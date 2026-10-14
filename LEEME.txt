@@ -1,0 +1,22 @@
+PLANIFICADOR JAGPINO v25 · VERSIÓN INSTALABLE
+================================================
+
+Esta carpeta es la app lista para publicar en internet. Para que los estudiantes
+puedan instalarla (Android, Windows, iPhone/iPad) tiene que estar en una dirección
+web con https. Un archivo .html abierto desde Descargas o WhatsApp no se puede instalar.
+
+Contenido
+- index.html .............. la app
+- manifest.webmanifest .... nombre, colores e iconos de la app instalada
+- sw.js ................... permite instalarla y usarla sin conexión
+- icon-*.png, apple-touch-icon.png ... iconos
+
+Cómo publicarla
+1. Sube TODA la carpeta (sin cambiar nombres) a cualquier alojamiento web con https,
+   por ejemplo GitHub Pages o Netlify.
+2. Abre la dirección que te den: aparecerá la ventana «Instala el Planificador».
+3. (Opcional) Pon esa dirección en APP_URL, dentro de index.html, para que el archivo
+   .html que circula por WhatsApp enlace a la versión instalable.
+
+Al publicar una versión nueva, sube los archivos nuevos y cambia en sw.js el nombre
+de CACHE (por ejemplo 'jagpino-v26') para que las apps instaladas se actualicen.
