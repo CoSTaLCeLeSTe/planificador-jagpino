@@ -1,4 +1,4 @@
-PLANIFICADOR JAGPINO v25 · VERSIÓN INSTALABLE
+PLANIFICADOR JAGPINO v26 · VERSIÓN INSTALABLE
 ================================================
 
 Esta carpeta es la app lista para publicar en internet. Para que los estudiantes
@@ -19,4 +19,4 @@ Cómo publicarla
    .html que circula por WhatsApp enlace a la versión instalable.
 
 Al publicar una versión nueva, sube los archivos nuevos y cambia en sw.js el nombre
-de CACHE (por ejemplo 'jagpino-v26') para que las apps instaladas se actualicen.
+de CACHE (por ejemplo 'jagpino-v27') para que las apps instaladas se actualicen.

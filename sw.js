@@ -1,5 +1,5 @@
-// Service worker del Planificador Jagpino v25: permite instalar la app y usarla sin conexión.
-const CACHE = 'jagpino-v25';
+// Service worker del Planificador Jagpino v26: permite instalar la app y usarla sin conexión.
+const CACHE = 'jagpino-v26';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 // Librerías externas que usa la app: se guardan la primera vez para que funcione sin internet
 const CDN = ['cdn.tailwindcss.com', 'cdn.jsdelivr.net', 'cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];

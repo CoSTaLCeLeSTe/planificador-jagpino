@@ -136,8 +136,9 @@
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
 
             <div id="importHint" class="hidden p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-xs text-emerald-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <p><b>👋 ¡Bienvenido a la app instalada!</b> Empieza vacía. Si ya tenías datos en el navegador o en el archivo, impórtalos: <b>Datos → Importar copia</b>.</p>
-                <div class="flex gap-2 shrink-0">
+                <p><b>👋 ¡Bienvenido a la app instalada!</b> Si copiaste tus datos al instalarla, pulsa <b>«Pegar mis datos»</b>. También puedes importar una copia desde <b>Datos</b>.</p>
+                <div class="flex flex-wrap gap-2 shrink-0">
+                    <button onclick="pasteDataFromClipboard()" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-black">📋 Pegar mis datos</button>
                     <button onclick="toggleDataModal(true)" class="px-4 py-2 rounded-xl bg-slate-900 text-amber-300 text-xs font-black">Importar copia</button>
                     <button onclick="dismissImportHint()" class="px-3 py-2 rounded-xl bg-white border border-emerald-300 text-emerald-800 text-xs font-bold">Empiezo de cero</button>
                 </div>
@@ -559,26 +560,14 @@
         </main>
     </div>
 
-    <!-- Modal: Instalar como app -->
-    <div id="installModal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-xs z-50 flex items-start sm:items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-3xl max-w-4xl w-full p-6 sm:p-8 shadow-2xl border border-emerald-200 space-y-5 my-8">
-            <div class="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 rounded-2xl logo-gradient text-white flex items-center justify-center text-xl shadow-lg shrink-0"><i class="fa-solid fa-mobile-screen-button"></i></div>
-                    <div>
-                        <h3 class="font-black text-lg text-slate-900">📲 Instala el Planificador en tu dispositivo</h3>
-                        <p class="text-xs text-slate-500">Tenlo como una app más: con su icono, a pantalla completa, sin conexión y con tu progreso guardado en el dispositivo.</p>
-                    </div>
-                </div>
-                <button onclick="closeInstallModal()" class="w-8 h-8 shrink-0 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold flex items-center justify-center transition">✕</button>
-            </div>
-            <div id="installModalBody" class="space-y-4"></div>
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-100">
-                <p class="text-[11px] text-slate-400">Puedes volver a abrir esta ventana con el botón «Instalar» de la cabecera.</p>
-                <button onclick="closeInstallModal()" class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black transition">Ahora no</button>
-            </div>
-        </div>
+    <!-- Modal: Instalar como app (contenido según el dispositivo) -->
+    <div id="installModal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div id="installModalCard" class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-emerald-200 space-y-4 my-8"></div>
     </div>
+    <!-- Flecha que señala el menú o el botón Compartir del navegador -->
+    <div id="installPointer" class="hidden"></div>
+    <!-- Aviso breve -->
+    <div id="appToast" class="hidden"></div>
 
     <!-- Modal: Datos (exportar, importar, copias de seguridad) -->
     <div id="dataModal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
@@ -764,7 +753,7 @@
             <!-- Detailed Legal Terms Clause -->
             <div class="pt-3 border-t border-slate-100 text-[11px] text-slate-400 flex flex-col sm:flex-row justify-between gap-2">
                 <p>© 2026 <b>Jagpino</b>. Se autoriza el uso libre y gratuito para fines estrictamente académicos y personales. Queda prohibida su venta, comercialización total o parcial, así como la redistribución sin citar la autoría original.</p>
-                <span class="whitespace-nowrap font-medium text-slate-500">v25</span>
+                <span class="whitespace-nowrap font-medium text-slate-500">v26</span>
             </div>
         </div>
     </footer>
@@ -4245,15 +4234,20 @@
             updateBackupReminder();
         });
 
-        // ================= INSTALAR COMO APP (Android, Windows, iOS) =================
-        // Dirección web donde está publicada la versión instalable. Si se rellena, el archivo .html
-        // descargado enlaza a ella desde la ventana de instalación. Vacía = aún sin publicar.
+        // ================= INSTALAR COMO APP: DIRECTO EN CADA DISPOSITIVO =================
+        // Android y Windows (Chrome / Edge): un botón que abre el instalador del sistema.
+        // iPhone / iPad: Apple no permite instalar desde un botón; se señala el botón Compartir de Safari.
+        // Desde el archivo .html (WhatsApp, Descargas): un toque abre la versión web con los datos incluidos.
         const APP_URL = 'https://costalceleste.github.io/planificador-jagpino/';
-        const INSTALL_SEEN_KEY = 'jagpino_install_seen_v25';
+        const INSTALL_SEEN_KEY = 'jagpino_install_seen_v26';
         const IMPORT_HINT_KEY = 'jagpino_import_hint_done';
+        const INSTALL_REQUESTED = new URLSearchParams(location.search).get('instalar') === '1';
+        const PAGE_LOADED_AT = Date.now();
         let deferredInstallPrompt = null;
         let installModalShownThisSession = false;
         let installedJustNow = false;
+        let installHelpShown = false;      // se ha pulsado instalar sin instalador disponible: mostrar el camino manual
+        let installTicker = null;
 
         function detectPlatform() {
             const ua = navigator.userAgent || '';
@@ -4261,6 +4255,11 @@
             if (/Android/i.test(ua)) return 'android';
             if (/Windows/i.test(ua)) return 'windows';
             return 'desktop';
+        }
+
+        function isIPad() {
+            const ua = navigator.userAgent || '';
+            return /iPad/.test(ua) || (/Macintosh/.test(ua) && (navigator.maxTouchPoints || 0) > 1);
         }
 
         function isStandalone() {
@@ -4279,8 +4278,107 @@
         function storageGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
         function storageSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 
+        const DEVICE_NAMES = { android: 'tu Android', windows: 'tu PC con Windows', desktop: 'tu ordenador', ios: 'tu iPhone' };
+        function deviceName() {
+            const p = detectPlatform();
+            return p === 'ios' && isIPad() ? 'tu iPad' : DEVICE_NAMES[p];
+        }
+
+        // ---- Pasar los datos del archivo a la versión web (en la parte # de la dirección: no sale del dispositivo) ----
+        function stateMeaningful(st) {
+            if (!st) return false;
+            return Object.keys(st.weeklyLog || {}).length > 0
+                || Object.keys(st.topicLog || {}).length > 0
+                || Object.keys(st.pecLog || {}).length > 0
+                || Object.keys(st.examManual || {}).length > 0
+                || Object.values(st.examChoice || {}).some(c => c && c.pin);
+        }
+
+        function b64url(bytes) {
+            let s = '';
+            for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+            return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+
+        function unb64url(str) {
+            const t = str.replace(/-/g, '+').replace(/_/g, '/');
+            const s = atob(t + '='.repeat((4 - t.length % 4) % 4));
+            const out = new Uint8Array(s.length);
+            for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
+            return out;
+        }
+
+        async function packState(obj) {
+            const json = JSON.stringify(obj);
+            try {
+                if (typeof CompressionStream !== 'undefined') {
+                    const stream = new Blob([json]).stream().pipeThrough(new CompressionStream('deflate-raw'));
+                    return 'z.' + b64url(new Uint8Array(await new Response(stream).arrayBuffer()));
+                }
+            } catch (e) {}
+            return 'j.' + b64url(new TextEncoder().encode(json));
+        }
+
+        async function unpackState(str) {
+            const kind = str.slice(0, 2);
+            const bytes = unb64url(str.slice(2));
+            let json;
+            if (kind === 'z.') {
+                const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+                json = await new Response(stream).text();
+            } else {
+                json = new TextDecoder().decode(bytes);
+            }
+            return JSON.parse(json);
+        }
+
+        // Desde el archivo: abre la versión web (instalable) llevando tus datos
+        async function goToInstallableVersion() {
+            let url = APP_URL + '?instalar=1';
+            try {
+                const st = buildState();
+                if (stateMeaningful(st)) url += '#datos=' + await packState(st);
+            } catch (e) {}
+            location.href = url;
+        }
+
+        // En la versión web: recoge los datos que llegan desde el archivo
+        async function receiveTransferredData() {
+            const m = location.hash.match(/[#&]datos=([^&]+)/);
+            if (!m) return;
+            try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+            let incoming;
+            try {
+                incoming = sanitizeState(await unpackState(m[1]));
+            } catch (e) {
+                showToast('No se pudieron pasar tus datos del archivo. Usa Datos → Exportar en el archivo y Datos → Importar aquí.', 'warn');
+                return;
+            }
+            if (!stateMeaningful(incoming)) return;
+            const current = buildState();
+            if (JSON.stringify(sanitizeState(current)) === JSON.stringify(incoming)) return;
+            if (stateMeaningful(current)) {
+                if (!confirm('Has abierto el Planificador desde el archivo con tus datos.\n\n¿Reemplazar los datos que ya había en esta versión web por los del archivo?\n(Los actuales se guardan antes en una copia de seguridad.)')) return;
+                writeBackup('safety', current, 'Antes de recibir datos del archivo');
+            }
+            applyState(incoming);
+            refreshAfterStateChange();
+            saveAllToStorage();
+            showToast('✅ Tus datos ya están en la versión instalable.', 'ok');
+        }
+
+        function showToast(text, kind) {
+            const t = document.getElementById('appToast');
+            if (!t) return;
+            t.className = `fixed left-1/2 -translate-x-1/2 bottom-6 z-[70] max-w-sm w-[calc(100%-2rem)] px-4 py-3 rounded-2xl shadow-2xl text-xs font-bold ${kind === 'warn' ? 'bg-amber-100 text-amber-950 border border-amber-300' : 'bg-slate-900 text-emerald-200 border border-emerald-500/40'}`;
+            t.innerText = text;
+            clearTimeout(showToast._t);
+            showToast._t = setTimeout(() => t.classList.add('hidden'), 6000);
+        }
+
+        // ---- Instalador del navegador (Chrome / Edge) ----
         window.addEventListener('beforeinstallprompt', e => {
-            e.preventDefault();               // la instalación se lanza desde nuestro botón
+            e.preventDefault();               // se lanza desde nuestro botón
             deferredInstallPrompt = e;
             renderInstallModal();
         });
@@ -4289,117 +4387,166 @@
             deferredInstallPrompt = null;
             installedJustNow = true;
             storageSet(INSTALL_SEEN_KEY, 'true');
+            hideInstallPointer();
             renderInstallModal();
             updateInstallButton();
         });
 
-        async function triggerInstall() {
-            if (!deferredInstallPrompt) return;
-            const ev = deferredInstallPrompt;
-            deferredInstallPrompt = null;
-            try {
-                ev.prompt();
-                const choice = await ev.userChoice;
-                if (choice && choice.outcome === 'accepted') installedJustNow = true;
-            } catch (e) {}
+        async function installNow() {
+            const p = detectPlatform();
+            if (!isWebOrigin()) { goToInstallableVersion(); return; }
+            if (p === 'ios') {
+                // Copia los datos al portapapeles para pegarlos en la app instalada (iOS separa sus datos)
+                if (stateMeaningful(buildState())) {
+                    try { await navigator.clipboard.writeText(exportPayloadText()); window.__jagpinoCopied = true; } catch (e) {}
+                }
+                installHelpShown = true;
+                renderInstallModal();
+                showInstallPointer();
+                return;
+            }
+            if (deferredInstallPrompt) {
+                const ev = deferredInstallPrompt;
+                deferredInstallPrompt = null;
+                try {
+                    ev.prompt();
+                    const choice = await ev.userChoice;
+                    if (choice && choice.outcome === 'accepted') installedJustNow = true;
+                } catch (e) {}
+                renderInstallModal();
+                return;
+            }
+            // El navegador aún no ofrece su instalador: se señala dónde está en el menú
+            installHelpShown = true;
             renderInstallModal();
+            showInstallPointer();
         }
 
-        function installSteps(p) {
-            const steps = {
-                android: [
-                    'Abre el enlace del Planificador en <b>Chrome</b>.',
-                    'Pulsa <b>«Instalar»</b> aquí o, en el menú <b>⋮</b>, <b>«Instalar aplicación»</b> (o «Añadir a pantalla de inicio»).',
-                    'Te aparecerá el icono en la pantalla de inicio, como cualquier otra app.'
-                ],
-                windows: [
-                    'Abre el enlace del Planificador en <b>Chrome</b> o <b>Edge</b>.',
-                    'Pulsa <b>«Instalar»</b> aquí o el icono de instalar que aparece a la derecha de la barra de direcciones.',
-                    'La tendrás en el <b>menú Inicio</b>, en su propia ventana, y podrás anclarla a la barra de tareas.'
-                ],
-                ios: [
-                    'Abre el enlace del Planificador en <b>Safari</b>.',
-                    'Pulsa el botón <b>Compartir</b> (el cuadrado con una flecha hacia arriba).',
-                    'Elige <b>«Añadir a pantalla de inicio»</b> y después <b>«Añadir»</b>.'
-                ]
-            };
-            return steps[p] || steps.windows;
+        function manualHint(p) {
+            if (p === 'android') return 'Toca el menú <b>⋮</b> de arriba a la derecha y elige <b>«Instalar aplicación»</b> (o «Añadir a pantalla de inicio»).';
+            return 'Pulsa el icono de <b>instalar</b> de la barra de direcciones, arriba a la derecha (o el menú <b>⋮ / …</b> → <b>«Instalar»</b>).';
+        }
+
+        function showInstallPointer() {
+            const el = document.getElementById('installPointer');
+            if (!el) return;
+            const p = detectPlatform();
+            const bottom = p === 'ios' && !isIPad();
+            el.className = `fixed z-[60] pointer-events-none flex flex-col items-center gap-1 ${bottom ? 'bottom-2 left-1/2 -translate-x-1/2' : 'top-1 right-3'}`;
+            el.innerHTML = bottom
+                ? '<span class="px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 text-xs font-black shadow-lg">Compartir ⬆️ aquí abajo</span><span class="text-4xl animate-bounce">⬇️</span>'
+                : `<span class="text-4xl animate-bounce">⬆️</span><span class="px-3 py-1.5 rounded-xl bg-amber-400 text-slate-950 text-xs font-black shadow-lg">${p === 'android' ? 'Menú ⋮ → Instalar aplicación' : (p === 'ios' ? 'Compartir ⬆️' : 'Icono de instalar')}</span>`;
+        }
+
+        function hideInstallPointer() {
+            const el = document.getElementById('installPointer');
+            if (el) el.className = 'hidden';
         }
 
         function renderInstallModal() {
-            const body = document.getElementById('installModalBody');
-            if (!body) return;
-            const platform = detectPlatform();
+            const card = document.getElementById('installModalCard');
+            const modal = document.getElementById('installModal');
+            if (!card || !modal || modal.classList.contains('hidden')) return;
+            const p = detectPlatform();
             const web = isWebOrigin();
-            const canPrompt = !!deferredInstallPrompt;
-            const mine = p => p === platform || (p === 'windows' && platform === 'desktop');
+            const ready = !!deferredInstallPrompt;
+            const dev = deviceName();
+            const hasData = stateMeaningful(buildState());
+            const bigButton = label => `<button onclick="installNow()" class="w-full px-5 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 ${ready ? 'animate-pulse' : ''} text-white text-base font-black shadow-lg transition flex items-center justify-center gap-2"><i class="fa-solid fa-download"></i> ${label}</button>`;
+
+            const header = `
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-14 h-14 rounded-2xl logo-gradient text-white flex items-center justify-center text-2xl shadow-lg shrink-0"><i class="fa-solid fa-graduation-cap"></i></div>
+                        <div>
+                            <p class="text-[11px] font-black uppercase tracking-wider text-emerald-700">Planificador Jagpino</p>
+                            <h3 class="font-black text-lg text-slate-900 leading-tight">Instálalo en ${dev}</h3>
+                        </div>
+                    </div>
+                    <button onclick="closeInstallModal()" aria-label="Cerrar" class="w-8 h-8 shrink-0 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold flex items-center justify-center transition">✕</button>
+                </div>`;
 
             if (installedJustNow) {
-                body.innerHTML = `
+                card.innerHTML = header + `
                     <div class="p-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-950 space-y-2 text-center">
-                        <div class="text-4xl">✅</div>
-                        <p class="text-base font-black">¡Planificador instalado!</p>
-                        <p class="text-xs leading-relaxed">Ábrelo desde tu pantalla de inicio o desde el menú Inicio. La app instalada guarda su propio progreso: si ya tenías datos aquí, <b>exporta una copia</b> (Datos → Exportar) e <b>impórtala</b> en la app (Datos → Importar).</p>
-                        <button onclick="closeInstallModal(); toggleDataModal(true)" class="mt-1 px-4 py-2 rounded-xl bg-slate-900 text-amber-300 text-xs font-black">Exportar mi copia ahora</button>
-                    </div>`;
+                        <div class="text-5xl">✅</div>
+                        <p class="text-base font-black">¡Instalado!</p>
+                        <p class="text-xs leading-relaxed">Ábrelo desde ${p === 'android' ? 'tu pantalla de inicio' : 'el menú Inicio o el escritorio'}. Tus datos de aquí ya están dentro.</p>
+                    </div>
+                    <button onclick="closeInstallModal()" class="w-full px-5 py-3 rounded-2xl bg-slate-900 text-white text-sm font-black">Entendido</button>`;
                 return;
             }
 
-            let notice = '';
+            const benefits = `
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="p-2 rounded-xl bg-slate-50 border border-slate-200"><div class="text-xl">📱</div><p class="text-[10px] font-bold text-slate-600 leading-tight mt-0.5">Su propio icono</p></div>
+                    <div class="p-2 rounded-xl bg-slate-50 border border-slate-200"><div class="text-xl">✈️</div><p class="text-[10px] font-bold text-slate-600 leading-tight mt-0.5">Funciona sin conexión</p></div>
+                    <div class="p-2 rounded-xl bg-slate-50 border border-slate-200"><div class="text-xl">💾</div><p class="text-[10px] font-bold text-slate-600 leading-tight mt-0.5">Tu progreso guardado</p></div>
+                </div>`;
+
+            let action, note;
             if (!web) {
-                notice = `
-                    <div class="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 text-xs leading-relaxed space-y-2">
-                        <p><b>📁 Estás usando el archivo descargado.</b> Un archivo .html no se puede instalar: para tenerlo como app hay que abrir el Planificador desde su <b>dirección web</b>.</p>
-                        ${APP_URL
-                            ? `<ol class="list-decimal pl-5 space-y-0.5">
-                                    <li>Exporta aquí tu copia: <b>Datos → Exportar copia</b>.</li>
-                                    <li>Abre la versión web e instálala siguiendo los pasos de tu dispositivo.</li>
-                                    <li>En la app instalada, <b>Datos → Importar copia</b>.</li>
-                               </ol>
-                               <a href="${escapeHtml(APP_URL)}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-amber-300 font-black"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir la versión instalable</a>`
-                            : `<p>Pide el enlace web del Planificador a quien te lo pasó. Mientras tanto puedes seguir usándolo así; exporta una copia de vez en cuando.</p>`}
-                    </div>`;
+                action = bigButton(`Instalar en ${dev}`);
+                note = `Se abrirá la versión web${hasData ? ' <b>con tus datos incluidos</b>' : ''} y la instalas con un toque.`;
+            } else if (p === 'ios') {
+                action = installHelpShown
+                    ? `<div class="p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 space-y-3">
+                            <div class="flex items-center gap-3"><span class="w-8 h-8 rounded-full bg-slate-900 text-amber-300 font-black flex items-center justify-center shrink-0">1</span><p class="text-sm text-slate-900">Toca <b>Compartir</b> <span class="inline-block px-1.5 rounded bg-white border">⬆️</span> ${isIPad() ? 'arriba a la derecha' : 'en la barra de abajo'} <span class="text-slate-500 text-xs">(si no lo ves, toca antes «⋯»)</span></p></div>
+                            <div class="flex items-center gap-3"><span class="w-8 h-8 rounded-full bg-slate-900 text-amber-300 font-black flex items-center justify-center shrink-0">2</span><p class="text-sm text-slate-900">Elige <b>«Añadir a pantalla de inicio»</b> y pulsa <b>«Añadir»</b></p></div>
+                       </div>`
+                    : bigButton(`Instalar en ${dev}`);
+                note = window.__jagpinoCopied
+                    ? '📋 <b>Tus datos están copiados.</b> Al abrir la app instalada, pulsa «Pegar mis datos».'
+                    : 'En iPhone y iPad se instala desde el menú Compartir de Safari: te indico dónde tocar.';
+            } else if (installHelpShown && !ready) {
+                action = `<div class="p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-sm text-slate-900 leading-relaxed">${manualHint(p)}</div>
+                          <button onclick="installNow()" class="w-full px-5 py-3 rounded-2xl bg-white border border-emerald-300 text-emerald-800 text-sm font-black">Volver a intentarlo</button>`;
+                note = 'Tu navegador aún no ha activado el botón directo; desde su menú se instala igual.';
+            } else {
+                action = bigButton('Instalar ahora');
+                note = ready
+                    ? 'Un toque y tendrás el Planificador como una app más. Tus datos de aquí van incluidos.'
+                    : 'Un toque y se instala (o te indico dónde tocar). Tus datos de aquí van incluidos.';
             }
 
-            const card = (p, icon, name) => {
-                const highlight = mine(p);
-                const showButton = web && canPrompt && highlight && p !== 'ios';
-                return `
-                    <div class="p-4 rounded-2xl border ${highlight ? 'border-emerald-400 bg-emerald-50/60 ring-2 ring-emerald-300' : 'border-slate-200 bg-white'} space-y-2.5">
-                        <div class="flex items-center justify-between gap-2">
-                            <p class="text-sm font-black text-slate-900"><span class="text-lg mr-1">${icon}</span>${name}</p>
-                            ${highlight ? '<span class="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-black">Tu dispositivo</span>' : ''}
-                        </div>
-                        <ol class="list-decimal pl-5 space-y-1 text-[11px] text-slate-600 leading-relaxed">
-                            ${installSteps(p).map(s => `<li>${s}</li>`).join('')}
-                        </ol>
-                        ${showButton ? `<button onclick="triggerInstall()" class="w-full px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition flex items-center justify-center gap-2"><i class="fa-solid fa-download"></i> Instalar</button>` : ''}
-                        ${p === 'ios' && highlight ? '<p class="text-[10px] text-slate-500">En iPhone y iPad no hay botón automático: Apple solo permite instalar desde el menú Compartir de Safari.</p>' : ''}
-                    </div>`;
-            };
+            card.innerHTML = `
+                ${header}
+                ${benefits}
+                <div class="space-y-2">${action}<p class="text-[11px] text-slate-500 text-center leading-relaxed">${note}</p></div>
+                <details class="text-[11px] text-slate-500">
+                    <summary class="cursor-pointer font-bold text-slate-600 select-none">¿Instalarlo en otro dispositivo?</summary>
+                    <div class="mt-2 space-y-1.5">
+                        <p>Abre esta dirección en el otro dispositivo y pulsa «Instalar»:</p>
+                        <div class="flex items-center gap-2"><code class="flex-1 min-w-0 truncate px-2 py-1 rounded bg-slate-100 text-slate-800">${escapeHtml(APP_URL)}</code><button onclick="copyAppLink(this)" class="shrink-0 px-2.5 py-1 rounded-lg bg-slate-900 text-white font-bold">Copiar</button></div>
+                        <p>🤖 Android: Chrome · 🪟 Windows: Chrome o Edge · 🍎 iPhone/iPad: Safari → Compartir → «Añadir a pantalla de inicio».</p>
+                    </div>
+                </details>
+                <button onclick="closeInstallModal()" class="w-full text-xs font-bold text-slate-400 hover:text-slate-600">Ahora no</button>`;
+        }
 
-            const order = platform === 'ios' ? ['ios', 'android', 'windows'] : (platform === 'android' ? ['android', 'windows', 'ios'] : ['windows', 'android', 'ios']);
-            const cards = { android: card('android', '🤖', 'Android'), windows: card('windows', '🪟', 'Windows (escritorio)'), ios: card('ios', '🍎', 'iPhone / iPad') };
-
-            body.innerHTML = `
-                ${notice}
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">${order.map(k => cards[k]).join('')}</div>
-                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 leading-relaxed">
-                    <b class="text-slate-800">💾 ¿Y mis datos?</b> La app instalada guarda tu progreso en el propio dispositivo y funciona sin conexión. Empieza vacía: si ya usabas el Planificador en el navegador o en el archivo, <b>exporta una copia</b> antes (Datos → Exportar) e <b>impórtala</b> en la app instalada (Datos → Importar).
-                </div>`;
+        async function copyAppLink(btn) {
+            try { await navigator.clipboard.writeText(APP_URL); btn.innerText = '¡Copiado!'; } catch (e) { btn.innerText = 'Cópialo a mano'; }
         }
 
         function openInstallModal() {
             const m = document.getElementById('installModal');
             if (!m) return;
             installModalShownThisSession = true;
-            renderInstallModal();
             m.classList.remove('hidden');
+            renderInstallModal();
+            // Mientras el navegador prepara su instalador, se refresca la ventana
+            clearInterval(installTicker);
+            installTicker = setInterval(() => {
+                if (m.classList.contains('hidden')) { clearInterval(installTicker); return; }
+                if (deferredInstallPrompt || Date.now() - PAGE_LOADED_AT > 60000) { renderInstallModal(); clearInterval(installTicker); }
+            }, 1000);
         }
 
         function closeInstallModal() {
             const m = document.getElementById('installModal');
             if (m) m.classList.add('hidden');
+            clearInterval(installTicker);
+            hideInstallPointer();
             storageSet(INSTALL_SEEN_KEY, 'true');
             if (!installedJustNow) checkFirstTimeUser();   // después, la guía rápida si aún no se ha visto
         }
@@ -4410,19 +4557,21 @@
         }
 
         // Ventanas del arranque: primero la de instalar (una vez por versión), luego la guía rápida
-        function startupModals() {
+        async function startupModals() {
             updateInstallButton();
+            if (isWebOrigin()) await receiveTransferredData();
+            if (INSTALL_REQUESTED) {
+                try { history.replaceState(null, '', location.pathname); } catch (e) {}
+            }
             if (isStandalone()) {
-                // App instalada: pedir almacenamiento persistente y ofrecer importar si empieza vacía
+                // App instalada: pedir almacenamiento persistente y ofrecer recuperar datos si empieza vacía
                 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
                 const hint = document.getElementById('importHint');
-                if (hint && !storageGet(IMPORT_HINT_KEY) && Object.keys(weeklyLog).length === 0 && Object.keys(topicLog).length === 0) {
-                    hint.classList.remove('hidden');
-                }
+                if (hint && !storageGet(IMPORT_HINT_KEY) && !stateMeaningful(buildState())) hint.classList.remove('hidden');
                 checkFirstTimeUser();
                 return;
             }
-            if (!storageGet(INSTALL_SEEN_KEY) && !installModalShownThisSession) {
+            if (INSTALL_REQUESTED || (!storageGet(INSTALL_SEEN_KEY) && !installModalShownThisSession)) {
                 openInstallModal();
             } else {
                 checkFirstTimeUser();
@@ -4433,6 +4582,25 @@
             storageSet(IMPORT_HINT_KEY, 'true');
             const hint = document.getElementById('importHint');
             if (hint) hint.classList.add('hidden');
+        }
+
+        // En la app instalada de iPhone: pegar los datos copiados antes de instalar
+        async function pasteDataFromClipboard() {
+            let text = '';
+            try { text = await navigator.clipboard.readText(); } catch (e) {}
+            if (!text) {
+                toggleDataModal(true);
+                const d = document.querySelector('#dataModal details');
+                if (d) d.open = true;
+                setDataStatus('warn', 'No se pudo leer el portapapeles: pega aquí abajo el texto de tu copia y pulsa «Importar texto pegado».');
+                return;
+            }
+            let clean;
+            try { clean = parseBackupText(text); } catch (e) {
+                showToast('Lo copiado no es una copia del Planificador. Vuelve a la versión web y pulsa «Instalar» otra vez.', 'warn');
+                return;
+            }
+            importState(clean);
         }
 
         // Service worker: permite instalar la app y usarla sin conexión (solo desde una dirección web)
@@ -4452,7 +4620,7 @@
                     <div class="space-y-3">
                         <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-950 space-y-1.5 leading-relaxed">
                             <p class="font-bold flex items-center gap-1.5 text-amber-900 text-sm">
-                                <i class="fa-solid fa-graduation-cap text-amber-600"></i> ¡Bienvenido al Planificador Jagpino v25!
+                                <i class="fa-solid fa-graduation-cap text-amber-600"></i> ¡Bienvenido al Planificador Jagpino v26!
                             </p>
                             <p>
                                 Diseñado para estudiantes de Derecho en la UNED que compaginan trabajo y familia. Este planificador no reparte el tiempo a ojo: utiliza un <b>Algoritmo de Ponderación Estadística</b> basado en la dificultad histórica de cada asignatura.
