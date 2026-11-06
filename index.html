@@ -97,6 +97,10 @@
                         <span class="hidden sm:inline">Guardado automático</span>
                     </span>
 
+                    <button id="btnSync" onclick="syncTap()" class="hidden px-3.5 py-2 rounded-xl border text-xs sm:text-sm font-black transition shadow-sm flex items-center gap-2 bg-white/10 text-slate-200 border-white/20" title="Sincronizar con Google Drive">
+                        <i class="fa-solid fa-cloud text-sm"></i><span>Nube</span>
+                    </button>
+
                     <button id="btnInstallApp" onclick="openInstallModal()" title="Instalar el Planificador como app" class="px-3.5 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-200 border border-emerald-400/40 rounded-xl text-xs sm:text-sm font-black transition shadow-sm flex items-center gap-2">
                         <i class="fa-solid fa-mobile-screen-button text-emerald-300 text-sm"></i>
                         <span>Instalar</span>
@@ -566,6 +570,8 @@
     </div>
     <!-- Flecha que señala el menú o el botón Compartir del navegador -->
     <div id="installPointer" class="hidden"></div>
+    <!-- Conflicto de sincronización -->
+    <div id="syncConflictModal" class="hidden fixed inset-0 bg-slate-950/85 z-[65] flex items-center justify-center p-4 overflow-y-auto"></div>
     <!-- Aviso breve -->
     <div id="appToast" class="hidden"></div>
 
@@ -577,11 +583,13 @@
                     <div class="w-11 h-11 rounded-2xl bg-slate-900 text-emerald-400 flex items-center justify-center text-lg shadow-lg"><i class="fa-solid fa-database"></i></div>
                     <div>
                         <h3 class="font-black text-lg text-slate-900">Tus datos</h3>
-                        <p class="text-xs text-slate-500">Se guardan solo en este navegador: exporta una copia de vez en cuando</p>
+                        <p class="text-xs text-slate-500">Se guardan en este dispositivo. Sincronízalos con Google Drive o exporta una copia de vez en cuando</p>
                     </div>
                 </div>
                 <button onclick="toggleDataModal(false)" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold flex items-center justify-center transition">✕</button>
             </div>
+
+            <div id="syncPanel" class="hidden"></div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button onclick="exportData()" class="p-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-left transition shadow space-y-1">
@@ -753,7 +761,7 @@
             <!-- Detailed Legal Terms Clause -->
             <div class="pt-3 border-t border-slate-100 text-[11px] text-slate-400 flex flex-col sm:flex-row justify-between gap-2">
                 <p>© 2026 <b>Jagpino</b>. Se autoriza el uso libre y gratuito para fines estrictamente académicos y personales. Queda prohibida su venta, comercialización total o parcial, así como la redistribución sin citar la autoría original.</p>
-                <span class="whitespace-nowrap font-medium text-slate-500">v26</span>
+                <span class="whitespace-nowrap font-medium text-slate-500">v27</span>
             </div>
         </div>
     </footer>
@@ -3944,9 +3952,11 @@
                         try { writeBackup('auto', JSON.parse(prev), 'Copia automática'); } catch (e) {}
                     }
                 }
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(buildState()));
+                const next = JSON.stringify(buildState());
+                localStorage.setItem(STORAGE_KEY, next);
                 showSaveBadge();
                 updateBackupReminder();
+                if (prev !== next) syncOnLocalChange();   // cambio real en este dispositivo: subir a la nube
             } catch (e) {
                 console.warn("No se pudo guardar en almacenamiento local:", e);
             }
@@ -4168,6 +4178,7 @@
                 if (st) { st.className = 'hidden'; st.innerText = ''; }
                 const sh = document.getElementById('btnShareExport');
                 if (sh) sh.classList.toggle('hidden', !(navigator.share && navigator.canShare));
+                renderSyncPanel();
                 modal.classList.remove('hidden');
             } else {
                 modal.classList.add('hidden');
@@ -4222,6 +4233,7 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            if (syncBootstrap()) return;   // renovando el permiso de Google Drive: la página vuelve enseguida
             applyDefaultDates();
             loadFromStorage();
             renderDayHoursInputs();
@@ -4232,6 +4244,7 @@
             }
             startupModals();
             updateBackupReminder();
+            syncAfterStartup();
         });
 
         // ================= INSTALAR COMO APP: DIRECTO EN CADA DISPOSITIVO =================
@@ -4610,6 +4623,489 @@
             });
         }
 
+        // ================= SINCRONIZACIÓN CON GOOGLE DRIVE =================
+        // Los datos se guardan en la carpeta oculta de la app en el Drive de cada usuario (appDataFolder):
+        // la app no ve ningún otro archivo de su Drive.
+        // Acceso: OAuth de Google por redirección. Al abrir la app se renueva el permiso sin pedir nada
+        // (prompt=none) si la persona ya lo concedió; si Google necesita confirmación, basta un toque en la nube.
+        const GOOGLE_CLIENT_ID = '847819660734-bger2d8feemdnegqnc9f2kkvak72eb3r.apps.googleusercontent.com';   // ID de cliente OAuth (Aplicación web) del proyecto de Google Cloud
+        const SYNC_REDIRECT_URI = APP_URL;
+        const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+        const SYNC_FILE_NAME = 'planificador-jagpino.json';
+        const SYNC_META_KEY = STORAGE_KEY + '_sync';
+        const SYNC_TOKEN_KEY = STORAGE_KEY + '_sync_token';
+        const SYNC_STATE_KEY = STORAGE_KEY + '_sync_oauth_state';
+        const SYNC_SILENT_KEY = STORAGE_KEY + '_sync_silent_at';
+        const DRIVE_API = 'https://www.googleapis.com/drive/v3';
+        const DRIVE_UPLOAD = 'https://www.googleapis.com/upload/drive/v3';
+        const OAUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
+
+        let syncApplyingRemote = false;   // evita marcar como «cambio local» lo que llega de la nube
+        let syncBusy = false;
+        let syncPushTimer = null;
+        let syncLastError = '';
+        let syncPendingConflict = null;
+
+        function syncAvailable() {
+            return !!GOOGLE_CLIENT_ID && isWebOrigin() && STORAGE_OK;
+        }
+
+        function syncMeta() {
+            try { return JSON.parse(localStorage.getItem(SYNC_META_KEY)) || {}; } catch (e) { return {}; }
+        }
+
+        function setSyncMeta(patch) {
+            const m = Object.assign(syncMeta(), patch);
+            try { localStorage.setItem(SYNC_META_KEY, JSON.stringify(m)); } catch (e) {}
+            return m;
+        }
+
+        function syncToken() {
+            try {
+                const t = JSON.parse(localStorage.getItem(SYNC_TOKEN_KEY));
+                if (t && t.token && t.exp > Date.now() + 60000) return t.token;
+            } catch (e) {}
+            return null;
+        }
+
+        function clearSyncToken() {
+            try { localStorage.removeItem(SYNC_TOKEN_KEY); } catch (e) {}
+        }
+
+        function deviceLabel() {
+            const p = detectPlatform();
+            const ua = navigator.userAgent || '';
+            const browser = /Edg\//.test(ua) ? 'Edge' : (/CriOS|Chrome\//.test(ua) ? 'Chrome' : (/Safari\//.test(ua) ? 'Safari' : 'navegador'));
+            const dev = { android: 'Android', ios: isIPad() ? 'iPad' : 'iPhone', windows: 'Windows', desktop: 'Ordenador' }[p];
+            return `${dev} · ${isStandalone() ? 'app' : browser}`;
+        }
+
+        // ---- Acceso a Google (redirección) ----
+        function startGoogleAuth(mode) {
+            if (!syncAvailable()) return;
+            const st = Math.random().toString(36).slice(2) + Date.now().toString(36);
+            try { localStorage.setItem(SYNC_STATE_KEY, JSON.stringify({ st, mode, path: location.pathname })); } catch (e) {}
+            const m = syncMeta();
+            const params = new URLSearchParams({
+                client_id: GOOGLE_CLIENT_ID,
+                redirect_uri: SYNC_REDIRECT_URI,
+                response_type: 'token',
+                scope: DRIVE_SCOPE,
+                include_granted_scopes: 'true',
+                state: st
+            });
+            if (mode === 'silent') params.set('prompt', 'none');
+            else if (mode === 'connect') params.set('prompt', 'select_account');
+            if (m.email && mode !== 'connect') params.set('login_hint', m.email);
+            if (mode === 'silent') { try { localStorage.setItem(SYNC_SILENT_KEY, String(Date.now())); } catch (e) {} }
+            location.assign(`${OAUTH_URL}?${params.toString()}`);
+        }
+
+        // Lee la respuesta de Google al volver (#access_token=… o #error=…). Devuelve true si había respuesta.
+        function readGoogleAuthResponse() {
+            if (!location.hash || !/(access_token|error)=/.test(location.hash)) return false;
+            const h = new URLSearchParams(location.hash.slice(1));
+            let saved = null;
+            try { saved = JSON.parse(localStorage.getItem(SYNC_STATE_KEY)); localStorage.removeItem(SYNC_STATE_KEY); } catch (e) {}
+            try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+            if (!saved || h.get('state') !== saved.st) return true;   // respuesta ajena o caducada: se ignora
+            if (h.get('access_token')) {
+                const exp = Date.now() + (parseInt(h.get('expires_in')) || 3600) * 1000;
+                try { localStorage.setItem(SYNC_TOKEN_KEY, JSON.stringify({ token: h.get('access_token'), exp })); } catch (e) {}
+                setSyncMeta({ enabled: true, needsTap: false });
+                syncLastError = '';
+            } else {
+                const err = h.get('error') || 'error';
+                // Google necesita que la persona confirme: se le pedirá con un toque en la nube
+                setSyncMeta({ needsTap: true });
+                if (saved.mode !== 'silent') syncLastError = err === 'access_denied' ? 'Has cancelado el acceso a Google Drive.' : 'Google no ha dado acceso (' + err + ').';
+            }
+            return true;
+        }
+
+        // Al arrancar: si la sincronización está activa y el permiso ha caducado, se renueva sin pedir nada.
+        // Devuelve true si la página se va a Google (no hace falta seguir cargando).
+        function syncBootstrap() {
+            readGoogleAuthResponse();
+            if (!syncAvailable()) return false;
+            const m = syncMeta();
+            if (!m.enabled || m.needsTap || syncToken()) return false;
+            if (!navigator.onLine) return false;
+            if (/datos=/.test(location.hash) || INSTALL_REQUESTED) return false;   // primero, recoger datos del archivo
+            let last = 0;
+            try { last = parseInt(localStorage.getItem(SYNC_SILENT_KEY)) || 0; } catch (e) {}
+            if (Date.now() - last < 3 * 60000) return false;                         // evita bucles
+            startGoogleAuth('silent');
+            return true;
+        }
+
+        // ---- Drive ----
+        async function driveFetch(url, opts = {}) {
+            const token = syncToken();
+            if (!token) { const e = new Error('sin-permiso'); e.code = 401; throw e; }
+            const res = await fetch(url, Object.assign({}, opts, { headers: Object.assign({ Authorization: 'Bearer ' + token }, opts.headers || {}) }));
+            if (res.status === 401 || res.status === 403) {
+                if (res.status === 401) { clearSyncToken(); setSyncMeta({ needsTap: true }); }
+                const e = new Error('Drive ' + res.status); e.code = res.status; throw e;
+            }
+            if (!res.ok) { const e = new Error('Drive ' + res.status); e.code = res.status; throw e; }
+            return res;
+        }
+
+        async function driveFindFile() {
+            const q = encodeURIComponent(`name='${SYNC_FILE_NAME}' and trashed=false`);
+            const res = await driveFetch(`${DRIVE_API}/files?spaces=appDataFolder&q=${q}&fields=files(id,modifiedTime,appProperties)&pageSize=10`);
+            const j = await res.json();
+            const files = (j.files || []).sort((a, b) => String(b.modifiedTime).localeCompare(String(a.modifiedTime)));
+            return files[0] || null;
+        }
+
+        async function driveDownload(id) {
+            const res = await driveFetch(`${DRIVE_API}/files/${id}?alt=media`);
+            return res.json();
+        }
+
+        async function driveFileInfo(id) {
+            const res = await driveFetch(`${DRIVE_API}/files/${id}?fields=id,modifiedTime,appProperties`);
+            return res.json();
+        }
+
+        async function driveUpload(id, payload, keepalive) {
+            const boundary = 'jagpino' + Date.now().toString(36);
+            const meta = id
+                ? { appProperties: { updatedAt: payload.updatedAt } }
+                : { name: SYNC_FILE_NAME, parents: ['appDataFolder'], mimeType: 'application/json', appProperties: { updatedAt: payload.updatedAt } };
+            const body = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(meta)}\r\n`
+                + `--${boundary}\r\nContent-Type: application/json\r\n\r\n${JSON.stringify(payload)}\r\n--${boundary}--`;
+            const url = id
+                ? `${DRIVE_UPLOAD}/files/${id}?uploadType=multipart&fields=id,modifiedTime,appProperties`
+                : `${DRIVE_UPLOAD}/files?uploadType=multipart&fields=id,modifiedTime,appProperties`;
+            const res = await driveFetch(url, { method: id ? 'PATCH' : 'POST', headers: { 'Content-Type': `multipart/related; boundary=${boundary}` }, body, keepalive: !!keepalive && body.length < 60000 });
+            return res.json();
+        }
+
+        async function driveUserEmail() {
+            try {
+                const res = await driveFetch(`${DRIVE_API}/about?fields=user(emailAddress)`);
+                const j = await res.json();
+                return (j.user && j.user.emailAddress) || '';
+            } catch (e) { return ''; }
+        }
+
+        // ---- Sincronizar ----
+        function cloudPayload() {
+            const m = syncMeta();
+            return { app: 'planificador-jagpino', version: STATE_VERSION, updatedAt: m.localUpdatedAt || new Date().toISOString(), device: deviceLabel(), data: buildState() };
+        }
+
+        function stateSummary(st) {
+            const weeks = Object.keys(st.weeklyLog || {}).length;
+            const hours = Object.values(st.weeklyLog || {}).reduce((a, w) => a + Object.values(w).reduce((x, v) => x + (parseFloat(v) || 0), 0), 0);
+            const topics = Object.values(st.topicLog || {}).reduce((a, t) => a + Object.keys(t).length, 0);
+            return `${round2(hours)} h en ${weeks} semana${weeks === 1 ? '' : 's'} · ${topics} tema${topics === 1 ? '' : 's'} terminado${topics === 1 ? '' : 's'}`;
+        }
+
+        function applyCloudState(remote) {
+            const clean = sanitizeState(remote.data);
+            syncApplyingRemote = true;
+            try {
+                applyState(clean);
+                refreshAfterStateChange();
+                saveAllToStorage();
+            } finally {
+                syncApplyingRemote = false;
+            }
+        }
+
+        function timeAgo(iso) {
+            const t = Date.parse(iso);
+            if (!t) return '';
+            const s = Math.round((Date.now() - t) / 1000);
+            if (s < 60) return 'hace un momento';
+            if (s < 3600) return `hace ${Math.round(s / 60)} min`;
+            if (s < 86400) return `hace ${Math.round(s / 3600)} h`;
+            return `el ${new Date(t).toLocaleDateString('es-ES')}`;
+        }
+
+        async function syncNow(opts = {}) {
+            if (!syncAvailable() || syncBusy) return;
+            const m = syncMeta();
+            if (!m.enabled) return;
+            if (!syncToken()) { setSyncMeta({ needsTap: true }); renderSyncUI(); return; }
+            if (!navigator.onLine) { syncLastError = 'Sin conexión: se sincronizará al volver internet.'; renderSyncUI(); return; }
+            syncBusy = true; syncLastError = ''; renderSyncUI();
+            try {
+                if (!m.email) { const email = await driveUserEmail(); if (email) setSyncMeta({ email }); }
+                let file = await driveFindFile();
+                const local = buildState();
+                const meta = syncMeta();
+                if (!file) {
+                    // Primera vez en la nube: se suben los datos de este dispositivo
+                    const payload = cloudPayload();
+                    const up = await driveUpload(null, payload);
+                    setSyncMeta({ fileId: up.id, baseUpdatedAt: payload.updatedAt, dirty: false, lastSyncAt: new Date().toISOString() });
+                } else {
+                    const remoteUpdatedAt = (file.appProperties && file.appProperties.updatedAt) || file.modifiedTime;
+                    const remoteChanged = remoteUpdatedAt !== meta.baseUpdatedAt;
+                    const localChanged = !!meta.dirty || !meta.baseUpdatedAt;
+                    if (remoteChanged && localChanged && stateMeaningful(local)) {
+                        const remote = await driveDownload(file.id);
+                        if (JSON.stringify(sanitizeState(remote.data)) === JSON.stringify(sanitizeState(local))) {
+                            setSyncMeta({ fileId: file.id, baseUpdatedAt: remoteUpdatedAt, dirty: false, lastSyncAt: new Date().toISOString() });
+                        } else {
+                            syncPendingConflict = { file, remote, remoteUpdatedAt };
+                            openSyncConflict();
+                        }
+                    } else if (remoteChanged) {
+                        const remote = await driveDownload(file.id);
+                        applyCloudState(remote);
+                        setSyncMeta({ fileId: file.id, baseUpdatedAt: remoteUpdatedAt, dirty: false, lastSyncAt: new Date().toISOString(), localUpdatedAt: remoteUpdatedAt });
+                        if (!opts.quiet) showToast(`☁️ Datos actualizados desde ${remote.device || 'otro dispositivo'}.`, 'ok');
+                    } else if (localChanged) {
+                        const payload = cloudPayload();
+                        const up = await driveUpload(file.id, payload);
+                        setSyncMeta({ fileId: up.id || file.id, baseUpdatedAt: payload.updatedAt, dirty: false, lastSyncAt: new Date().toISOString() });
+                    } else {
+                        setSyncMeta({ fileId: file.id, lastSyncAt: new Date().toISOString() });
+                    }
+                }
+            } catch (e) {
+                if (e.code === 401) syncLastError = 'El permiso de Google ha caducado: toca la nube para renovarlo.';
+                else if (e.code === 403) syncLastError = 'Google Drive ha rechazado el acceso. Vuelve a conectar la cuenta.';
+                else syncLastError = navigator.onLine ? 'No se pudo sincronizar ahora. Se reintentará.' : 'Sin conexión: se sincronizará al volver internet.';
+            } finally {
+                syncBusy = false;
+                renderSyncUI();
+            }
+        }
+
+        // Subida rápida de un cambio local (solo si la nube no ha cambiado desde la última vez)
+        async function syncPush(keepalive) {
+            if (!syncAvailable() || syncBusy || !syncToken()) return;
+            const m = syncMeta();
+            if (!m.enabled || !m.dirty) return;
+            if (!m.fileId) { syncNow({ quiet: true }); return; }
+            syncBusy = true; renderSyncUI();
+            try {
+                const info = await driveFileInfo(m.fileId);
+                const remoteUpdatedAt = (info.appProperties && info.appProperties.updatedAt) || info.modifiedTime;
+                if (remoteUpdatedAt !== m.baseUpdatedAt) {
+                    syncBusy = false;
+                    await syncNow();                 // ha cambiado en otro dispositivo: sincronización completa
+                    return;
+                }
+                const payload = cloudPayload();
+                await driveUpload(m.fileId, payload, keepalive);
+                setSyncMeta({ baseUpdatedAt: payload.updatedAt, dirty: false, lastSyncAt: new Date().toISOString() });
+                syncLastError = '';
+            } catch (e) {
+                if (e.code === 404) setSyncMeta({ fileId: null, baseUpdatedAt: null });
+                if (e.code === 401) syncLastError = 'El permiso de Google ha caducado: toca la nube para renovarlo.';
+            } finally {
+                syncBusy = false;
+                renderSyncUI();
+            }
+        }
+
+        // Llamado por saveAllToStorage cuando cambian los datos en este dispositivo
+        function syncOnLocalChange() {
+            if (syncApplyingRemote || !syncAvailable()) return;
+            const m = syncMeta();
+            if (!m.enabled) return;
+            setSyncMeta({ dirty: true, localUpdatedAt: new Date().toISOString() });
+            clearTimeout(syncPushTimer);
+            syncPushTimer = setTimeout(() => syncPush(false), 4000);
+            renderSyncUI();
+        }
+
+        // ---- Conflicto: cambios en este dispositivo y en otro a la vez ----
+        function openSyncConflict() {
+            const box = document.getElementById('syncConflictModal');
+            if (!box || !syncPendingConflict) return;
+            const { remote } = syncPendingConflict;
+            const local = buildState();
+            const m = syncMeta();
+            box.innerHTML = `
+                <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-amber-300 space-y-4 my-8">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-100 text-2xl flex items-center justify-center shrink-0">☁️</div>
+                        <div>
+                            <h3 class="font-black text-base text-slate-900">Hay cambios en dos dispositivos</h3>
+                            <p class="text-xs text-slate-500">Elige qué datos quieres conservar. Los otros se guardan en una copia de seguridad.</p>
+                        </div>
+                    </div>
+                    <button onclick="resolveSyncConflict('local')" class="w-full text-left p-4 rounded-2xl border-2 border-slate-200 hover:border-emerald-400 transition space-y-1">
+                        <p class="text-sm font-black text-slate-900">📱 Los de este dispositivo</p>
+                        <p class="text-[11px] text-slate-500">${escapeHtml(deviceLabel())} · ${escapeHtml(timeAgo(m.localUpdatedAt) || '')}</p>
+                        <p class="text-[11px] text-slate-600">${escapeHtml(stateSummary(local))}</p>
+                    </button>
+                    <button onclick="resolveSyncConflict('remote')" class="w-full text-left p-4 rounded-2xl border-2 border-slate-200 hover:border-emerald-400 transition space-y-1">
+                        <p class="text-sm font-black text-slate-900">☁️ Los de la nube</p>
+                        <p class="text-[11px] text-slate-500">${escapeHtml(remote.device || 'Otro dispositivo')} · ${escapeHtml(timeAgo(remote.updatedAt) || '')}</p>
+                        <p class="text-[11px] text-slate-600">${escapeHtml(stateSummary(remote.data || {}))}</p>
+                    </button>
+                </div>`;
+            box.classList.remove('hidden');
+        }
+
+        async function resolveSyncConflict(choice) {
+            const c = syncPendingConflict;
+            const box = document.getElementById('syncConflictModal');
+            if (box) box.classList.add('hidden');
+            if (!c) return;
+            syncPendingConflict = null;
+            const now = new Date().toISOString();
+            if (choice === 'remote') {
+                writeBackup('safety', buildState(), 'Datos de este dispositivo antes de usar los de la nube');
+                applyCloudState(c.remote);
+                setSyncMeta({ fileId: c.file.id, baseUpdatedAt: c.remoteUpdatedAt, dirty: false, lastSyncAt: now, localUpdatedAt: c.remoteUpdatedAt });
+                showToast('☁️ Ahora tienes los datos de la nube.', 'ok');
+            } else {
+                try { writeBackup('safety', sanitizeState(c.remote.data), 'Datos de la nube antes de sustituirlos'); } catch (e) {}
+                syncBusy = true; renderSyncUI();
+                try {
+                    const payload = Object.assign(cloudPayload(), { updatedAt: now });
+                    await driveUpload(c.file.id, payload);
+                    setSyncMeta({ fileId: c.file.id, baseUpdatedAt: now, dirty: false, lastSyncAt: now, localUpdatedAt: now });
+                    showToast('☁️ La nube tiene ahora los datos de este dispositivo.', 'ok');
+                } catch (e) {
+                    syncLastError = 'No se pudo subir: se reintentará.';
+                } finally {
+                    syncBusy = false;
+                }
+            }
+            renderSyncUI();
+        }
+
+        // ---- Activar / desactivar ----
+        function connectGoogleDrive() {
+            if (!syncAvailable()) return;
+            setSyncMeta({ enabled: true, needsTap: false, fileId: null, baseUpdatedAt: null, dirty: true, localUpdatedAt: new Date().toISOString() });
+            startGoogleAuth('connect');
+        }
+
+        function syncTap() {
+            if (!syncAvailable()) { toggleDataModal(true); return; }
+            const m = syncMeta();
+            if (!m.enabled) { toggleDataModal(true); return; }
+            if (!syncToken()) { startGoogleAuth('tap'); return; }
+            syncNow();
+        }
+
+        async function disconnectGoogleDrive() {
+            if (!confirm('¿Desconectar Google Drive en este dispositivo?\n\nTus datos se quedan aquí y en tu Drive; simplemente dejarán de sincronizarse en este dispositivo.')) return;
+            const token = syncToken();
+            if (token) { try { await fetch('https://oauth2.googleapis.com/revoke?token=' + encodeURIComponent(token), { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }); } catch (e) {} }
+            clearSyncToken();
+            try { localStorage.removeItem(SYNC_META_KEY); } catch (e) {}
+            syncLastError = '';
+            renderSyncUI();
+        }
+
+        // ---- Interfaz ----
+        function syncStatus() {
+            if (!syncAvailable()) return { key: 'off' };
+            const m = syncMeta();
+            if (!m.enabled) return { key: 'off' };
+            if (syncBusy) return { key: 'busy' };
+            if (syncPendingConflict) return { key: 'conflict' };
+            if (!syncToken() || m.needsTap) return { key: 'tap' };
+            if (syncLastError) return { key: 'error' };
+            if (m.dirty) return { key: 'pending' };
+            return { key: 'ok' };
+        }
+
+        function renderSyncUI() {
+            const btn = document.getElementById('btnSync');
+            const st = syncStatus();
+            if (btn) {
+                const m = syncMeta();
+                const look = {
+                    off: ['bg-white/10 text-slate-200 border-white/20', 'fa-cloud', 'Nube', 'Sincronizar con Google Drive'],
+                    busy: ['bg-blue-500/20 text-blue-100 border-blue-400/40', 'fa-rotate fa-spin', 'Sincronizando', 'Sincronizando…'],
+                    ok: ['bg-emerald-500/20 text-emerald-100 border-emerald-400/40', 'fa-cloud', 'Al día', `Sincronizado ${timeAgo(m.lastSyncAt)}`],
+                    pending: ['bg-emerald-500/20 text-emerald-100 border-emerald-400/40', 'fa-cloud-arrow-up', 'Subiendo', 'Cambios pendientes de subir'],
+                    tap: ['bg-amber-400 text-slate-950 border-amber-300 animate-pulse', 'fa-cloud-arrow-down', 'Sincronizar', 'Toca para sincronizar con Google Drive'],
+                    error: ['bg-amber-400/90 text-slate-950 border-amber-300', 'fa-triangle-exclamation', 'Nube', syncLastError],
+                    conflict: ['bg-rose-500 text-white border-rose-400', 'fa-code-compare', 'Elegir', 'Hay cambios en dos dispositivos']
+                }[st.key];
+                btn.className = `${syncAvailable() ? '' : 'hidden '}px-3.5 py-2 rounded-xl border text-xs sm:text-sm font-black transition shadow-sm flex items-center gap-2 ${look[0]}`;
+                btn.title = look[3];
+                btn.innerHTML = `<i class="fa-solid ${look[1]} text-sm"></i><span>${look[2]}</span>`;
+            }
+            renderSyncPanel();
+        }
+
+        function renderSyncPanel() {
+            const box = document.getElementById('syncPanel');
+            if (!box) return;
+            if (!GOOGLE_CLIENT_ID) { box.innerHTML = ''; box.classList.add('hidden'); return; }
+            box.classList.remove('hidden');
+            if (!isWebOrigin() || !STORAGE_OK) {
+                box.innerHTML = `
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-2">
+                        <p class="font-black text-slate-900">☁️ Sincronización con Google Drive</p>
+                        <p>Solo funciona en la app instalada o en su versión web, no en el archivo descargado.</p>
+                        <button onclick="installNow()" class="px-3.5 py-2 rounded-xl bg-slate-900 text-amber-300 font-black">Abrir la app con mis datos</button>
+                    </div>`;
+                return;
+            }
+            const m = syncMeta();
+            const st = syncStatus();
+            if (!m.enabled) {
+                box.innerHTML = `
+                    <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-2">
+                        <p class="font-black text-sm">☁️ Sincroniza tus dispositivos con Google Drive</p>
+                        <p class="leading-relaxed">Conecta tu cuenta de Google en cada dispositivo (ordenador, móvil, tablet) y tus progresos se mantendrán iguales en todos. Se guardan en una <b>carpeta oculta de tu Drive</b> que solo esta app puede ver.</p>
+                        <button onclick="connectGoogleDrive()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black flex items-center gap-2"><i class="fa-brands fa-google"></i> Conectar con Google</button>
+                    </div>`;
+                return;
+            }
+            const line = {
+                busy: 'Sincronizando…',
+                ok: `Al día · última sincronización ${escapeHtml(timeAgo(m.lastSyncAt))}`,
+                pending: 'Hay cambios esperando a subir (unos segundos).',
+                tap: 'El permiso de Google ha caducado. Toca «Sincronizar ahora» para renovarlo.',
+                error: escapeHtml(syncLastError),
+                conflict: 'Hay cambios en dos dispositivos: elige cuáles conservar.'
+            }[st.key] || '';
+            box.innerHTML = `
+                <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <p class="font-black text-sm">☁️ Sincronización con Google Drive</p>
+                        <span class="px-2 py-0.5 rounded-md text-[10px] font-black ${st.key === 'ok' ? 'bg-emerald-600 text-white' : 'bg-amber-300 text-amber-950'}">${st.key === 'ok' ? 'Activa' : 'Atención'}</span>
+                    </div>
+                    ${m.email ? `<p>Cuenta: <b>${escapeHtml(m.email)}</b></p>` : ''}
+                    <p>${line}</p>
+                    <div class="flex flex-wrap gap-2 pt-1">
+                        <button onclick="syncTap()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black flex items-center gap-1.5"><i class="fa-solid fa-rotate"></i> Sincronizar ahora</button>
+                        ${st.key === 'conflict' ? '<button onclick="openSyncConflict()" class="px-3.5 py-2 rounded-xl bg-rose-600 text-white font-black">Elegir datos</button>' : ''}
+                        <button onclick="disconnectGoogleDrive()" class="px-3.5 py-2 rounded-xl bg-white border border-emerald-300 text-emerald-800 font-bold">Desconectar</button>
+                    </div>
+                    <p class="text-[10px] text-emerald-800/80">Se sincroniza al abrir la app, al volver a ella y unos segundos después de cada cambio.</p>
+                </div>`;
+        }
+
+        // Al volver a la app (otra pestaña, otra app del móvil…): traer cambios; al salir: subir lo pendiente
+        document.addEventListener('visibilitychange', () => {
+            if (!syncAvailable() || !syncMeta().enabled) return;
+            if (document.visibilityState === 'visible') {
+                if (syncToken()) syncNow({ quiet: false });
+                else renderSyncUI();
+            } else if (syncMeta().dirty) {
+                clearTimeout(syncPushTimer);
+                syncPush(true);
+            }
+        });
+        window.addEventListener('online', () => { if (syncAvailable() && syncMeta().enabled && syncToken()) syncNow({ quiet: true }); });
+
+        function syncAfterStartup() {
+            renderSyncUI();
+            if (!syncAvailable()) return;
+            const m = syncMeta();
+            if (m.enabled && syncToken()) syncNow();
+        }
+
         let currentWizardStep = 1;
         const totalWizardSteps = 5;
 
@@ -4620,7 +5116,7 @@
                     <div class="space-y-3">
                         <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-950 space-y-1.5 leading-relaxed">
                             <p class="font-bold flex items-center gap-1.5 text-amber-900 text-sm">
-                                <i class="fa-solid fa-graduation-cap text-amber-600"></i> ¡Bienvenido al Planificador Jagpino v26!
+                                <i class="fa-solid fa-graduation-cap text-amber-600"></i> ¡Bienvenido al Planificador Jagpino v27!
                             </p>
                             <p>
                                 Diseñado para estudiantes de Derecho en la UNED que compaginan trabajo y familia. Este planificador no reparte el tiempo a ojo: utiliza un <b>Algoritmo de Ponderación Estadística</b> basado en la dificultad histórica de cada asignatura.
