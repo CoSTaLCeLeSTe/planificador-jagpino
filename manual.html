@@ -1,0 +1,1215 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual · Planificador Jagpino</title>
+<meta name="description" content="Manual completo del Planificador Jagpino v29.2 para el grado en Derecho de la UNED: instalación, plan diario, repasos, exámenes y PEC, expediente, sincronización y preguntas frecuentes.">
+<meta name="theme-color" content="#064e3b">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+  :root { --bg: #f6f7f4; --card: #ffffff; --ink: #0f172a; --ink2: #334155; --muted: #64748b; --line: #e2e8f0; --em: #059669; --em-d: #064e3b; --em-l: #ecfdf5; --am: #f59e0b; --am-l: #fffbeb; --th: #f1f5f9; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0b1220; --card: #111a2e; --ink: #e2e8f0; --ink2: #cbd5e1; --muted: #94a3b8; --line: #263450; --em-l: rgba(16,185,129,.12); --am-l: rgba(245,158,11,.12); --th: #16213a; }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+  body { margin: 0; font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif; background: var(--bg); color: var(--ink); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  a { color: var(--em); }
+  .top { position: sticky; top: 0; z-index: 20; background: rgba(2,6,23,.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,.06); }
+  .top .in { max-width: 1240px; margin: 0 auto; padding: 0 20px; height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .brand { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; font-weight: 800; font-size: 14px; letter-spacing: .02em; }
+  .brand img { width: 32px; height: 32px; border-radius: 9px; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 12px; font-weight: 800; font-size: 13px; text-decoration: none; border: 0; cursor: pointer; }
+  .btn-am { background: var(--am); color: #111827; }
+  .btn-ghost { background: rgba(255,255,255,.08); color: #e2e8f0; border: 1px solid rgba(255,255,255,.18); }
+  .hero { background: linear-gradient(160deg, #020617 0%, #0f172a 55%, #064e3b 130%); color: #fff; padding: 44px 20px 40px; }
+  .hero .in { max-width: 1240px; margin: 0 auto; }
+  .hero h1 { margin: 10px 0 8px; font-size: clamp(28px, 4.4vw, 46px); line-height: 1.08; letter-spacing: -.02em; }
+  .hero p { margin: 0; color: #cbd5e1; max-width: 46em; }
+  .pill { display: inline-block; padding: 5px 11px; border-radius: 999px; background: rgba(16,185,129,.16); border: 1px solid rgba(52,211,153,.35); color: #a7f3d0; font-size: 12px; font-weight: 700; }
+  .layout { max-width: 1240px; margin: 0 auto; padding: 28px 20px 60px; display: grid; grid-template-columns: 270px 1fr; gap: 36px; align-items: start; }
+  nav.toc { position: sticky; top: 80px; max-height: calc(100vh - 100px); overflow-y: auto; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px 12px; }
+  nav.toc p { margin: 0 8px 8px; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; }
+  nav.toc a { display: block; padding: 6px 8px; border-radius: 10px; color: var(--ink2); text-decoration: none; font-size: 13.5px; font-weight: 600; line-height: 1.35; }
+  nav.toc a:hover, nav.toc a.on { background: var(--em-l); color: var(--em-d); }
+  @media (prefers-color-scheme: dark) { nav.toc a:hover, nav.toc a.on { color: #a7f3d0; } }
+  article { min-width: 0; }
+  article h2 { font-size: clamp(22px, 2.6vw, 28px); letter-spacing: -.015em; margin: 48px 0 14px; padding-top: 18px; border-top: 1px solid var(--line); line-height: 1.2; }
+  article h2:first-child { margin-top: 0; border-top: 0; padding-top: 0; }
+  article h3 { font-size: 18px; margin: 28px 0 8px; }
+  article p, article li { color: var(--ink2); font-size: 15.5px; }
+  article strong { color: var(--ink); }
+  article ul, article ol { padding-left: 22px; }
+  article li { margin: 4px 0; }
+  article code { background: var(--th); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-size: .9em; }
+  .tbl { overflow-x: auto; margin: 14px 0 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--ink2); }
+  th { background: var(--th); color: var(--ink); font-weight: 800; font-size: 13px; }
+  tr:last-child td { border-bottom: 0; }
+  blockquote.callout { margin: 16px 0; padding: 12px 16px; border-radius: 14px; background: var(--am-l); border: 1px solid rgba(245,158,11,.35); }
+  blockquote.callout p { margin: 0; }
+  .formula { margin: 12px 0; padding: 14px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); overflow-x: auto; text-align: center; }
+  .formula.raw { font-family: ui-monospace, monospace; font-size: 13px; text-align: left; white-space: pre-wrap; }
+  .tocm { display: none; }
+  .foot { max-width: 1240px; margin: 0 auto; padding: 0 20px 40px; color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: space-between; }
+  .foot a { color: var(--muted); }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; gap: 18px; padding-top: 18px; }
+    nav.toc { display: none; }
+    .tocm { display: block; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 16px; }
+    .tocm summary { font-weight: 800; cursor: pointer; }
+    .tocm ol { margin: 10px 0 0; padding-left: 0; list-style: none; }
+    .tocm a { display: block; padding: 6px 0; color: var(--ink2); text-decoration: none; font-weight: 600; font-size: 14.5px; }
+    .top .btn-ghost { display: none; }
+    .brand span { display: none; }
+  }
+  @media print {
+    .top, nav.toc, .tocm, .hero .btns { display: none !important; }
+    .layout { display: block; padding: 0; }
+    body { background: #fff; color: #000; }
+    .hero { background: #fff; color: #000; padding: 0 0 12px; }
+    .hero p { color: #333; }
+    article h2 { break-after: avoid; }
+    .tbl, blockquote, .formula { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="in">
+    <a class="brand" href="presentacion.html"><img src="icon-192.png" alt=""><span>PLANIFICADOR JAGPINO</span></a>
+    <div style="display:flex;gap:8px">
+      <a class="btn btn-ghost" href="presentacion.html">← Presentación</a>
+      <button class="btn btn-ghost" onclick="window.print()">🖨️ Imprimir / PDF</button>
+      <a class="btn btn-am" href="./">Abrir la app</a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="in">
+    <span class="pill">📘 Versión 29.2 · noviembre 2026</span>
+    <h1>📘 Manual del Planificador Jagpino v29.2</h1>
+    <p>Todo lo que hace el Planificador, paso a paso: desde instalarlo y pasar tus datos de la v26 hasta el expediente, la sincronización entre dispositivos y las preguntas frecuentes.</p>
+  </div>
+</section>
+
+<div class="layout">
+  <nav class="toc" aria-label="Índice"><p>Índice</p><ol><li><a href="#bienvenida-qué-es-y-qué-hace-por-ti">👋 Bienvenida: qué es y qué hace por ti</a></li><li><a href="#actualizar">⬆️ ¿Usabas la v26 o una anterior? Pásate a la v29.2</a></li><li><a href="#primeros-pasos">🚀 Primeros pasos</a></li><li><a href="#instalar-la-app-en-tu-dispositivo">📲 Instalar la app en tu dispositivo</a></li><li><a href="#configuración-inicial-paso-a-paso">⚙️ Configuración inicial paso a paso</a></li><li><a href="#pestaña-1-panel-y-plan">🎯 Pestaña 1 · Panel y Plan</a></li><li><a href="#repasos-rápidos-a-la-semana-y-al-mes">🔁 Repasos rápidos: a la semana y al mes</a></li><li><a href="#pestaña-2-registro-semanal">📅 Pestaña 2 · Registro Semanal</a></li><li><a href="#pestaña-3-exámenes-y-pec">🏁 Pestaña 3 · Exámenes y PEC</a></li><li><a href="#pestaña-4-expediente">🎓 Pestaña 4 · Expediente</a></li><li><a href="#cómo-calcula-la-app">🧮 Cómo calcula la app</a></li><li><a href="#tus-datos-exportar-importar-y-copias">💾 Tus datos: exportar, importar y copias</a></li><li><a href="#apariencia-y-actualizaciones">🌙 Apariencia y actualizaciones</a></li><li><a href="#rutina-recomendada">🔄 Rutina recomendada</a></li><li><a href="#preguntas-frecuentes">❓ Preguntas frecuentes</a></li><li><a href="#chuleta-final">🗂️ Chuleta final</a></li></ol></nav>
+  <article>
+    <details class="tocm"><summary>📑 Índice del manual</summary><ol><li><a href="#bienvenida-qué-es-y-qué-hace-por-ti">👋 Bienvenida: qué es y qué hace por ti</a></li><li><a href="#actualizar">⬆️ ¿Usabas la v26 o una anterior? Pásate a la v29.2</a></li><li><a href="#primeros-pasos">🚀 Primeros pasos</a></li><li><a href="#instalar-la-app-en-tu-dispositivo">📲 Instalar la app en tu dispositivo</a></li><li><a href="#configuración-inicial-paso-a-paso">⚙️ Configuración inicial paso a paso</a></li><li><a href="#pestaña-1-panel-y-plan">🎯 Pestaña 1 · Panel y Plan</a></li><li><a href="#repasos-rápidos-a-la-semana-y-al-mes">🔁 Repasos rápidos: a la semana y al mes</a></li><li><a href="#pestaña-2-registro-semanal">📅 Pestaña 2 · Registro Semanal</a></li><li><a href="#pestaña-3-exámenes-y-pec">🏁 Pestaña 3 · Exámenes y PEC</a></li><li><a href="#pestaña-4-expediente">🎓 Pestaña 4 · Expediente</a></li><li><a href="#cómo-calcula-la-app">🧮 Cómo calcula la app</a></li><li><a href="#tus-datos-exportar-importar-y-copias">💾 Tus datos: exportar, importar y copias</a></li><li><a href="#apariencia-y-actualizaciones">🌙 Apariencia y actualizaciones</a></li><li><a href="#rutina-recomendada">🔄 Rutina recomendada</a></li><li><a href="#preguntas-frecuentes">❓ Preguntas frecuentes</a></li><li><a href="#chuleta-final">🗂️ Chuleta final</a></li></ol></details>
+    <h2 id="bienvenida-qué-es-y-qué-hace-por-ti">👋 Bienvenida: qué es y qué hace por ti</h2>
+<p>El Planificador Jagpino reparte tus horas de estudio entre las asignaturas del grado de Derecho de la UNED según su dificultad, te dice cada día qué estudiar y te avisa a tiempo de exámenes, repasos y PEC. Está pensado para quien estudia con poco tiempo, compaginando trabajo o familia.</p>
+<p>Se instala como una app más en Android, Windows o iPhone desde su dirección web. No necesita registro: tus datos se quedan en tu dispositivo y, si quieres, se sincronizan entre tus dispositivos a través de tu propio Google Drive.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Qué hace</th>
+<th>Dónde lo ves</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>⚖️ Reparte tus horas según la <strong>dificultad × nº de temas</strong> de cada asignatura</td>
+<td>Configuración (pestaña 1)</td>
+</tr>
+<tr>
+<td>✅ Te dice <strong>qué tema estudiar hoy</strong> y durante cuánto tiempo</td>
+<td>Plan de hoy (pestaña 1)</td>
+</tr>
+<tr>
+<td>🔁 Programa <strong>repasos rápidos</strong> a la semana y al mes de terminar cada tema</td>
+<td>Plan de hoy y Temario</td>
+</tr>
+<tr>
+<td>🚦 Te avisa si el ritmo que necesitas se vuelve <strong>insostenible</strong></td>
+<td>Semáforo y Asistente de decisión</td>
+</tr>
+<tr>
+<td>📝 Lleva el <strong>registro de horas</strong> semana a semana</td>
+<td>Registro Semanal (pestaña 2)</td>
+</tr>
+<tr>
+<td>🏁 Elige si te examinas en la <strong>1ª o la 2ª semana</strong> para equilibrar la carga</td>
+<td>Exámenes y PEC (pestaña 3)</td>
+</tr>
+<tr>
+<td>📄 Te recuerda las <strong>PEC</strong> antes de que venzan</td>
+<td>Plan de hoy y Calendario de PEC</td>
+</tr>
+<tr>
+<td>🔥 Te enseña tu <strong>constancia</strong> y si <strong>llegas a tiempo</strong> con el temario</td>
+<td>Panel (pestaña 1)</td>
+</tr>
+<tr>
+<td>🎓 Lleva tu <strong>expediente</strong>, tu nota media y el <strong>plan de septiembre</strong></td>
+<td>Expediente (pestaña 4)</td>
+</tr>
+<tr>
+<td>☁️ <strong>Sincroniza</strong> ordenador, móvil y tablet con tu Google Drive</td>
+<td>Datos</td>
+</tr>
+</tbody>
+</table></div>
+<p>La app tiene <strong>cuatro pestañas</strong> en la cabecera:</p>
+<ol>
+<li>🎯 <strong>Panel y Plan</strong>: tu día a día, tu constancia, la previsión del temario, el estado de cada asignatura y la configuración.</li>
+<li>📅 <strong>Registro Semanal</strong>: las horas que estudias cada semana.</li>
+<li>🏁 <strong>Exámenes y PEC</strong>: el calendario oficial de febrero, el reparto entre semanas, las PEC y el calendario con avisos.</li>
+<li>🎓 <strong>Expediente</strong>: tus notas, créditos y nota media del grado, y el plan de septiembre.</li>
+</ol>
+<blockquote class="callout">
+<p>💡 <strong>La idea clave:</strong> tú solo anotas lo que estudias y marcas los temas que terminas. La app recalcula todo lo demás.</p>
+</blockquote>
+<h2 id="actualizar">⬆️ ¿Usabas la v26 o una anterior? Pásate a la v29.2</h2>
+<p>Tus datos <strong>no se pierden</strong>. Elige tu caso:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Cómo usabas el Planificador</th>
+<th>Qué hacer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>📲 <strong>App instalada</strong> (icono en el móvil o el ordenador)</td>
+<td>Ciérrala del todo (quítala también de las apps recientes) y vuelve a abrirla con internet. Se actualiza sola con tus datos. Si abajo no pone <strong>v29.2</strong>, ciérrala y ábrela otra vez.</td>
+</tr>
+<tr>
+<td>🌐 <strong>En el navegador</strong> con la dirección web</td>
+<td>Recarga la página.</td>
+</tr>
+<tr>
+<td>📁 <strong>Archivo .html</strong> (WhatsApp, descargas)</td>
+<td>Ábrelo como siempre y pulsa <strong>«📲 Instalar»</strong> en la cabecera → <strong>«Instalar en tu…»</strong>. Se abre la versión web con tus datos incluidos y la instalas con un toque.</td>
+</tr>
+<tr>
+<td>🗂️ Versiones antiguas (v21 a v24) o no te funciona lo anterior</td>
+<td>En la versión antigua: <strong>Datos → Exportar copia</strong>. Abre <a href="https://costalceleste.github.io/planificador-jagpino/" target="_blank" rel="noopener">la versión nueva</a> y pulsa <strong>Datos → Importar copia</strong>.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Después, dos pasos opcionales que merecen la pena:</p>
+<ol>
+<li>☁️ <strong>Conecta Google Drive</strong> en cada dispositivo (Datos → «Conectar con Google») y tendrás lo mismo en el ordenador, el móvil y la tablet.</li>
+<li>✏️ <strong>Pon nombre a tus temas</strong> con el botón «✏️ Ponerle nombre» del Plan de hoy.</li>
+</ol>
+<p>A partir de ahora no tendrás que hacer nada: cuando haya una versión nueva, la app te avisa con <strong>«✨ Hay una versión nueva → Actualizar»</strong>.</p>
+<h2 id="primeros-pasos">🚀 Primeros pasos</h2>
+<p>La forma recomendada de usar el Planificador es <strong>instalarlo como app</strong> desde su dirección web: <a href="https://costalceleste.github.io/planificador-jagpino/" target="_blank" rel="noopener">costalceleste.github.io/planificador-jagpino</a></p>
+<ol>
+<li>🌐 <strong>Abre el enlace</strong>: en Android con Chrome, en Windows con Chrome o Edge, y en iPhone o iPad con Safari.</li>
+<li>📲 <strong>Instálalo</strong>: sale la ventana «Instálalo en tu…» con un solo botón para tu dispositivo (lo explica el apartado siguiente).</li>
+<li>🧭 <strong>Sigue la Guía Rápida</strong>: aparece sola la primera vez, en 5 pasos. Puedes volver a verla con el botón «Guía Rápida» de la cabecera.</li>
+<li>⚙️ <strong>Configura tus asignaturas</strong> (apartado «Configuración inicial»). En 5 minutos tienes el plan hecho.</li>
+</ol>
+<p>¿Te han pasado el archivo <code>.html</code> por WhatsApp? Ábrelo y pulsa el botón de la ventana: te lleva a la versión instalable con tus datos incluidos.</p>
+<h3 id="cómo-se-guardan-tus-datos">💾 Cómo se guardan tus datos</h3>
+<ul>
+<li>Todo se <strong>guarda solo</strong> en tu dispositivo cada vez que cambias algo. Lo verás en el aviso verde «Guardado automático» de la cabecera.</li>
+<li>Sin registro. Si quieres tener tus datos en varios dispositivos, conecta <strong>Google Drive</strong> (apartado «Tus datos»); también puedes pasarlos con un <strong>código QR</strong> o con «Datos → Exportar copia».</li>
+<li>La app instalada <strong>funciona sin conexión</strong> una vez abierta con internet al menos una vez.</li>
+<li>Si ves un <strong>aviso amarillo</strong> que dice que el navegador no está guardando tus datos, has abierto el archivo directamente desde WhatsApp u otra app. Pulsa «Instalar» para pasar a la app, o exporta una copia antes de cerrar.</li>
+<li>Un <strong>punto ámbar</strong> en el botón «Datos» indica que hace más de 14 días que no exportas una copia.</li>
+</ul>
+<blockquote class="callout">
+<p>⚠️ <strong>Importante:</strong> desinstalar la app o borrar los datos de navegación borra también tu planificación. Exporta una copia de vez en cuando.</p>
+</blockquote>
+<h2 id="instalar-la-app-en-tu-dispositivo">📲 Instalar la app en tu dispositivo</h2>
+<p>Instalado, el Planificador tiene <strong>su propio icono</strong>, se abre a pantalla completa, <strong>funciona sin conexión</strong> y guarda tu progreso en el dispositivo. La ventana de instalación aparece sola la primera vez y muestra <strong>solo tu dispositivo</strong>, con un único botón.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Dispositivo</th>
+<th>Qué haces</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🤖 Android</td>
+<td>Abre el enlace en <strong>Chrome</strong> y pulsa <strong>«Instalar ahora»</strong>: sale el instalador de Android y el icono queda en tu pantalla de inicio.</td>
+</tr>
+<tr>
+<td>🪟 Windows</td>
+<td>Abre el enlace en <strong>Chrome o Edge</strong> y pulsa <strong>«Instalar ahora»</strong>: la app queda en el menú Inicio, en su propia ventana.</td>
+</tr>
+<tr>
+<td>🍎 iPhone / iPad</td>
+<td>Abre el enlace en <strong>Safari</strong> y pulsa <strong>«Instalar en tu iPhone»</strong>. Una flecha te señala el botón <strong>Compartir ⬆️</strong> (si no lo ves, toca antes «⋯») → <strong>«Añadir a pantalla de inicio»</strong> → <strong>«Añadir»</strong>.</td>
+</tr>
+<tr>
+<td>📁 Archivo de WhatsApp</td>
+<td>Pulsa <strong>«Instalar en tu…»</strong>: se abre la versión web <strong>con tus datos incluidos</strong> y la instalas con un toque.</td>
+</tr>
+</tbody>
+</table></div>
+<p>Puedes volver a abrir la ventana con el botón <strong>«📲 Instalar»</strong> de la cabecera. Dentro de la app instalada ese botón desaparece.</p>
+<h3 id="si-no-sale-el-instalador-a-la-primera">⏳ Si no sale el instalador a la primera</h3>
+<p>En Android y Windows, Chrome solo activa su instalador cuando has tocado la página y llevas unos 30 segundos en ella. Si pulsas antes, la app te señala con una flecha el camino manual, que funciona desde el primer momento:</p>
+<ul>
+<li><strong>Android</strong>: menú <strong>⋮</strong> (arriba a la derecha) → <strong>«Instalar aplicación»</strong>.</li>
+<li><strong>Windows</strong>: icono de <strong>instalar</strong> de la barra de direcciones, o menú <strong>⋮</strong> → <strong>«Enviar, guardar y compartir»</strong> → <strong>«Instalar página como aplicación»</strong> (en Edge: <strong>⋯ → Aplicaciones → Instalar este sitio como una aplicación</strong>).</li>
+</ul>
+<p>En cuanto Chrome activa su instalador, el botón «Instalar ahora» vuelve a funcionar directamente.</p>
+<h3 id="tus-datos-en-la-app-instalada">💾 Tus datos en la app instalada</h3>
+<ul>
+<li><strong>Android y Windows</strong>: la app comparte los datos con la versión web en ese navegador. Lo que ya tenías aparece dentro sin hacer nada.</li>
+<li><strong>iPhone y iPad</strong>: la app instalada guarda sus datos aparte. Al pulsar «Instalar en tu iPhone», el Planificador <strong>copia tus datos</strong>; abre la app y pulsa <strong>«📋 Pegar mis datos»</strong>.</li>
+<li><strong>Desde el archivo de WhatsApp</strong>: el botón de instalar se lleva tus datos a la versión web. Si allí ya había otros, te pregunta antes de sustituirlos y guarda una copia de seguridad.</li>
+</ul>
+<h3 id="actualizaciones">🔄 Actualizaciones</h3>
+<p>La app se actualiza sola cuando la abres con conexión y <strong>conserva tus datos</strong>. No tienes que volver a instalarla. Si la tenías abierta, te avisa con <strong>«✨ Hay una versión nueva»</strong>. La versión que tienes aparece abajo del todo, en el pie de la página.</p>
+<h2 id="configuración-inicial-paso-a-paso">⚙️ Configuración inicial paso a paso</h2>
+<p>Todo se configura en la tarjeta <strong>«Configuración del Semestre y Materias»</strong> de la pestaña 1, debajo del calendario. Las casillas <strong>amarillas</strong> son las que puedes cambiar; el plan se recalcula al instante.</p>
+<h3 id="1-parámetros-del-cuatrimestre">1️⃣ Parámetros del cuatrimestre</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Casilla</th>
+<th>Qué poner</th>
+<th>Consejo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>📚 Nº asignaturas</td>
+<td>Cuántas vas a preparar (1 a 10)</td>
+<td>Pon solo las que de verdad vas a presentar</td>
+</tr>
+<tr>
+<td>⏱️ Horas / Semana (total)</td>
+<td>Tus horas semanales de estudio</td>
+<td>Si lo cambias aquí, se reparte entre tus días respetando los libres</td>
+</tr>
+<tr>
+<td>📅 Inicio estudio</td>
+<td>El día en que empiezas</td>
+<td>Por defecto, 15 de septiembre</td>
+</tr>
+<tr>
+<td>🏁 Examen por defecto</td>
+<td>Fecha para asignaturas <strong>sin</strong> calendario oficial</td>
+<td>Solo afecta a las del 2º cuatrimestre; las demás usan la pestaña 3</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="2-horas-por-día-l-m-x-j-v-s-d">2️⃣ Horas por día (L M X J V S D)</h3>
+<p>Indica cuántas horas tienes de verdad <strong>cada día de la semana</strong>. Pon <strong>0</strong> en tus días libres. La suma es tu total semanal.</p>
+<ul>
+<li>Admite cuartos de hora: 1,25 h = 1 h 15 min.</li>
+<li>«<strong>Repartir igual</strong>» reparte tu total semanal a partes iguales entre los 7 días.</li>
+<li>Ejemplo: L-V 1,5 h, S 4 h, D 0 = 11,5 h/semana, con el domingo libre.</li>
+</ul>
+<h3 id="días-libres">🌴 Días libres</h3>
+<p>Justo debajo de las horas por día está el recuadro <strong>Días libres</strong>, para vacaciones, viajes, bodas o cualquier día en que no vayas a estudiar.</p>
+<ol>
+<li>Elige <strong>Desde</strong> y <strong>Hasta</strong> (para un solo día, pon la misma fecha o deja «Hasta» vacío).</li>
+<li>Escribe un motivo si quieres («Navidad», «Viaje»).</li>
+<li>Pulsa <strong>+ Añadir</strong>.</li>
+</ol>
+<p>El plan deja esos días a 0 h y <strong>reparte ese tiempo en el resto de días</strong> hasta el examen. Ese día el Plan de hoy muestra 🌴 <em>Día libre</em> y la racha no se rompe. Para quitarlo, pulsa la ✕ de su etiqueta.</p>
+<h3 id="3-tus-asignaturas">3️⃣ Tus asignaturas</h3>
+<p>En la tabla, una fila por asignatura:</p>
+<ul>
+<li><strong>Asignatura</strong>: elige en la lista (están las 45 del grado). No repitas ninguna: la segunda se ignora.</li>
+<li><strong>Nº temas</strong>: los temas o lecciones del programa (mira la guía). Es clave: con el número real el reparto es mucho más fiable.</li>
+<li><strong>Examen</strong>: se rellena solo con el calendario oficial. Pulsa el botón para ir a la pestaña 3 y cambiarlo.</li>
+</ul>
+<p>Las demás columnas las calcula la app:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Columna</th>
+<th>Qué significa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🏷️ Dificultad</td>
+<td>Índice estadístico de cada asignatura (Normal, Media o Alta)</td>
+</tr>
+<tr>
+<td>⚖️ Carga ponderada</td>
+<td>Su peso en tu cuatrimestre: dificultad × temas, en %</td>
+</tr>
+<tr>
+<td>⏳ Horas iniciales</td>
+<td>Todas las horas que le asigna el plan; debajo, cuántas son de repaso</td>
+</tr>
+<tr>
+<td>⚡ Ritmo inicial / tema</td>
+<td>Tiempo que puedes dedicar a cada tema en la primera vuelta</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote class="callout">
+<p>✅ <strong>Listo.</strong> Con esto ya tienes el plan completo: el Plan de hoy, el calendario y el reparto de exámenes se generan solos.</p>
+</blockquote>
+<h2 id="pestaña-1-panel-y-plan">🎯 Pestaña 1 · Panel y Plan</h2>
+<p>Es tu pantalla de cada día: de arriba abajo responde a <em>¿cómo voy?</em>, <em>¿qué hago hoy?</em> y <em>¿qué asignatura necesita más atención?</em></p>
+<h3 id="el-semáforo-banner-superior">🚦 El semáforo (banner superior)</h3>
+<p>Compara las horas diarias que necesitas para llegar a tiempo con tu media habitual. El límite rojo es <strong>4 h al día</strong>.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Tramo</th>
+<th>Nombre</th>
+<th>Qué significa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1/5 🌿</td>
+<td>Modo Jurista Zen</td>
+<td>Vas a tu ritmo o mejor</td>
+</tr>
+<tr>
+<td>2/5 ☕</td>
+<td>Doble Espresso</td>
+<td>Te pide un poco más de lo habitual</td>
+</tr>
+<tr>
+<td>3/5 ⚡</td>
+<td>Tensión en el Tribunal</td>
+<td>El retraso empieza a notarse</td>
+</tr>
+<tr>
+<td>4/5 🔥</td>
+<td>Codos de Hierro</td>
+<td>Muy cerca del límite de 4 h/día</td>
+</tr>
+<tr>
+<td>5/5 🚨</td>
+<td>Alarma Máxima</td>
+<td>Más de 4 h/día: abre el <strong>Asistente de decisión</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>Debajo verás un resumen de tu última semana (si llegaste al objetivo, te quedaste corto o anotaste 0 h).</p>
+<h3 id="plan-de-hoy">✅ Plan de hoy</h3>
+<p>Te dice <strong>qué estudiar hoy y cuánto tiempo</strong>. En la cabecera ves la fecha, la semana del cuatrimestre y tu <strong>objetivo de hoy</strong>.</p>
+<ul>
+<li>📖 <strong>Bloques de estudio</strong> (hasta 3): asignatura, tema que toca y tiempo. Van primero las asignaturas que más retraso llevan respecto al plan. Si el tiempo da para dos temas, te propone dos; si no da para uno entero, te avisa de que «hoy avanzas parte del tema».</li>
+<li>«<strong>Anotar</strong>» suma ese tiempo a tu Registro Semanal.</li>
+<li>«<strong>Tema N terminado</strong>» lo marca en el temario y programa sus repasos.</li>
+<li>🔁 <strong>Repasos rápidos</strong>: los que te tocan hoy, con su botón «✓ Hecho» (apartado siguiente).</li>
+<li>📊 <strong>Hecho hoy</strong>: barra de progreso del objetivo del día.</li>
+<li>🧾 <strong>Anotado hoy</strong>: lo que has anotado; la ✕ lo deshace.</li>
+</ul>
+<p>Y estos avisos, cuando tocan:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Aviso</th>
+<th>Cuándo sale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🍀 Hoy te examinas</td>
+<td>El día de un examen</td>
+</tr>
+<tr>
+<td>🎯 Víspera</td>
+<td>El día antes de un examen: todo el tiempo va a esa asignatura</td>
+</tr>
+<tr>
+<td>🔁 Semana de repaso</td>
+<td>Esos 7 días solo se repasan las asignaturas de la semana de exámenes siguiente</td>
+</tr>
+<tr>
+<td>📄 PEC</td>
+<td>Una PEC vence en los próximos 14 días (o venció hace poco sin marcarla)</td>
+</tr>
+<tr>
+<td>🧯 Mucho retraso</td>
+<td>El objetivo no cabe en un día: se limita a 4 h (o al doble de tus horas de ese día)</td>
+</tr>
+<tr>
+<td>😌 Día libre / 🎉 Plan completado / 🚀 Vas por delante</td>
+<td>Según tu disponibilidad y lo que lleves hecho</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="los-cinco-indicadores">📈 Los cinco indicadores</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Indicador</th>
+<th>Qué te dice</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>⏱️ Horas estudiadas</td>
+<td>Total anotado frente a lo previsto <strong>hasta ayer</strong></td>
+</tr>
+<tr>
+<td>⚖️ Balance / Desvío</td>
+<td>Horas de adelanto (verde) o de retraso (rojo)</td>
+</tr>
+<tr>
+<td>📆 Semanas restantes</td>
+<td>Tiempo hasta tu próximo examen</td>
+</tr>
+<tr>
+<td>🎯 Meta semanal reajustada</td>
+<td>Horas por semana que necesitas desde hoy para llegar, y su tramo</td>
+</tr>
+<tr>
+<td>📚 Temas completados</td>
+<td>Temas terminados, % del temario y repasos pendientes</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="calendario-del-semestre">🗓️ Calendario del semestre</h3>
+<p>Una casilla por semana con sus horas anotadas. Púsala para ir a esa semana del Registro.</p>
+<ul>
+<li>🟩 objetivo cumplido · 🟦 al menos el 70 % · 🟨 por debajo · 🟥 sin registrar · ⬜ próximas · <strong>HOY</strong> = semana actual.</li>
+<li>Etiquetas dentro de cada semana: 🔁 semana de repaso, 📝 examen y 📄 PEC.</li>
+<li>Debajo, la lista de tus exámenes con los días que faltan.</li>
+</ul>
+<h3 id="estado-de-asignaturas">📋 Estado de asignaturas</h3>
+<p>Por asignatura: horas del plan, hechas y restantes, y su estado (<strong>adelanto</strong>, <strong>al día</strong> o <strong>retraso</strong>). La barra muestra lo hecho; la <strong>línea oscura</strong>, dónde deberías ir. La última columna es el <strong>nuevo ritmo por tema</strong>, recalculado con lo que te queda.</p>
+<h3 id="temario-completado">📗 Temario completado</h3>
+<p>Un botón por tema. Púlsalo al terminarlo (o usa «Marcar siguiente»). Vuelve a pulsarlo para desmarcarlo.</p>
+<ul>
+<li>⬜ pendiente · 🟢 claro: terminado · 🟢 medio: repaso de la semana hecho · 🟢 oscuro: repaso del mes hecho.</li>
+<li>Un <strong>aro ámbar</strong> indica que al tema le toca repaso. Pasa el dedo o el ratón por encima para ver sus fechas.</li>
+</ul>
+<p><strong>✏️ Nombres de los temas.</strong> Pulsa <strong>«✏️ Ponerle nombre»</strong> junto al tema en el Plan de hoy, o el botón <strong>Nombrar temas</strong> de cada asignatura aquí abajo. Escribe un tema por línea, en orden, o pega el índice del manual: si una línea empieza por número («3.», «Tema 3:»), se usa ese número. Los nombres aparecen en el Plan de hoy («📖 Tema 6 · La responsabilidad patrimonial»), en los repasos y al pasar el ratón por cada casilla.</p>
+<h3 id="ranking-de-urgencia">🏅 Ranking de urgencia</h3>
+<p>Ordena las asignaturas de más a menos retraso y propone una acción concreta, por ejemplo: «reforzar con +2 h/sem durante las 6 semanas que quedan hasta su examen».</p>
+<h3 id="gráficos">📊 Gráficos</h3>
+<ul>
+<li><strong>Distribución de horas pendientes</strong>: qué parte del trabajo que queda es de cada asignatura.</li>
+<li><strong>Tiempo necesario por tema</strong>: el ritmo reajustado de cada una.</li>
+<li><strong>Evolución semanal</strong>: horas reales frente a la meta de cada semana (★ = semana actual).</li>
+</ul>
+<h3 id="asistente-de-decisión">🧠 Asistente de decisión</h3>
+<p>Se abre desde el banner cuando el semáforo se pone serio. Te propone qué asignatura <strong>posponer para septiembre</strong> y te enseña cómo bajarían tus horas diarias. Puedes posponer y reactivar asignaturas cuando quieras: sus horas anotadas no se pierden.</p>
+<h3 id="tu-constancia">🔥 Tu constancia</h3>
+<p>Debajo del Plan de hoy, esta tarjeta te enseña cómo de constante estás siendo.</p>
+<ul>
+<li><strong>Racha de días</strong> 🔥: días seguidos con estudio anotado. Los días a 0 h y los días libres no la rompen, y hoy cuenta aunque aún no hayas anotado nada. También ves tu mejor racha.</li>
+<li><strong>Semanas cumpliendo</strong> 🏆: semanas seguidas en las que hiciste al menos el 90 % del objetivo semanal.</li>
+<li><strong>Mapa de calor</strong>: un cuadrado por día de las últimas semanas. Cuanto más oscuro el verde, más horas. Azul claro = día libre; ámbar = semana anotada en el Registro semanal sin detalle por día.</li>
+</ul>
+<blockquote class="callout">
+<p>💡 La racha y el mapa usan lo que anotas con <strong>«Anotar»</strong> en el Plan de hoy. Si solo rellenas el Registro semanal, la racha no puede saber qué días estudiaste.</p>
+</blockquote>
+<h3 id="previsión-del-temario">🔮 Previsión del temario</h3>
+<p>A su lado, la previsión calcula para cada asignatura <strong>cuándo terminarías el temario</strong> al ritmo de temas terminados de las últimas 4 semanas, y lo compara con el inicio de su semana de repaso.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Verás</th>
+<th>Significa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🟢</td>
+<td>Llegas: terminas X días antes de la semana de repaso</td>
+</tr>
+<tr>
+<td>🔴</td>
+<td>A este ritmo no llegas: te dice cuántos temas por semana necesitas</td>
+</tr>
+<tr>
+<td>🌱</td>
+<td>Aún no hay ritmo: marca temas terminados para ver la previsión</td>
+</tr>
+<tr>
+<td>⏰</td>
+<td>Ya estás en la semana de repaso con temas por terminar</td>
+</tr>
+<tr>
+<td>✅</td>
+<td>Temario completo: toca repasar</td>
+</tr>
+</tbody>
+</table></div>
+<p>Las asignaturas que no llegan salen primero.</p>
+<h2 id="repasos-rápidos-a-la-semana-y-al-mes">🔁 Repasos rápidos: a la semana y al mes</h2>
+<p>Cada tema que terminas tiene <strong>dos repasos rápidos</strong> de 10 a 20 minutos: uno <strong>7 días</strong> después y otro <strong>30 días</strong> después. Te aparecen solos en el Plan de hoy y <strong>tú los marcas</strong> cuando los haces.</p>
+<ol>
+<li>Marca el tema como terminado (en el Plan de hoy o en el Temario).</li>
+<li>A los 7 días sale «<strong>Repaso de la semana</strong>». Repásalo y pulsa <strong>✓ Hecho</strong>.</li>
+<li>A los 30 días sale «<strong>Repaso del mes</strong>». Igual: repásalo y <strong>✓ Hecho</strong>.</li>
+</ol>
+<p>Al marcar un repaso, sus minutos se suman a tus horas de hoy. Si te equivocas, pulsa «<strong>Deshacer</strong>» en el mismo día.</p>
+<h3 id="ningún-repaso-queda-para-después-del-examen">⏰ Ningún repaso queda para después del examen</h3>
+<p>Si un repaso caería después del examen de su asignatura, la app lo <strong>adelanta al primer día de su semana de repaso</strong>. Cuando el de la semana y el del mes caen el mismo día, se hacen <strong>juntos en uno</strong>: «<em>Repaso de la semana y del mes</em>».</p>
+<p>Ejemplo con Penal I (examen el martes 26/1, semana de repaso desde el 18/1):</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Terminas el tema</th>
+<th>Repaso de la semana</th>
+<th>Repaso del mes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1/11</td>
+<td>8/11</td>
+<td>1/12</td>
+</tr>
+<tr>
+<td>25/12</td>
+<td>1/1</td>
+<td><strong>18/1</strong> (adelantado; tocaba el 24/1)</td>
+</tr>
+<tr>
+<td>14/1</td>
+<td><strong>18/1, juntos en uno</strong></td>
+<td>—</td>
+</tr>
+<tr>
+<td>20/1 (en la semana de repaso)</td>
+<td><strong>21/1, juntos en uno</strong></td>
+<td>—</td>
+</tr>
+<tr>
+<td>25/1 (víspera)</td>
+<td><strong>25/1, juntos en uno</strong></td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="cuántos-repasos-te-pone-cada-día">🧮 Cuántos repasos te pone cada día</h3>
+<ul>
+<li>Normalmente, como máximo el <strong>40 %</strong> de tu tiempo de hoy. Si hay más, el resto pasa al día siguiente; verás «+N repasos más pendientes».</li>
+<li>En tu <strong>semana de repaso</strong>, hasta el <strong>70 %</strong>, y primero los de la asignatura que se examina antes.</li>
+<li>La <strong>víspera</strong> del examen, todos los que queden de esa asignatura.</li>
+<li>En un día libre o con el plan del día cumplido, te los ofrece como <strong>opcionales</strong>.</li>
+</ul>
+<blockquote class="callout">
+<p>💡 <strong>Repaso rápido no es volver a estudiar el tema:</strong> relée tu esquema, intenta recordar las ideas clave sin mirar y haz unas preguntas tipo test.</p>
+</blockquote>
+<h2 id="pestaña-2-registro-semanal">📅 Pestaña 2 · Registro Semanal</h2>
+<p>Aquí anotas <strong>las horas reales que estudias cada semana</strong>, por asignatura. Con ellas la app calcula tu balance y reajusta el plan.</p>
+<ul>
+<li>💻 <strong>En el ordenador</strong> ves una tabla: una fila por semana y una columna por asignatura. Escribe las horas en la casilla y se guardan solas.</li>
+<li>📱 <strong>En el móvil</strong> ves una semana cada vez. Muévete con las flechas y suma o resta horas con los botones <strong>− / +</strong> (de media en media hora).</li>
+<li>⭐ La semana actual aparece marcada como <strong>«ESTA SEMANA»</strong>. Desde el calendario de la pestaña 1 puedes saltar directamente a cualquier semana.</li>
+<li>🎯 Cada semana muestra su <strong>objetivo</strong> (la suma de tus horas por día) y su <strong>balance</strong>. Mientras la semana está en curso verás «en curso · faltan X h», no un retraso.</li>
+</ul>
+<blockquote class="callout">
+<p>⚠️ <strong>No anotes dos veces.</strong> Lo que apuntas con «Anotar» o al marcar un repaso en el Plan de hoy ya está sumado aquí, en la semana actual. Usa el Registro para lo que estudies fuera del Plan de hoy o para corregir.</p>
+</blockquote>
+<p>Las semanas se cuentan desde tu fecha de inicio: si empiezas un martes, cada semana va de martes a lunes.</p>
+<h2 id="pestaña-3-exámenes-y-pec">🏁 Pestaña 3 · Exámenes y PEC</h2>
+<p>Cada asignatura del 1er cuatrimestre (y el 1er parcial de las anuales) se puede examinar en la <strong>1ª o en la 2ª semana</strong> de febrero. La app elige por ti la semana de cada una para que tus <strong>dos semanas de repaso tengan una carga parecida</strong>, y tú puedes cambiarla cuando quieras.</p>
+<h3 id="las-cuatro-semanas-clave-convocatoria-de-febrero-2027">🗓️ Las cuatro semanas clave (convocatoria de febrero 2027)</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Semana</th>
+<th>Fechas</th>
+<th>Qué toca</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🔁 Repaso 1</td>
+<td>18–24 enero</td>
+<td>Solo las asignaturas de la 1ª semana de exámenes</td>
+</tr>
+<tr>
+<td>📝 Exámenes 1ª semana</td>
+<td>25–29 enero</td>
+<td>Exámenes de esas asignaturas</td>
+</tr>
+<tr>
+<td>🔁 Repaso 2</td>
+<td>1–7 febrero</td>
+<td>Solo las asignaturas de la 2ª semana</td>
+</tr>
+<tr>
+<td>📝 Exámenes 2ª semana</td>
+<td>8–12 febrero</td>
+<td>Exámenes de esas asignaturas</td>
+</tr>
+</tbody>
+</table></div>
+<p>Hasta el 17 de enero estudias todas tus asignaturas; después, cada semana de repaso es solo para las que se examinan justo a continuación.</p>
+<p>Las asignaturas de la 2ª semana descansan durante el repaso 1 y los exámenes de la 1ª semana, y vuelven en cuanto acaba tu último examen de esa semana.</p>
+<h3 id="el-reparto-inteligente">⚖️ El reparto inteligente</h3>
+<ul>
+<li>Cada asignatura pesa su <strong>carga ponderada</strong> (dificultad × temas), rebajada según los temas que ya has terminado: con el temario completo pesa la mitad.</li>
+<li>La app prueba todas las combinaciones y elige la que deja las dos semanas de repaso más igualadas, <strong>sin dos exámenes a la misma hora</strong> (en los grados no hay sesión de reserva) y evitando dos el mismo día.</li>
+<li>La barra <strong>«Carga de cada semana de repaso»</strong> muestra el reparto (por ejemplo 52 % / 48 %) y el <strong>equilibrio</strong> (98 % = casi perfecto). En cada semana de repaso ves las horas que tendrá cada asignatura.</li>
+</ul>
+<h3 id="cambiar-de-semana">📌 Cambiar de semana</h3>
+<ul>
+<li>Pulsa la otra semana en la ficha de la asignatura, o su casilla gris en el <strong>horario oficial</strong>. Esa asignatura queda <strong>fijada</strong> (📌) y la app no la moverá.</li>
+<li>«<strong>Volver a automático</strong>» la suelta; «<strong>Quitar fijaciones</strong>» suelta todas.</li>
+<li>«<strong>Recalcular reparto</strong>» busca el mejor reparto respetando las fijadas.</li>
+<li>Si con tu avance aparece un reparto bastante mejor, verás un aviso 💡 con un botón «<strong>Aplicar</strong>». La app <strong>nunca cambia la semana por su cuenta</strong>. Desde el 18 de enero deja de proponer cambios.</li>
+</ul>
+<h3 id="horario-oficial-y-fichas">📑 Horario oficial y fichas</h3>
+<ul>
+<li>El <strong>horario oficial</strong> muestra las dos semanas por día y hora: en color donde te examinas, en gris tu otra opción. Si dos coinciden a la misma hora, se marca en rojo.</li>
+<li>Cada <strong>ficha</strong> indica el tipo de examen (Test, Desarrollo o Mixto), el peso de la asignatura en el reparto y sus horas de repaso. En «<strong>Ver ficha del examen y de la PEC</strong>» tienes número de preguntas, duración, material permitido, penalización, estructura, claves y cómo se calcula la nota final.</li>
+<li>Las asignaturas del <strong>2º cuatrimestre</strong> no tienen fecha oficial todavía: pon tú la fecha en su ficha. Si no la pones, se usa el «Examen por defecto» de la configuración.</li>
+</ul>
+<h3 id="calendario-de-pec">📄 Calendario de PEC</h3>
+<p>Todas las PEC de tus asignaturas ordenadas por fecha, con su peso y su requisito.</p>
+<ul>
+<li>Las fechas salen de las guías del curso 2026-27. Las marcadas «<strong>aprox.</strong>» son estimadas: confírmalas en el curso virtual y corrígelas en su casilla.</li>
+<li>Las que la guía no fija («se comunica en el curso virtual») quedan <strong>sin fecha</strong> hasta que la pongas.</li>
+<li>«<strong>Marcar entregada</strong>» la da por hecha. Si no vas a hacer una PEC, <strong>táchala</strong> abajo y desaparecerá del Plan de hoy y del calendario.</li>
+<li>Desde 14 días antes, la PEC te aparece en el Plan de hoy.</li>
+</ul>
+<h3 id="calendario-con-avisos-opcional">📅 Calendario con avisos (opcional)</h3>
+<p>Si quieres tus exámenes y PEC en el calendario del móvil, pulsa <strong>«Añadir a mi calendario»</strong> (arriba en esta pestaña o en <strong>Datos</strong>).</p>
+<ol>
+<li>Elige qué llevar: 🎓 exámenes (con su hora), 📝 entregas de PEC, 🧠 semanas de repaso y, si quieres, 📚 el plan de estudio diario de las próximas 2, 4 u 8 semanas.</li>
+<li>Pulsa <strong>Continuar</strong>. La app te enseña primero la opción de tu dispositivo:</li>
+</ol>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Calendario</th>
+<th>Cómo se añade</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>📆 <strong>Google Calendar</strong> (Android y ordenador)</td>
+<td>Un botón <strong>➕ Añadir</strong> por cada examen, PEC y semana de repaso: se abre Google Calendar con el evento ya rellenado y pulsas <strong>Guardar</strong>. Los avisos son los de tu Google Calendar.</td>
+</tr>
+<tr>
+<td>🍎 <strong>iPhone / iPad / Mac</strong></td>
+<td><strong>«Añadir todo al Calendario»</strong>: abre el archivo descargado y pulsa <strong>«Añadir todo»</strong>. Incluye avisos una semana y un día antes de cada examen y 3 días antes de cada PEC.</td>
+</tr>
+<tr>
+<td>🪟 <strong>Outlook / Calendario de Windows</strong></td>
+<td>Descarga el archivo y ábrelo: te pregunta si añades los eventos. Avisos incluidos.</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote class="callout">
+<p>💡 El <strong>plan diario</strong> son muchos eventos, así que no va con botones: descarga el archivo y, en el ordenador, impórtalo en <strong>calendar.google.com → ⚙️ Configuración → Importar y exportar → Importar</strong>. Aparecerá también en el móvil. Es el reparto previsto en ese momento: si cambias el plan, vuelve a exportarlo.</p>
+</blockquote>
+<h2 id="pestaña-4-expediente">🎓 Pestaña 4 · Expediente</h2>
+<p>Aquí llevas <strong>tu expediente del grado</strong>: las 45 asignaturas de Derecho con sus créditos ECTS, ordenadas por curso.</p>
+<h3 id="apuntar-tus-notas">📝 Apuntar tus notas</h3>
+<ol>
+<li>Abre la pestaña <strong>🎓 Expediente</strong> (la cuarta de la cabecera) y busca la asignatura en su curso (las de tu plan llevan la etiqueta <strong>EN TU PLAN</strong>).</li>
+<li>Elige su estado: <strong>Aprobada</strong>, <strong>Suspensa</strong>, <strong>No presentada</strong> o <strong>Convalidada</strong>.</li>
+<li>Si tiene nota, escríbela (por ejemplo <code>7,5</code>). Con nota, el estado se ajusta solo: 5 o más = aprobada.</li>
+<li>Indica la convocatoria (febrero, junio o septiembre) y el curso académico.</li>
+</ol>
+<p>Arriba ves cuatro cifras:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Tarjeta</th>
+<th>Qué muestra</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Créditos superados</td>
+<td>ECTS aprobados y convalidados, sobre el total del grado</td>
+</tr>
+<tr>
+<td>Avance del grado</td>
+<td>El porcentaje de créditos superados</td>
+</tr>
+<tr>
+<td>Nota media</td>
+<td>Media de tus notas ponderada por créditos (las convalidadas no cuentan en la media)</td>
+</tr>
+<tr>
+<td>Asignaturas</td>
+<td>Superadas de las 45</td>
+</tr>
+</tbody>
+</table></div>
+<p>Cada curso tiene su propia barra de avance.</p>
+<h3 id="plan-de-septiembre">📆 Plan de septiembre</h3>
+<p>Si marcas alguna asignatura como <strong>Suspensa</strong> o <strong>No presentada</strong>, aparece la tarjeta <strong>Plan para septiembre</strong>:</p>
+<ol>
+<li>Deja marcadas las asignaturas que vas a preparar.</li>
+<li>Pon la <strong>fecha de examen de septiembre</strong> de cada una (búscala en el calendario de exámenes de la UNED) y revisa el número de temas.</li>
+<li>Indica cuándo empiezas a estudiar.</li>
+<li>Decide si <strong>conservas los temas ya marcados</strong> como terminados o empiezas de cero.</li>
+<li>Pulsa <strong>Crear plan de septiembre</strong>.</li>
+</ol>
+<p>La app monta un plan nuevo solo con esas asignaturas, con su semana de repaso antes de cada examen, igual que en febrero. Tu plan anterior se guarda en una <strong>copia de seguridad</strong>: puedes recuperarlo en <strong>Datos → Restaurar</strong>. El expediente, los nombres de los temas, los días libres y tu racha se conservan.</p>
+<h2 id="cómo-calcula-la-app">🧮 Cómo calcula la app</h2>
+<p>La app cruza <strong>dos medidas independientes</strong>: las horas que anotas y los temas que marcas. Nunca deduce unas de otras; compararlas es lo que te dice si vas bien.</p>
+<h3 id="1-el-reparto-de-partida">1️⃣ El reparto de partida</h3>
+<p>Cada día, tus horas de ese día se reparten entre las asignaturas activas según su carga:</p>
+<div class="formula" data-tex="\text{horas de la asignatura} = \text{horas del día} \times \frac{\text{carga de la asignatura}}{\text{suma de cargas activas}}
+"></div>
+<ul>
+<li><strong>Carga</strong> = dificultad × nº de temas. Ejemplo: Penal I = 0,312 × 19 = 5,93.</li>
+<li><strong>Activas</strong> = las que aún no se han examinado. En una semana de repaso, solo las de la semana de exámenes siguiente.</li>
+<li>Sumando todos los días salen las <strong>horas iniciales</strong> de cada asignatura. Las anteriores a su semana de repaso son la <strong>primera vuelta</strong>.</li>
+</ul>
+<h3 id="2-el-ritmo-por-tema">2️⃣ El ritmo por tema</h3>
+<div class="formula" data-tex="\text{ritmo inicial} = \frac{\text{horas de primera vuelta}}{\text{nº de temas}} \qquad \text{nuevo ritmo} = \frac{\text{horas de primera vuelta} - \text{horas hechas}}{\text{temas que faltan}}
+"></div>
+<p>Ejemplo: Penal I tiene 64,5 h de primera vuelta para 19 temas, así que su ritmo inicial es 3 h 24 min por tema. Si has anotado 15 h y marcado 3 temas, te quedan 49,5 h para 16 temas: <strong>3 h 6 min por tema</strong>.</p>
+<ul>
+<li>📉 Muchas horas y pocos temas marcados → el ritmo baja: te queda menos tiempo por tema.</li>
+<li>📈 Temas marcados con menos horas de las previstas → el ritmo sube: ganas margen.</li>
+</ul>
+<h3 id="3-balance-y-reajuste">3️⃣ Balance y reajuste</h3>
+<ul>
+<li><strong>Previsto hasta ayer</strong>: lo que el plan te daba hasta ayer. Hoy no cuenta, porque aún lo estás estudiando.</li>
+<li><strong>Balance</strong> = horas hechas − previstas hasta ayer.</li>
+<li><strong>Reajuste</strong>: si te faltan más horas de las que el plan tiene previstas desde hoy, cada día te pide más en esa proporción.</li>
+</ul>
+<div class="formula" data-tex="\text{factor} = \frac{\text{horas que te faltan}}{\text{horas que el plan aún tiene previstas}} \qquad \text{meta} = \text{factor} \times \text{lo previsto para esos días}
+"></div>
+<p>Con 50 h pendientes y solo 40 h programadas, el factor es 1,25: cada día te pide un 25 % más. El semáforo compara esa meta diaria con tu media y con el límite de 4 h/día.</p>
+<blockquote class="callout">
+<p>ℹ️ <strong>Ten en cuenta:</strong> todos los temas de una asignatura cuentan igual (no se miran las páginas) y los minutos de repaso también se descuentan de la primera vuelta, así que el ritmo por tema es algo prudente.</p>
+</blockquote>
+<h2 id="tus-datos-exportar-importar-y-copias">💾 Tus datos: exportar, importar y copias</h2>
+<p>Tu progreso vive en el navegador del dispositivo donde usas la app. El botón <strong>«Datos»</strong> de la cabecera sirve para sacarlo de ahí, llevarlo a otro dispositivo o recuperarlo.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Botón</th>
+<th>Para qué sirve</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>📥 Exportar copia</td>
+<td>Descarga un archivo <code>.json</code> con todo: asignaturas, horas, temas, repasos, exámenes y PEC</td>
+</tr>
+<tr>
+<td>📤 Importar copia</td>
+<td>Carga un archivo exportado (sirve también de versiones anteriores: v21 a v29)</td>
+</tr>
+<tr>
+<td>🔗 Compartir copia</td>
+<td>Envía el archivo por WhatsApp, correo o Drive (en móviles que lo permiten)</td>
+</tr>
+<tr>
+<td>📋 Copiar como texto</td>
+<td>Copia la copia al portapapeles para pegarla en una nota o mensaje</td>
+</tr>
+<tr>
+<td>✍️ Pegar copia</td>
+<td>Si no puedes elegir el archivo, pega su texto en el recuadro e impórtalo</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="pasar-tus-datos-a-otro-dispositivo">📲 Pasar tus datos a otro dispositivo</h3>
+<ol>
+<li>En el dispositivo antiguo: <strong>Datos → Exportar copia</strong> (o Compartir copia).</li>
+<li>Lleva el archivo al nuevo dispositivo (WhatsApp, correo, Drive…).</li>
+<li>En el nuevo: abre el Planificador y pulsa <strong>Datos → Importar copia</strong>.</li>
+<li>Confirma. Antes de reemplazar nada, la app guarda una copia de seguridad de lo que había.</li>
+</ol>
+<blockquote class="callout">
+<p>📲 <strong>Con la app instalada es más fácil:</strong> desde el archivo de WhatsApp, el botón «Instalar» se lleva tus datos solo; en iPhone, «Instalar en tu iPhone» los copia y en la app pulsas «📋 Pegar mis datos». Exportar e importar sigue sirviendo para cambiar de móvil o guardar copias.</p>
+</blockquote>
+<h3 id="copias-de-seguridad-automáticas">🛡️ Copias de seguridad automáticas</h3>
+<ul>
+<li>La app guarda una <strong>copia automática cada 12 horas</strong> y otra <strong>justo antes</strong> de importar, restaurar o restablecer.</li>
+<li>Están en el mismo menú «Datos», con su botón «<strong>Restaurar</strong>».</li>
+<li>«<strong>Restablecer</strong>» vuelve a los valores iniciales (también guarda una copia antes, por si te arrepientes).</li>
+</ul>
+<blockquote class="callout">
+<p>🟡 <strong>Recordatorio:</strong> si llevas más de 14 días sin exportar, el botón «Datos» muestra un punto ámbar. Exporta una copia cada semana: tarda dos segundos.</p>
+</blockquote>
+<h3 id="sincronizar-con-google-drive">☁️ Sincronizar con Google Drive</h3>
+<p>Para tener <strong>el mismo progreso en el ordenador, el móvil y la tablet</strong> sin hacer nada, conecta Google Drive en cada dispositivo:</p>
+<ol>
+<li>Abre el Planificador (la app instalada o la web) y pulsa <strong>Datos → «Conectar con Google»</strong>.</li>
+<li>Elige tu cuenta de Google y acepta. Al volver, el botón de la cabecera pone <strong>«Al día»</strong> en verde.</li>
+<li>Repite en cada dispositivo <strong>con la misma cuenta</strong>.</li>
+</ol>
+<p>Tus datos se guardan en una <strong>carpeta oculta de tu Drive</strong> que solo esta app puede ver: no ve ni toca el resto de tus archivos.</p>
+<ul>
+<li>Cada cambio se sube unos segundos después.</li>
+<li>Los demás dispositivos lo reciben al abrir la app o al volver a ella.</li>
+<li>El permiso de Google dura una hora y se renueva solo al abrir la app (verás un parpadeo de un segundo).</li>
+<li>Si un dispositivo deja de sincronizar, arriba sale un <strong>aviso amarillo</strong> con el botón <strong>«Sincronizar ahora»</strong>.</li>
+</ul>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Botón de la nube</th>
+<th>Qué pasa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>☁️ Nube</td>
+<td>Sin conectar: púlsalo para conectar</td>
+</tr>
+<tr>
+<td>🟢 Al día</td>
+<td>Todo sincronizado</td>
+</tr>
+<tr>
+<td>⬆️ Subiendo</td>
+<td>Hay un cambio pendiente de subir</td>
+</tr>
+<tr>
+<td>🟡 Sincronizar</td>
+<td>Google pide permiso otra vez: tócalo una vez</td>
+</tr>
+<tr>
+<td>🔴 Elegir</td>
+<td>Hay cambios distintos en dos dispositivos</td>
+</tr>
+</tbody>
+</table></div>
+<p>Si cambiaste cosas en dos dispositivos sin que se sincronizaran entre medias, la app pregunta <strong>qué datos conservas</strong>. Elige los del dispositivo donde anotaste lo último; los otros se guardan en una copia de seguridad.</p>
+<blockquote class="callout">
+<p>⚠️ La sincronización funciona en la app instalada y en la web, no en el archivo <code>.html</code> descargado. Para desconectar: <strong>Datos → Desconectar</strong>.</p>
+</blockquote>
+<h3 id="pasar-los-datos-con-un-código-qr">📲 Pasar los datos con un código QR</h3>
+<p>Sin cuentas ni archivos: en <strong>Datos → «Pasar a otro dispositivo con QR»</strong>.</p>
+<ol>
+<li>En el dispositivo que tiene los datos, pulsa <strong>Mostrar QR</strong>.</li>
+<li>En el otro:<ul>
+<li><strong>Con poco progreso</strong> sale un solo código: basta con la cámara del móvil. Toca el enlace y se abre el Planificador con tus datos.</li>
+<li><strong>Con mucho progreso</strong> salen varios códigos que se van alternando (con ◀ ▶ y Pausa para pasarlos a mano). Lo más cómodo: en el otro dispositivo, <strong>Datos → Escanear QR</strong> y apuntar sin moverte hasta que lea todas las partes. También sirve la cámara normal: escanea cada parte, toca el enlace y la app las va juntando.</li>
+</ul>
+</li>
+<li>Si el otro dispositivo ya tenía datos, la app pregunta antes de reemplazarlos y guarda una copia de seguridad.</li>
+</ol>
+<blockquote class="callout">
+<p>💡 El QR es un <strong>traspaso puntual</strong>, no una sincronización: lo que anotes después no pasa solo al otro dispositivo. Para eso está Google Drive. No compartas el código: quien lo escanee verá tu progreso.</p>
+</blockquote>
+<h3 id="estadísticas-anónimas-y-nombre-de-usuario">📊 Estadísticas anónimas y nombre de usuario</h3>
+<p>Para saber cuántas personas usan el Planificador, la app envía como mucho <strong>una señal al día</strong> con un número aleatorio de tu dispositivo, la versión y el tipo de dispositivo. <strong>Nunca tus datos de estudio.</strong></p>
+<ul>
+<li>En <strong>Datos → Estadísticas anónimas</strong> puedes desactivarlas.</li>
+<li>Si quieres que el autor vea que lo usas, escribe un <strong>nombre de usuario</strong> (puede ser un apodo) y pulsa Guardar. Ponlo igual en todos tus dispositivos. A partir del segundo día de uso, la app te lo propone una sola vez.</li>
+</ul>
+<p>Más detalles en la <a href="https://costalceleste.github.io/planificador-jagpino/privacidad.html" target="_blank" rel="noopener">política de privacidad</a>.</p>
+<h2 id="apariencia-y-actualizaciones">🌙 Apariencia y actualizaciones</h2>
+<h3 id="modo-oscuro">🌗 Modo oscuro</h3>
+<p>El botón redondo de la cabecera cambia el tema cada vez que lo pulsas:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Icono</th>
+<th>Tema</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🌗</td>
+<td>Automático: igual que tu dispositivo (el que viene de serie)</td>
+</tr>
+<tr>
+<td>🌙</td>
+<td>Oscuro siempre</td>
+</tr>
+<tr>
+<td>☀️</td>
+<td>Claro siempre</td>
+</tr>
+</tbody>
+</table></div>
+<p>Se guarda en cada dispositivo por separado.</p>
+<h3 id="aviso-de-versión-nueva">✨ Aviso de versión nueva</h3>
+<p>Cuando se publica una versión nueva, arriba aparece <strong>«Hay una versión nueva»</strong>. Pulsa <strong>Actualizar</strong>: la app se recarga con la versión nueva y <strong>conserva todos tus datos</strong>. Si usas el archivo <code>.html</code> descargado, el botón dice <strong>Abrir</strong> y te lleva a la versión web con tus datos, porque un archivo no se actualiza solo.</p>
+<p>También hay una <a href="https://costalceleste.github.io/planificador-jagpino/presentacion.html" target="_blank" rel="noopener">página de presentación</a> para compartir el Planificador con otros compañeros.</p>
+<h2 id="rutina-recomendada">🔄 Rutina recomendada</h2>
+<p>Con <strong>dos minutos al día y cinco a la semana</strong> el plan se mantiene fiable.</p>
+<h3 id="cada-día-2-minutos">☀️ Cada día (2 minutos)</h3>
+<ul>
+<li>☐ Abre la app (pestaña 1) y mira el <strong>Plan de hoy</strong>.</li>
+<li>☐ Estudia los bloques propuestos y pulsa «<strong>Anotar</strong>» al acabar cada uno.</li>
+<li>☐ Pulsa «<strong>Tema N terminado</strong>» cuando cierres un tema.</li>
+<li>☐ Haz los <strong>repasos rápidos</strong> del día y márcalos con «✓ Hecho».</li>
+</ul>
+<h3 id="cada-semana-5-minutos-por-ejemplo-el-domingo">📆 Cada semana (5 minutos, por ejemplo el domingo)</h3>
+<ul>
+<li>☐ Revisa el <strong>Registro Semanal</strong>: añade lo estudiado fuera del Plan de hoy.</li>
+<li>☐ Mira el <strong>semáforo</strong> y el <strong>Ranking de urgencia</strong>.</li>
+<li>☐ Comprueba las <strong>PEC</strong> de las próximas semanas.</li>
+<li>☐ <strong>Exporta una copia</strong> de tus datos.</li>
+</ul>
+<h3 id="cada-mes-y-antes-de-los-exámenes">📅 Cada mes y antes de los exámenes</h3>
+<ul>
+<li>☐ Entra en <strong>Exámenes y PEC</strong>: si aparece un aviso 💡 de reparto mejor, valóralo.</li>
+<li>☐ Confirma en el curso virtual las fechas de PEC marcadas «aprox.».</li>
+<li>☐ Si el semáforo llega al tramo 4 o 5, abre el <strong>Asistente de decisión</strong>.</li>
+<li>☐ Antes del <strong>18 de enero</strong>, deja decidida la semana de examen de cada asignatura.</li>
+</ul>
+<h2 id="preguntas-frecuentes">❓ Preguntas frecuentes</h2>
+<h3 id="uso-diario">📖 Uso diario</h3>
+<p><strong>¿Qué pasa si un día no estudio?</strong> Nada se pierde. El balance se pone en negativo y la meta de los próximos días sube un poco para repartir lo pendiente. El Plan de hoy dará prioridad a lo que más retraso acumule.</p>
+<p><strong>Tengo un día libre fijo, ¿cómo lo indico?</strong> Pon <strong>0</strong> en ese día en «Horas por día». Ese día el Plan de hoy dirá «Día libre» y el reparto se hace con el resto de la semana. Para días sueltos o vacaciones, usa el recuadro «Días libres».</p>
+<p><strong>¿Por qué el objetivo de hoy no coincide con mis horas de ese día?</strong> Porque está reajustado: si vas atrasado te pide algo más y si vas adelantado, algo menos. Nunca pasa de 4 h (o del doble de tus horas de ese día); si haría falta más, verás el aviso 🧯.</p>
+<p><strong>Hoy no me aparece una asignatura, ¿es un error?</strong> No. Puede que estés en la semana de repaso de otras asignaturas, que ya te hayas examinado, que esté pospuesta o que hoy tengan prioridad otras (como mucho salen 3 bloques al día).</p>
+<p><strong>He marcado un tema sin querer.</strong> Vuelve a pulsar su número en el Temario para desmarcarlo. Si ya tenía repasos hechos, la app te pide confirmación.</p>
+<p><strong>He anotado horas de más.</strong> Si fue hoy desde el Plan de hoy, pulsa la ✕ en «Anotado hoy». Si fue otro día, corrige la casilla en el Registro Semanal.</p>
+<p><strong>¿Puedo cambiar el número de temas a mitad de curso?</strong> Sí. El plan se recalcula al momento y los temas que ya marcaste se conservan.</p>
+<h3 id="repasos">🔁 Repasos</h3>
+<p><strong>¿Tengo que marcar los repasos?</strong> Sí: la app no sabe si los has hecho hasta que pulsas «✓ Hecho». Al marcarlo, sus minutos se suman a tus horas de hoy.</p>
+<p><strong>Se me ha pasado un repaso, ¿se pierde?</strong> No. Sigue apareciendo cada día hasta que lo hagas. Si se retrasa tanto que llega la fecha del repaso del mes, se juntan en uno.</p>
+<p><strong>¿Por qué me sale «repaso de la semana y del mes» junto?</strong> Porque el examen está cerca y no hay tiempo para dos repasos separados, o porque el de la semana se ha retrasado hasta la fecha del del mes. Con uno cuentan los dos.</p>
+<h3 id="exámenes-y-pec">🏁 Exámenes y PEC</h3>
+<p><strong>¿Por qué la app ha puesto una asignatura en la 2ª semana?</strong> Para que tus dos semanas de repaso tengan una carga parecida. Si prefieres otra, púlsala en su ficha: quedará fijada.</p>
+<p><strong>¿La app cambia sola la semana de mis exámenes?</strong> Nunca. Si encuentra un reparto mejor te lo propone con un aviso 💡 y tú decides si lo aplicas.</p>
+<p><strong>¿Puedo examinarme de dos asignaturas el mismo día?</strong> Sí, si son a distinta hora (la app lo evita cuando puede). A la misma hora no: en los grados no hay sesión de reserva.</p>
+<p><strong>Tengo una asignatura del 2º cuatrimestre.</strong> No hay fechas oficiales de junio todavía. Pon su fecha en su ficha de la pestaña 3; mientras tanto se usa el «Examen por defecto».</p>
+<p><strong>¿Y las asignaturas anuales, como Penal I?</strong> La app planifica el <strong>1er parcial</strong> de febrero. Después de ese examen la da por examinada: para el 2º parcial, configúrala de nuevo en el 2º cuatrimestre.</p>
+<p><strong>La fecha de una PEC pone «aprox.».</strong> Es una estimación a partir de la guía. Confírmala en el curso virtual y corrígela en el Calendario de PEC.</p>
+<p><strong>No voy a hacer una PEC.</strong> Táchala en la parte de abajo del Calendario de PEC. Dejará de avisarte.</p>
+<h3 id="instalación">📲 Instalación</h3>
+<p><strong>Pulso «Instalar ahora» y no sale el instalador.</strong> Chrome activa su instalador cuando has tocado la página y llevas unos 30 segundos en ella. Mientras tanto, la app te señala el menú ⋮ → «Instalar aplicación» (o el icono de instalar en Windows): desde ahí se instala igual.</p>
+<p><strong>¿Por qué en el iPhone no hay botón de instalar directo?</strong> Apple solo permite instalar webs desde el menú Compartir de Safari. La app te señala dónde tocar: Compartir ⬆️ → «Añadir a pantalla de inicio».</p>
+<p><strong>He instalado la app en el iPhone y está vacía.</strong> Pulsa «📋 Pegar mis datos» en el aviso verde. Si no funciona, en Safari pulsa Datos → Copiar como texto y, en la app, Datos → «¿No puedes elegir el archivo? Pega aquí…».</p>
+<p><strong>¿Tengo que reinstalarla cuando salga una versión nueva?</strong> No, nunca hace falta desinstalar. Se actualiza sola al abrirla con conexión y conserva tus datos. Si no ves los cambios, ciérrala del todo y vuelve a abrirla.</p>
+<p><strong>En el móvil no veo la pestaña Expediente.</strong> Comprueba en el pie de la página que tienes la v29.2. Está en la cabecera, la cuarta: 🎓 <strong>Expediente</strong>.</p>
+<p><strong>¿Cómo la desinstalo?</strong> Como cualquier app: en el móvil, mantén pulsado el icono y elige Desinstalar o Eliminar; en Windows, clic derecho en el menú Inicio → Desinstalar. Exporta antes una copia: al desinstalar se borran sus datos.</p>
+<p><strong>¿Sirve el mismo enlace para todos los estudiantes?</strong> Sí. Cada uno instala la app en su dispositivo y sus datos se quedan solo en el suyo.</p>
+<h3 id="datos-y-dispositivos">💾 Datos y dispositivos</h3>
+<p><strong>Abrí el archivo desde WhatsApp y sale un aviso amarillo.</strong> Ese navegador no está guardando tus datos. Pulsa «Instalar» en la ventana para pasar a la app con tus datos incluidos, o exporta una copia antes de cerrar.</p>
+<p><strong>¿Pierdo mis datos al pasar a una versión nueva?</strong> Con la app instalada, no: se actualiza sola y conserva tus datos. Si usas el archivo .html, abre la versión nueva en el mismo navegador y, por si acaso, exporta una copia antes.</p>
+<p><strong>¿Puedo usarla en el móvil y en el ordenador a la vez?</strong> Sí. Conecta Google Drive en cada dispositivo (Datos → Conectar con Google) y se sincronizan solos. Sin cuenta de Google, pásalos con el código QR o con Exportar → Importar.</p>
+<p><strong>¿Mis datos se envían a algún sitio?</strong> Tus datos de estudio se quedan en tu dispositivo y, solo si conectas Google Drive, en una carpeta oculta de <strong>tu</strong> Drive. La app envía además una señal anónima al día para contar usuarios, que puedes desactivar en Datos. Detalles en la <a href="https://costalceleste.github.io/planificador-jagpino/privacidad.html" target="_blank" rel="noopener">política de privacidad</a>.</p>
+<p><strong>¿Qué hago si voy muy atrasado?</strong> Abre el <strong>Asistente de decisión</strong> desde el banner: te enseña cuánto bajarían tus horas diarias si pospones una asignatura para septiembre, y puedes reactivarla cuando quieras.</p>
+<h3 id="sincronización-y-otros-dispositivos">☁️ Sincronización y otros dispositivos</h3>
+<p><strong>¿Lo que anoto en el ordenador aparece en el móvil?</strong> Sí, si has conectado Google Drive en los dos con la misma cuenta. El móvil lo recibe al abrir la app o al volver a ella.</p>
+<p><strong>¿Cuesta algo la sincronización?</strong> No. Tus datos ocupan unos pocos KB en tu propio Drive, dentro de los 15 GB gratuitos de tu cuenta.</p>
+<p><strong>El botón de la nube está amarillo y pone «Sincronizar».</strong> Google necesita que confirmes el permiso otra vez (por ejemplo, porque cerraste sesión). Tócalo una vez y vuelve a «Al día».</p>
+<p><strong>Me ha salido «Hay cambios en dos dispositivos».</strong> Anotaste cosas en dos sitios sin que se sincronizaran entre medias. Elige los datos del dispositivo donde anotaste lo último; los otros se guardan en una copia de seguridad.</p>
+<p><strong>No tengo cuenta de Google.</strong> Usa el código QR para pasar los datos cuando lo necesites. También puedes crear una cuenta de Google con tu correo de siempre (Outlook, iCloud…) eligiendo «Usar mi dirección de correo actual», sin necesidad de Gmail.</p>
+<p><strong>He pasado los datos con el QR, ¿ya se sincronizan?</strong> No. El QR es una copia puntual. Para que se sincronicen solos, conecta Google Drive en los dos.</p>
+<p><strong>El QR tiene muchos códigos que van cambiando.</strong> Es normal con mucho progreso. En el otro dispositivo usa <strong>Datos → Escanear QR</strong> y mantén el móvil quieto unos segundos; sube el brillo de la pantalla si no lo lee.</p>
+<p><strong>Quiero los exámenes en Google Calendar.</strong> En «Exámenes y PEC» pulsa «Añadir a mi calendario» → Continuar → ➕ Añadir en cada evento y Guardar en Google Calendar.</p>
+<h3 id="expediente-y-septiembre">🎓 Expediente y septiembre</h3>
+<p><strong>¿La nota media cuenta las convalidadas?</strong> No. Cuentan como créditos superados, pero no tienen nota.</p>
+<p><strong>Si creo el plan de septiembre, ¿pierdo el de febrero?</strong> No. Se guarda en una copia de seguridad que puedes restaurar en <strong>Datos</strong>. El expediente, tu racha y los nombres de los temas se mantienen.</p>
+<p><strong>¿De dónde saco las fechas de septiembre?</strong> Del calendario oficial de exámenes de la UNED. La app no las trae porque aún no se publican al empezar el curso.</p>
+<h3 id="constancia-días-libres-y-apariencia">🔥 Constancia, días libres y apariencia</h3>
+<p><strong>Mi racha está a 0 aunque estudio.</strong> La racha cuenta lo que anotas con «Anotar» en el Plan de hoy. Si apuntas las horas por semana en el Registro, no puede saber qué días estudiaste.</p>
+<p><strong>¿Un día libre rompe la racha?</strong> No. Los días libres y los días que tienes a 0 h no la rompen.</p>
+<p><strong>La previsión dice que no llego.</strong> Es un aviso a tiempo: te dice cuántos temas por semana necesitas. Sube un poco las horas, pospone alguna asignatura o abre el Asistente.</p>
+<p><strong>¿Cómo pongo el modo oscuro?</strong> Con el botón redondo de la cabecera: automático → oscuro → claro.</p>
+<p><strong>Me sale «Hay una versión nueva».</strong> Pulsa Actualizar. Tus datos se conservan.</p>
+<h2 id="chuleta-final">🗂️ Chuleta final</h2>
+<h3 id="iconos-y-colores">🎨 Iconos y colores</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Verás</th>
+<th>Significa</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>📲 Instalar</td>
+<td>Abre la ventana para instalar la app en tu dispositivo</td>
+</tr>
+<tr>
+<td>📋 Pegar mis datos</td>
+<td>Recupera en la app del iPhone los datos copiados al instalarla</td>
+</tr>
+<tr>
+<td>🟩 🟦 🟨 🟥</td>
+<td>Semana: objetivo cumplido · al menos el 70 % · por debajo · sin registrar</td>
+</tr>
+<tr>
+<td><strong>HOY</strong> / ★</td>
+<td>Semana actual</td>
+</tr>
+<tr>
+<td>🔁</td>
+<td>Semana de repaso / repaso rápido</td>
+</tr>
+<tr>
+<td>📝</td>
+<td>Examen</td>
+</tr>
+<tr>
+<td>📄</td>
+<td>PEC</td>
+</tr>
+<tr>
+<td>📌</td>
+<td>Semana de examen fijada por ti</td>
+</tr>
+<tr>
+<td>💡</td>
+<td>La app propone un reparto de exámenes mejor</td>
+</tr>
+<tr>
+<td>🧯</td>
+<td>Vas con mucho retraso: abre el Asistente</td>
+</tr>
+<tr>
+<td>Aro ámbar en un tema</td>
+<td>Le toca repaso</td>
+</tr>
+<tr>
+<td>Verde claro / medio / oscuro</td>
+<td>Tema terminado / repaso de la semana hecho / repaso del mes hecho</td>
+</tr>
+<tr>
+<td>Línea oscura en una barra</td>
+<td>Dónde deberías ir según el plan</td>
+</tr>
+<tr>
+<td>☁️ Nube / 🟢 Al día</td>
+<td>Sincronización con Google Drive: sin conectar / todo sincronizado</td>
+</tr>
+<tr>
+<td>🟡 Sincronizar</td>
+<td>Google pide confirmar el permiso: tócalo una vez</td>
+</tr>
+<tr>
+<td>🌗 / 🌙 / ☀️</td>
+<td>Tema automático / oscuro / claro</td>
+</tr>
+<tr>
+<td>🔥 / 🏆</td>
+<td>Racha de días / semanas seguidas cumpliendo el objetivo</td>
+</tr>
+<tr>
+<td>🟢 / 🔴 en la previsión</td>
+<td>A tu ritmo llegas / no llegas a la semana de repaso</td>
+</tr>
+<tr>
+<td>🌴</td>
+<td>Día libre marcado por ti</td>
+</tr>
+<tr>
+<td>EN TU PLAN</td>
+<td>En el Expediente: asignatura que estás estudiando ahora</td>
+</tr>
+<tr>
+<td>✨ Hay una versión nueva</td>
+<td>Pulsa Actualizar: la app se recarga y conserva tus datos</td>
+</tr>
+<tr>
+<td>✏️ Ponerle nombre</td>
+<td>Escribe el nombre real de los temas de esa asignatura</td>
+</tr>
+<tr>
+<td>➕ Añadir (calendario)</td>
+<td>Abre Google Calendar con ese evento listo para guardar</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="glosario">📖 Glosario</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Término</th>
+<th>Qué es</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Carga ponderada</td>
+<td>Peso de una asignatura: dificultad × nº de temas</td>
+</tr>
+<tr>
+<td>Horas iniciales</td>
+<td>Todas las horas que el plan asigna a una asignatura</td>
+</tr>
+<tr>
+<td>Primera vuelta</td>
+<td>Horas para estudiar el temario, antes de la semana de repaso</td>
+</tr>
+<tr>
+<td>Ritmo por tema</td>
+<td>Tiempo disponible para cada tema que te queda</td>
+</tr>
+<tr>
+<td>Balance</td>
+<td>Horas hechas menos horas previstas hasta ayer</td>
+</tr>
+<tr>
+<td>Meta semanal reajustada</td>
+<td>Horas por semana que necesitas desde hoy para llegar a tiempo</td>
+</tr>
+<tr>
+<td>Semana de repaso</td>
+<td>Los 7 días antes de cada semana de exámenes, solo para sus asignaturas</td>
+</tr>
+<tr>
+<td>Equilibrio</td>
+<td>Lo parecidas que son las cargas de las dos semanas de repaso</td>
+</tr>
+<tr>
+<td>Fijar</td>
+<td>Elegir tú la semana de examen para que la app no la mueva</td>
+</tr>
+<tr>
+<td>Posponer</td>
+<td>Dejar una asignatura para septiembre y sacarla del ritmo diario</td>
+</tr>
+<tr>
+<td>Racha</td>
+<td>Días seguidos con estudio anotado; los días libres no la rompen</td>
+</tr>
+<tr>
+<td>Previsión</td>
+<td>Fecha en la que terminarías el temario al ritmo de las últimas 4 semanas</td>
+</tr>
+<tr>
+<td>Día libre</td>
+<td>Día sin estudio; su tiempo se reparte en el resto de días</td>
+</tr>
+<tr>
+<td>Expediente</td>
+<td>Tus notas, créditos superados y nota media del grado</td>
+</tr>
+<tr>
+<td>Sincronizar</td>
+<td>Mantener los mismos datos en todos tus dispositivos a través de tu Google Drive</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote class="callout">
+<p>🎓 <strong>¡Mucho ánimo!</strong> El mejor plan es el que se sigue: dos minutos al día en el Planificador te ahorran muchas horas de agobio en enero.</p>
+</blockquote>
+  </article>
+</div>
+
+<div class="foot">
+  <span>Planificador Jagpino · hecho por un estudiante de Derecho de la UNED. No es una herramienta oficial de la UNED.</span>
+  <span><a href="privacidad.html">Privacidad</a> · <a href="presentacion.html">Presentación</a> · <a href="./">Abrir la app</a></span>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script>
+  // Fórmulas: con KaTeX si carga; si no, el texto tal cual
+  document.querySelectorAll('.formula').forEach(el => {
+    const tex = el.dataset.tex.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+    try { katex.render(tex, el, { displayMode: true, throwOnError: false }); }
+    catch (e) { el.classList.add('raw'); el.textContent = tex; }
+  });
+  // Índice: resalta la sección visible y cierra el índice móvil al elegir
+  const links = [...document.querySelectorAll('nav.toc a')];
+  const heads = links.map(a => document.getElementById(decodeURIComponent(a.hash.slice(1)))).filter(Boolean);
+  const onScroll = () => {
+    let cur = heads[0];
+    for (const h of heads) if (h.getBoundingClientRect().top < 120) cur = h;
+    links.forEach(a => a.classList.toggle('on', cur && decodeURIComponent(a.hash.slice(1)) === cur.id));
+  };
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  document.querySelectorAll('.tocm a').forEach(a => a.addEventListener('click', () => a.closest('details').open = false));
+</script>
+</body>
+</html>

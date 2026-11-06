@@ -105,6 +105,24 @@
   .final h2 { color: #fff; }
   .final p { color: #cbd5e1; margin: 0 auto 24px; max-width: 34em; }
 
+  .upd { background: var(--card); border: 2px solid var(--am); border-radius: var(--radius); padding: 30px; }
+  .upd h2 { margin-top: 6px; }
+  .cases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 20px; }
+  .case { border: 1px solid var(--line); border-radius: 16px; padding: 18px; background: var(--bg); }
+  .case h3 { margin: 0 0 8px; font-size: 16px; }
+  .case ol { margin: 0; padding-left: 20px; color: var(--ink2); font-size: 14.5px; }
+  .case li { margin: 4px 0; }
+  .case .tag { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--em); margin-bottom: 6px; }
+  .upd .after { margin-top: 18px; color: var(--muted); font-size: 14.5px; }
+  .news { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 24px; }
+  .new { display: flex; gap: 12px; align-items: flex-start; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+  .new .e { font-size: 22px; line-height: 1; }
+  .new b { display: block; font-size: 15px; }
+  .new span { color: var(--muted); font-size: 13.5px; }
+  .manualcta { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 30px; }
+  .chapters { columns: 2; column-gap: 18px; margin: 0; padding-left: 20px; color: var(--ink2); font-size: 14.5px; }
+  .chapters li { margin: 3px 0; break-inside: avoid; }
+  @media (max-width: 880px) { .cases, .news, .manualcta { grid-template-columns: 1fr; } .upd, .manualcta { padding: 22px; } .chapters { columns: 1; } }
   footer { padding: 34px 0 46px; color: var(--muted); font-size: 13.5px; }
   footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 22px; justify-content: space-between; }
   footer a { color: var(--muted); }
@@ -117,7 +135,7 @@
     .manifesto { grid-template-columns: 1fr; padding: 24px; }
     section.block { padding: 60px 0; }
     .micro { padding-bottom: 28px; }
-    .top .btn-ghost, .hide-m { display: none; }
+    .top .btn-ghost:not(.keep), .hide-m { display: none; }
     .brand { font-size: 13px; }
   }
   @media (min-width: 881px) and (max-width: 1040px) { .features { grid-template-columns: repeat(2, 1fr); } }
@@ -129,8 +147,9 @@
   <div class="wrap">
     <a class="brand" href="#"><img src="icon-192.png" alt="">PLANIFICADOR JAGPINO</a>
     <div style="display:flex;gap:8px">
-      <a class="btn btn-ghost btn-sm" href="#funciones">Funciones</a>
-      <a class="btn btn-am btn-sm" href="./">Abrir<span class="hide-m">&nbsp;el planificador</span></a>
+      <a class="btn btn-ghost btn-sm" href="#novedades">Novedades</a>
+      <a class="btn btn-ghost btn-sm keep" href="manual.html">📘 Manual</a>
+      <a class="btn btn-am btn-sm" href="./">Abrir<span class="hide-m">el planificador</span></a>
     </div>
   </div>
 </header>
@@ -138,16 +157,74 @@
 <section class="hero">
   <div class="wrap hero-grid">
     <div>
-      <span class="pill">🎓 Grado en Derecho · UNED</span>
+      <span class="pill">🎓 Grado en Derecho · UNED · versión 29.2</span>
       <h1>Sabe cada día <em>qué estudiar</em> y cuánto, hasta el examen.</h1>
       <p class="lead">El Planificador Jagpino reparte tu temario según la dificultad de cada asignatura, tus horas reales y las fechas oficiales de exámenes y PEC. Y se reajusta solo cuando la vida se cruza.</p>
       <div class="cta">
         <a class="btn btn-am" href="./">Empezar gratis →</a>
-        <a class="btn btn-ghost" href="#como">Cómo funciona</a>
+        <a class="btn btn-ghost" href="manual.html">📘 Manual completo</a>
       </div>
       <div class="micro"><span>Gratis</span><span>Sin registro</span><span>Funciona sin conexión</span><span>Android, iPhone y PC</span></div>
     </div>
     <div class="phone"><img src="img/movil.jpg" alt="Plan de hoy en el móvil: temas que tocan, tiempo y repasos"></div>
+  </div>
+</section>
+
+<section class="block" id="actualizar" style="padding-bottom:0">
+  <div class="wrap">
+    <div class="upd">
+      <span class="kicker">¿Usabas la v26?</span>
+      <h2>Pásate a la v29.2 en un minuto, sin perder nada</h2>
+      <p class="sub">Tus asignaturas, horas, temas y repasos vienen contigo. Elige tu caso:</p>
+      <div class="cases">
+        <div class="case">
+          <span class="tag">Caso 1</span>
+          <h3>📲 La tenía instalada</h3>
+          <ol>
+            <li>Cierra la app del todo (quítala también de las apps recientes).</li>
+            <li>Vuelve a abrirla con internet: se actualiza sola.</li>
+            <li>Abajo del todo debe poner <b>v29.2</b>. Si no, repite una vez.</li>
+          </ol>
+        </div>
+        <div class="case">
+          <span class="tag">Caso 2</span>
+          <h3>📁 Usaba el archivo .html</h3>
+          <ol>
+            <li>Abre tu archivo de siempre.</li>
+            <li>Pulsa <b>«📲 Instalar»</b> en la cabecera → <b>«Instalar en tu…»</b>.</li>
+            <li>Se abre la versión nueva <b>con tus datos dentro</b>: instálala con un toque.</li>
+          </ol>
+        </div>
+        <div class="case">
+          <span class="tag">Caso 3</span>
+          <h3>🗂️ Otra versión o no me funciona</h3>
+          <ol>
+            <li>En la versión antigua: <b>Datos → Exportar copia</b>.</li>
+            <li>Abre <a href="./">la versión nueva</a>.</li>
+            <li><b>Datos → Importar copia</b> y elige el archivo.</li>
+          </ol>
+        </div>
+      </div>
+      <p class="after">✨ A partir de ahora ya no tendrás que hacer nada: cuando haya una versión nueva, la app te avisa con <b>«Actualizar»</b>. Si usas varios dispositivos, conecta <b>Google Drive</b> en cada uno (Datos → Conectar con Google). Todo, paso a paso, en el <a href="manual.html#actualizar">manual</a>.</p>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="novedades" style="padding-bottom:0">
+  <div class="wrap">
+    <span class="kicker">Novedades desde la v26</span>
+    <h2>Lo nuevo de la v29.2</h2>
+    <div class="news">
+      <div class="new"><div class="e">☁️</div><div><b>Sincroniza tus dispositivos</b><span>Ordenador, móvil y tablet iguales, con tu propio Google Drive.</span></div></div>
+      <div class="new"><div class="e">📲</div><div><b>Pasa tus datos con un QR</b><span>Sin cuentas ni archivos, de un dispositivo a otro.</span></div></div>
+      <div class="new"><div class="e">🔥</div><div><b>Constancia</b><span>Racha de días, semanas cumpliendo y mapa de calor.</span></div></div>
+      <div class="new"><div class="e">🔮</div><div><b>Previsión del temario</b><span>Te avisa a tiempo si a tu ritmo no llegas.</span></div></div>
+      <div class="new"><div class="e">🎓</div><div><b>Expediente y septiembre</b><span>Notas, créditos, media y plan de septiembre en un clic.</span></div></div>
+      <div class="new"><div class="e">✏️</div><div><b>Nombres de los temas</b><span>Ves «Tema 6 · La responsabilidad patrimonial».</span></div></div>
+      <div class="new"><div class="e">🌴</div><div><b>Días libres</b><span>Vacaciones o viajes: el plan se reparte solo.</span></div></div>
+      <div class="new"><div class="e">📅</div><div><b>Tu calendario</b><span>Exámenes y PEC en Google Calendar, iPhone u Outlook.</span></div></div>
+      <div class="new"><div class="e">🌙</div><div><b>Modo oscuro y avisos</b><span>Tema oscuro y aviso cuando hay versión nueva.</span></div></div>
+    </div>
   </div>
 </section>
 
@@ -186,7 +263,7 @@
         <ul>
           <li>Pon nombre a tus temas y los verás en el plan</li>
           <li>Marca días libres o vacaciones y el plan se adapta</li>
-          <li>Añade exámenes, PEC y el plan a tu calendario, con avisos</li>
+          <li>Añade exámenes y PEC a Google Calendar, iPhone u Outlook</li>
         </ul>
       </div>
       <div class="shot"><img src="img/plan-de-hoy.jpg" alt="Plan de hoy con temas y repasos rápidos" loading="lazy"></div>
@@ -230,6 +307,25 @@
   </div>
 </section>
 
+<section class="block" id="manual" style="padding-top:0">
+  <div class="wrap">
+    <div class="manualcta">
+      <div>
+        <span class="kicker">Guía completa</span>
+        <h2>📘 Manual del Planificador v29.2</h2>
+        <p class="sub" style="margin-bottom:18px">Todo el funcionamiento, paso a paso y con ejemplos, más las preguntas frecuentes. Se puede imprimir o guardar en PDF.</p>
+        <a class="btn btn-am" href="manual.html">Abrir el manual →</a>
+      </div>
+      <ol class="chapters">
+        <li>Pasarte desde la v26</li><li>Instalar la app</li><li>Configuración inicial</li><li>Panel y Plan de hoy</li>
+        <li>Constancia y previsión</li><li>Repasos rápidos</li><li>Registro semanal</li><li>Exámenes y PEC</li>
+        <li>Calendario con avisos</li><li>Expediente y septiembre</li><li>Cómo calcula la app</li><li>Tus datos, Drive y QR</li>
+        <li>Modo oscuro y actualizaciones</li><li>Rutina recomendada</li><li>Preguntas frecuentes</li><li>Chuleta de iconos</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
 <section class="block" id="como" style="padding-top:0">
   <div class="wrap">
     <span class="kicker">Cómo empezar</span>
@@ -247,6 +343,8 @@
     <span class="kicker">Preguntas frecuentes</span>
     <h2>Lo que suele preguntarse</h2>
     <div class="faq">
+      <details><summary>Usaba la v26: ¿pierdo mis datos al actualizar?</summary><p>No. Si la tenías instalada, ciérrala y vuelve a abrirla: se actualiza sola con tus datos. Si usabas el archivo .html, ábrelo y pulsa «Instalar»: tus datos pasan a la versión nueva. Lo tienes paso a paso <a href="#actualizar">arriba</a> y en el <a href="manual.html#actualizar">manual</a>.</p></details>
+      <details><summary>¿Tengo que desinstalar la versión anterior?</summary><p>No, nunca. La app se actualiza sola al abrirla con internet y, desde la v29, te avisa cuando hay una versión nueva.</p></details>
       <details><summary>¿Es gratis?</summary><p>Sí, totalmente. No hay registro, ni publicidad, ni versión de pago.</p></details>
       <details><summary>¿Dónde se guardan mis datos?</summary><p>En tu propio dispositivo. Si activas la sincronización, se guarda una copia en una carpeta oculta de <b>tu</b> Google Drive que solo esta app puede ver. Más detalles en la <a href="privacidad.html">política de privacidad</a>.</p></details>
       <details><summary>¿Funciona en iPhone, Android y ordenador?</summary><p>Sí. Ábrelo en el navegador y pulsa «Instalar»: tendrás su icono y funcionará también sin conexión.</p></details>
@@ -261,7 +359,7 @@
   <div class="wrap">
     <div class="final">
       <h2>Empieza hoy tu plan</h2>
-      <p>Abre el planificador, elige tus asignaturas y deja que él haga las cuentas.</p>
+      <p>Abre el planificador, elige tus asignaturas y deja que él haga las cuentas. ¿Dudas? El <a href="manual.html" style="color:#fcd34d">manual</a> lo explica todo.</p>
       <a class="btn btn-am" href="./">Abrir el Planificador Jagpino →</a>
     </div>
   </div>
@@ -270,7 +368,7 @@
 <footer>
   <div class="wrap">
     <span>Planificador Jagpino · hecho por un estudiante de Derecho de la UNED. No es una herramienta oficial de la UNED.</span>
-    <span><a href="privacidad.html">Privacidad</a> · <a href="./">Abrir la app</a></span>
+    <span><a href="manual.html">Manual</a> · <a href="privacidad.html">Privacidad</a> · <a href="./">Abrir la app</a></span>
   </div>
 </footer>
 
