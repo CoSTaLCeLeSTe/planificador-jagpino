@@ -2578,6 +2578,9 @@ html.dark #installPointer *{color:inherit}
         <!-- Main Container -->
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
 
+            <div id="syncTapBanner" class="hidden"></div>
+            <div id="qrPartsBanner" class="hidden"></div>
+
             <div id="importHint" class="hidden p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-xs text-emerald-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <p><b>👋 ¡Bienvenido a la app instalada!</b> Si copiaste tus datos al instalarla, pulsa <b>«Pegar mis datos»</b>. También puedes importar una copia desde <b>Datos</b>.</p>
                 <div class="flex flex-wrap gap-2 shrink-0">
@@ -3238,7 +3241,7 @@ html.dark #installPointer *{color:inherit}
             <!-- Detailed Legal Terms Clause -->
             <div class="pt-3 border-t border-slate-100 text-[11px] text-slate-400 flex flex-col sm:flex-row justify-between gap-2">
                 <p>© 2026 <b>Jagpino</b>. Se autoriza el uso libre y gratuito para fines estrictamente académicos y personales. Queda prohibida su venta, comercialización total o parcial, así como la redistribución sin citar la autoría original.</p>
-                <span class="whitespace-nowrap font-medium text-slate-500">v29</span>
+                <span class="whitespace-nowrap font-medium text-slate-500">v29.1</span>
             </div>
         </div>
     </footer>
@@ -7145,7 +7148,7 @@ html.dark #installPointer *{color:inherit}
         // Ventanas del arranque: primero la de instalar (una vez por versión), luego la guía rápida
         async function startupModals() {
             updateInstallButton();
-            if (isWebOrigin()) await receiveTransferredData();
+            if (isWebOrigin()) { await receiveTransferredData(); await receiveQrPartFromHash(); }
             if (INSTALL_REQUESTED) {
                 try { history.replaceState(null, '', location.pathname); } catch (e) {}
             }
@@ -7302,12 +7305,13 @@ html.dark #installPointer *{color:inherit}
             readGoogleAuthResponse();
             if (!syncAvailable()) return false;
             const m = syncMeta();
-            if (!m.enabled || m.needsTap || syncToken()) return false;
+            if (!m.enabled || syncToken()) return false;
             if (!navigator.onLine) return false;
-            if (/datos=/.test(location.hash) || INSTALL_REQUESTED) return false;   // primero, recoger datos del archivo
+            if (/(datos|qr)=/.test(location.hash) || INSTALL_REQUESTED) return false;   // primero, recoger datos del archivo o del QR
             let last = 0;
             try { last = parseInt(localStorage.getItem(SYNC_SILENT_KEY)) || 0; } catch (e) {}
-            if (Date.now() - last < 3 * 60000) return false;                         // evita bucles
+            // Evita bucles: si el último intento silencioso falló, se reintenta como mucho cada 30 min
+            if (Date.now() - last < (m.needsTap ? 30 : 3) * 60000) return false;
             startGoogleAuth('silent');
             return true;
         }
@@ -7607,6 +7611,18 @@ html.dark #installPointer *{color:inherit}
                 btn.innerHTML = `<i class="fa-solid ${look[1]} text-sm"></i><span>${look[2]}</span>`;
             }
             renderSyncPanel();
+            const bn = document.getElementById('syncTapBanner');
+            if (bn) {
+                const show = syncAvailable() && (st.key === 'tap' || st.key === 'conflict');
+                bn.classList.toggle('hidden', !show);
+                bn.innerHTML = !show ? '' : `
+                    <div class="p-4 rounded-2xl ${st.key === 'conflict' ? 'bg-rose-50 border-2 border-rose-300 text-rose-950' : 'bg-amber-50 border-2 border-amber-300 text-amber-950'} text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <p>${st.key === 'conflict'
+                            ? '<b>☁️ Hay cambios distintos en dos dispositivos.</b> Elige qué datos conservas para seguir sincronizando.'
+                            : '<b>☁️ Este dispositivo no está sincronizando con Google Drive.</b> Google pide que confirmes el permiso: hasta entonces aquí no llegan los cambios de tus otros dispositivos.'}</p>
+                        <button onclick="${st.key === 'conflict' ? 'openSyncConflict()' : 'syncTap()'}" class="shrink-0 px-4 py-2 rounded-xl bg-slate-900 text-amber-300 text-xs font-black">${st.key === 'conflict' ? 'Elegir datos' : 'Sincronizar ahora'}</button>
+                    </div>`;
+            }
         }
 
         function renderSyncPanel() {
@@ -7664,7 +7680,7 @@ html.dark #installPointer *{color:inherit}
             if (!syncAvailable() || !syncMeta().enabled) return;
             if (document.visibilityState === 'visible') {
                 if (syncToken()) syncNow({ quiet: false });
-                else renderSyncUI();
+                else if (!syncBootstrap()) renderSyncUI();   // permiso caducado: se renueva solo (o se pide un toque)
             } else if (syncMeta().dirty) {
                 clearTimeout(syncPushTimer);
                 syncPush(true);
@@ -7684,14 +7700,16 @@ html.dark #installPointer *{color:inherit}
         // - Con la cámara del móvil: se abre la app web con los datos (en Android la app instalada comparte esos datos).
         // - Desde la propia app (Datos → Escanear QR): sirve también en la app instalada de iPhone/iPad.
         const QR_SINGLE_MAX = 900;           // hasta aquí, un solo código (se lee también con la cámara del móvil)
-        const QR_PART_CHARS = 480;           // si no, varios códigos pequeños que se van alternando
-        const QR_PART_MS = 900;
+        const QR_PART_CHARS = 320;           // si no, varios códigos pequeños que se van alternando (fáciles de leer)
+        const QR_PART_MS = 1600;
+        const QR_PARTS_KEY = STORAGE_KEY + '_qrparts';
         const JSQR_LOCAL = 'jsqr.js';
         const JSQR_CDN = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
         let qrScanStream = null;
         let qrScanTimer = null;
         let qrScanBusy = false;
         let qrCycleTimer = null;
+        let qrCycle = null;      // { i, n, svgs, paused }
         let qrParts = null;      // partes recibidas al escanear { set, n, got: {} }
 
         async function buildTransferUrl() {
@@ -7747,12 +7765,115 @@ html.dark #installPointer *{color:inherit}
                 </div>`;
         }
 
+        // Cada parte es un enlace: la cámara del móvil también la abre y la app va juntando las partes
         function qrSplit(packed) {
             const set = Math.random().toString(36).slice(2, 6);
             const n = Math.ceil(packed.length / QR_PART_CHARS);
             const parts = [];
-            for (let i = 0; i < n; i++) parts.push(`JPQ1:${set}:${i + 1}/${n}:${packed.slice(i * QR_PART_CHARS, (i + 1) * QR_PART_CHARS)}`);
+            for (let i = 0; i < n; i++) parts.push(`${APP_URL}#qr=${set}:${i + 1}:${n}:${packed.slice(i * QR_PART_CHARS, (i + 1) * QR_PART_CHARS)}`);
             return parts;
+        }
+
+        function parseQrPart(text) {
+            let m = String(text || '').match(/[#&]qr=([a-z0-9]+):(\d+):(\d+):([^&\s]+)/);
+            if (!m) m = String(text || '').match(/^JPQ1:([a-z0-9]+):(\d+)\/(\d+):(.*)$/s);   // formato de la v28
+            if (!m) return null;
+            const i = parseInt(m[2]), n = parseInt(m[3]);
+            if (!(n >= 1 && n <= 60 && i >= 1 && i <= n)) return null;
+            return { set: m[1], i, n, chunk: m[4] };
+        }
+
+        function storedQrParts() {
+            try {
+                const v = JSON.parse(localStorage.getItem(QR_PARTS_KEY));
+                if (v && v.set && v.got && Date.now() - (v.ts || 0) < 2 * 3600000) return v;
+            } catch (e) {}
+            return null;
+        }
+
+        // Añade una parte; devuelve el paquete completo cuando ya están todas
+        function addQrPart(part) {
+            let cur = qrParts || storedQrParts();
+            if (!cur || cur.set !== part.set) cur = { set: part.set, n: part.n, got: {} };
+            cur.got[part.i] = part.chunk;
+            cur.ts = Date.now();
+            qrParts = cur;
+            const have = Object.keys(cur.got).length;
+            if (have >= cur.n) {
+                const packed = Array.from({ length: cur.n }, (_, k) => cur.got[k + 1]).join('');
+                qrParts = null;
+                try { localStorage.removeItem(QR_PARTS_KEY); } catch (e) {}
+                renderQrPartsBanner();
+                return packed;
+            }
+            try { localStorage.setItem(QR_PARTS_KEY, JSON.stringify(cur)); } catch (e) {}
+            renderQrPartsBanner();
+            return null;
+        }
+
+        function missingQrParts(cur) {
+            const out = [];
+            for (let k = 1; k <= cur.n; k++) if (!cur.got[k]) out.push(k);
+            return out;
+        }
+
+        function renderQrPartsBanner() {
+            const box = document.getElementById('qrPartsBanner');
+            if (!box) return;
+            const cur = qrParts || storedQrParts();
+            if (!cur) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+            const have = Object.keys(cur.got).length;
+            box.classList.remove('hidden');
+            box.innerHTML = `
+                <div class="p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-xs text-emerald-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <p><b>📲 Recibidas ${have} de ${cur.n} partes de tus datos.</b> Faltan: ${missingQrParts(cur).join(', ')}. Escanea las que faltan con la cámara o, más cómodo, con «Escanear aquí».</p>
+                    <div class="flex gap-2 shrink-0">
+                        <button onclick="openQrScan()" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-black">📷 Escanear aquí</button>
+                        <button onclick="cancelQrParts()" class="px-3 py-2 rounded-xl bg-white border border-emerald-300 text-emerald-800 text-xs font-bold">Cancelar</button>
+                    </div>
+                </div>`;
+        }
+
+        function cancelQrParts() {
+            qrParts = null;
+            try { localStorage.removeItem(QR_PARTS_KEY); } catch (e) {}
+            renderQrPartsBanner();
+        }
+
+        // Al abrir la app desde la cámara con una parte del QR (#qr=…)
+        async function receiveQrPartFromHash() {
+            const part = parseQrPart(location.hash);
+            if (!part) { renderQrPartsBanner(); return; }
+            try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+            const packed = addQrPart(part);
+            if (packed) { await applyIncomingPacked(packed, 'qr'); return; }
+            const cur = qrParts || storedQrParts();
+            showToast(`📲 Parte ${part.i} de ${part.n} recibida. Escanea la siguiente.`, 'ok');
+        }
+
+        function qrCycleShow(i) {
+            if (!qrCycle) return;
+            qrCycle.i = (i + qrCycle.n) % qrCycle.n;
+            const box = document.getElementById('qrCycle');
+            const lab = document.getElementById('qrCycleLabel');
+            if (!box) { clearInterval(qrCycleTimer); qrCycleTimer = null; qrCycle = null; return; }
+            box.innerHTML = qrCycle.svgs[qrCycle.i];
+            if (lab) lab.innerText = `Parte ${qrCycle.i + 1} de ${qrCycle.n}`;
+        }
+
+        function qrCycleStep(d) {
+            if (!qrCycle) return;
+            qrCycleShow(qrCycle.i + d);
+            if (!qrCycle.paused) qrCyclePause(true);
+        }
+
+        function qrCyclePause(force) {
+            if (!qrCycle) return;
+            qrCycle.paused = force === true ? true : !qrCycle.paused;
+            clearInterval(qrCycleTimer);
+            qrCycleTimer = qrCycle.paused ? null : setInterval(() => qrCycleShow(qrCycle.i + 1), QR_PART_MS);
+            const b = document.getElementById('qrCyclePause');
+            if (b) b.innerHTML = qrCycle.paused ? '▶️ Seguir' : '⏸ Pausa';
         }
 
         async function openQrShow() {
@@ -7781,39 +7902,29 @@ html.dark #installPointer *{color:inherit}
                     <button onclick="closeQrModal()" class="w-full py-3 rounded-2xl bg-slate-900 text-white font-black">Listo</button>`);
                 return;
             }
-            // Mucho progreso: varios códigos que se alternan solos; se leen desde la app (Datos → Escanear QR)
+            // Mucho progreso: varios códigos que se alternan solos (o a mano con las flechas)
             const parts = qrSplit(packed);
             const svgs = parts.map(t => qrSvg(t).svg);
-            const appQr = qrSvg(APP_URL).svg;
             qrModalShell(`
-                ${qrHeader('📲', 'Pasa tus datos a otro dispositivo', `Tu progreso va en ${parts.length} códigos que se alternan solos`)}
-                <div class="mx-auto w-full max-w-[min(100%,55vh)] rounded-2xl border-2 border-emerald-300 p-2 bg-white relative">
+                ${qrHeader('📲', 'Pasa tus datos a otro dispositivo', `Tu progreso va en ${parts.length} códigos`)}
+                <div class="mx-auto w-full max-w-[min(100%,55vh)] rounded-2xl border-2 border-emerald-300 p-2 bg-white">
                     <div id="qrCycle">${svgs[0]}</div>
-                    <span id="qrCycleLabel" class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-slate-900 text-white text-[11px] font-black">1/${parts.length}</span>
                 </div>
-                <ol class="text-xs text-slate-700 space-y-1.5 list-decimal pl-5 leading-relaxed">
-                    <li>En el otro dispositivo abre el Planificador y ve a <b>Datos → Escanear QR</b>.</li>
-                    <li>Apunta a este código y espera unos segundos sin moverte: irá leyendo las ${parts.length} partes.</li>
-                </ol>
-                <details class="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                    <summary class="cursor-pointer text-xs font-bold text-slate-700 select-none">¿Aún no tienes el Planificador en el otro dispositivo?</summary>
-                    <div class="mt-2 flex items-center gap-3">
-                        <div class="w-28 shrink-0 bg-white rounded-xl p-1 border border-slate-200">${appQr}</div>
-                        <p class="text-xs text-slate-600 leading-relaxed">Escanea este código con la cámara para abrirlo (e instalarlo). Luego vuelve aquí y sigue los pasos de arriba.</p>
-                    </div>
-                </details>
+                <div class="flex items-center justify-center gap-2">
+                    <button onclick="qrCycleStep(-1)" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black" aria-label="Anterior">◀</button>
+                    <span id="qrCycleLabel" class="px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-black min-w-[7.5rem] text-center">Parte 1 de ${parts.length}</span>
+                    <button onclick="qrCycleStep(1)" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black" aria-label="Siguiente">▶</button>
+                    <button id="qrCyclePause" onclick="qrCyclePause()" class="px-3 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-black">⏸ Pausa</button>
+                </div>
+                <div class="space-y-2 text-xs text-slate-700 leading-relaxed">
+                    <p><b>Lo más cómodo:</b> en el otro dispositivo abre el Planificador → <b>Datos → Escanear QR</b> y apunta aquí sin moverte. Lee las ${parts.length} partes solo, mientras van cambiando.</p>
+                    <p><b>Con la cámara del móvil:</b> pausa, escanea la parte 1 y toca el enlace; vuelve aquí, pasa a la parte 2 con ▶ y repite. La app va juntando las partes.</p>
+                </div>
                 <p class="text-[11px] text-slate-500 leading-relaxed">Sube el brillo de la pantalla si no lo lee. No compartas estos códigos: quien los escanee verá tu progreso.</p>
                 <button onclick="closeQrModal()" class="w-full py-3 rounded-2xl bg-slate-900 text-white font-black">Listo</button>`);
-            let i = 0;
+            qrCycle = { i: 0, n: parts.length, svgs, paused: false };
             clearInterval(qrCycleTimer);
-            qrCycleTimer = setInterval(() => {
-                const box = document.getElementById('qrCycle');
-                const lab = document.getElementById('qrCycleLabel');
-                if (!box) { clearInterval(qrCycleTimer); qrCycleTimer = null; return; }
-                i = (i + 1) % parts.length;
-                box.innerHTML = svgs[i];
-                if (lab) lab.innerText = `${i + 1}/${parts.length}`;
-            }, QR_PART_MS);
+            qrCycleTimer = setInterval(() => qrCycleShow(qrCycle.i + 1), QR_PART_MS);
         }
 
         function loadScript(src) {
@@ -7826,35 +7937,47 @@ html.dark #installPointer *{color:inherit}
             });
         }
 
+        async function loadJsQr() {
+            if (typeof jsQR === 'function') return true;
+            const sources = isWebOrigin() ? [JSQR_LOCAL, JSQR_CDN] : [JSQR_CDN];
+            for (const src of sources) {
+                try { await loadScript(src); if (typeof jsQR === 'function') return true; } catch (e) {}
+            }
+            return false;
+        }
+
         async function getQrDecoder() {
+            let det = null;
             try {
                 if ('BarcodeDetector' in window) {
                     const formats = await BarcodeDetector.getSupportedFormats();
-                    if (formats.includes('qr_code')) {
-                        const det = new BarcodeDetector({ formats: ['qr_code'] });
-                        return async source => {
-                            const codes = await det.detect(source);
-                            return codes.length ? codes[0].rawValue : null;
-                        };
-                    }
+                    if (formats.includes('qr_code')) det = new BarcodeDetector({ formats: ['qr_code'] });
                 }
-            } catch (e) {}
-            if (typeof jsQR !== 'function') {
-                const sources = isWebOrigin() ? [JSQR_LOCAL, JSQR_CDN] : [JSQR_CDN];
-                for (const src of sources) {
-                    try { await loadScript(src); if (typeof jsQR === 'function') break; } catch (e) {}
-                }
-            }
-            if (typeof jsQR !== 'function') return null;
+            } catch (e) { det = null; }
+            const hasJs = await loadJsQr();
+            if (!det && !hasJs) return null;
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            let turn = 0;
             return async video => {
                 const w = video.videoWidth, h = video.videoHeight;
                 if (!w || !h) return null;
-                canvas.width = w; canvas.height = h;
-                ctx.drawImage(video, 0, 0, w, h);
-                const img = ctx.getImageData(0, 0, w, h);
-                const code = jsQR(img.data, w, h, { inversionAttempts: 'dontInvert' });
+                turn++;
+                if (det && (!hasJs || turn % 2 === 1)) {
+                    try {
+                        const codes = await det.detect(video);
+                        if (codes.length) return codes[0].rawValue;
+                    } catch (e) {}
+                    if (!hasJs) return null;
+                }
+                // jsQR sobre el centro de la imagen (más rápido y con más detalle donde está el código)
+                const side = Math.min(w, h) * 0.85;
+                const sx = (w - side) / 2, sy = (h - side) / 2;
+                const out = Math.min(900, Math.round(side));
+                canvas.width = out; canvas.height = out;
+                ctx.drawImage(video, sx, sy, side, side, 0, 0, out, out);
+                const img = ctx.getImageData(0, 0, out, out);
+                const code = jsQR(img.data, out, out, { inversionAttempts: turn % 4 === 0 ? 'attemptBoth' : 'dontInvert' });
                 return code ? code.data : null;
             };
         }
@@ -7882,7 +8005,7 @@ html.dark #installPointer *{color:inherit}
 
         async function openQrScan() {
             stopQrScan();
-            qrParts = null;
+            qrParts = storedQrParts();
             qrModalShell(`
                 ${qrHeader('📷', 'Escanear QR', 'En el otro dispositivo: Datos → Mostrar QR')}
                 <div class="relative rounded-2xl overflow-hidden bg-slate-900 aspect-square max-h-[60vh] mx-auto">
@@ -7924,21 +8047,17 @@ html.dark #installPointer *{color:inherit}
                     qrScanBusy = false;
                     if (text) {
                         text = String(text);
-                        const part = text.match(/^JPQ1:([a-z0-9]+):(\d+)\/(\d+):(.*)$/s);
+                        const part = parseQrPart(text);
                         const m = text.match(/[#&]datos=([^&\s]+)/);
                         if (part) {
-                            const [, set, i, n, chunk] = part;
-                            if (!qrParts || qrParts.set !== set) qrParts = { set, n: +n, got: {} };
-                            qrParts.got[+i] = chunk;
-                            const have = Object.keys(qrParts.got).length;
-                            if (msg) msg.innerHTML = `Leyendo… <b>${have} de ${qrParts.n}</b> partes. No muevas el móvil.`;
-                            if (have === qrParts.n) {
-                                const packed = Array.from({ length: qrParts.n }, (_, k) => qrParts.got[k + 1]).join('');
-                                qrParts = null;
+                            const packed = addQrPart(part);
+                            if (packed) {
                                 closeQrModal();
                                 await applyIncomingPacked(packed, 'qr');
                                 return;
                             }
+                            const cur = qrParts;
+                            if (msg && cur) msg.innerHTML = `Leídas <b>${Object.keys(cur.got).length} de ${cur.n}</b> partes · faltan ${missingQrParts(cur).join(', ')}. No muevas el móvil.`;
                         } else if (m) {
                             closeQrModal();
                             await applyIncomingPacked(m[1], 'qr');
@@ -7955,12 +8074,19 @@ html.dark #installPointer *{color:inherit}
             tick();
         }
 
+        // Si la app ya estaba abierta y la cámara abre otra parte en la misma pestaña, solo cambia el #
+        window.addEventListener('hashchange', () => {
+            if (!isWebOrigin()) return;
+            if (/[#&]qr=/.test(location.hash)) receiveQrPartFromHash();
+            else if (/[#&]datos=/.test(location.hash)) receiveTransferredData();
+        });
+
         // ================= V28: ESTADÍSTICAS ANÓNIMAS DE USO =================
         // Una vez al día cada dispositivo envía: un número aleatorio propio, la versión, el tipo de dispositivo,
         // cómo se usa (web, app instalada o archivo), si sincroniza con Drive y, si el alumno lo pone, su nombre de usuario.
         // Nunca se envían datos de estudio. Se puede desactivar en Datos.
         const STATS_URL = 'https://script.google.com/macros/s/AKfycbwRdxL0fvYa05e_lmOlCYfZ9IkuHmcd0YsHIIVaU3LnvOOuYjKrb-bZLNjJo2iWJHHa/exec';   // URL de la aplicación web de Google Apps Script (…/exec)
-        const APP_VERSION = 'v29';
+        const APP_VERSION = 'v29.1';
         const STATS_KEY = STORAGE_KEY + '_stats';
         const ALIAS_MAX = 30;
 
