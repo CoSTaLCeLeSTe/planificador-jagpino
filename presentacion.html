@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planificador Jagpino · Planifica tu grado en Derecho UNED</title>
+<meta name="description" content="Planificador de estudio gratuito para el grado en Derecho de la UNED: plan diario, repasos, reparto de exámenes y PEC, expediente y sincronización entre dispositivos.">
+<meta name="theme-color" content="#064e3b">
+<meta property="og:title" content="Planificador Jagpino · Derecho UNED">
+<meta property="og:description" content="Tu plan de estudio diario, inteligente y gratuito para el grado en Derecho de la UNED.">
+<meta property="og:image" content="https://costalceleste.github.io/planificador-jagpino/img/plan-de-hoy.jpg">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f4; --card: #ffffff; --ink: #0f172a; --ink2: #334155; --muted: #64748b; --line: #e2e8f0;
+    --em: #059669; --em-d: #064e3b; --em-l: #d1fae5; --am: #f59e0b; --am-l: #fef3c7; --night: #0b1220;
+    --radius: 22px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0b1220; --card: #111a2e; --ink: #e2e8f0; --ink2: #cbd5e1; --muted: #94a3b8; --line: #263450; --em-l: rgba(16,185,129,.14); --am-l: rgba(245,158,11,.14); }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif; background: var(--bg); color: var(--ink); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; }
+  img { max-width: 100%; display: block; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+
+  /* Cabecera */
+  .top { position: sticky; top: 0; z-index: 10; background: rgba(2,6,23,.86); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,.06); }
+  .top .wrap { display: flex; align-items: center; justify-content: space-between; height: 62px; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; font-weight: 800; letter-spacing: .02em; font-size: 15px; }
+  .brand img { width: 34px; height: 34px; border-radius: 10px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 20px; border-radius: 14px; font-weight: 800; font-size: 15px; text-decoration: none; border: 0; cursor: pointer; transition: transform .15s ease, background .15s ease, box-shadow .15s ease; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-am { background: var(--am); color: #111827; box-shadow: 0 10px 30px -10px rgba(245,158,11,.7); }
+  .btn-am:hover { background: #fbbf24; }
+  .btn-ghost { background: rgba(255,255,255,.08); color: #e2e8f0; border: 1px solid rgba(255,255,255,.18); }
+  .btn-sm { padding: 9px 14px; font-size: 13px; border-radius: 12px; }
+
+  /* Portada */
+  .hero { background: radial-gradient(1200px 500px at 85% -10%, rgba(16,185,129,.35), transparent 60%), radial-gradient(800px 400px at 0% 110%, rgba(245,158,11,.18), transparent 60%), linear-gradient(160deg, #020617 0%, #0f172a 55%, #064e3b 130%); color: #fff; padding: 64px 0 0; overflow: hidden; }
+  .hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 40px; align-items: end; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: rgba(16,185,129,.16); border: 1px solid rgba(52,211,153,.35); color: #a7f3d0; font-size: 12.5px; font-weight: 700; }
+  h1 { font-size: clamp(34px, 5.2vw, 58px); line-height: 1.04; letter-spacing: -.025em; margin: 18px 0 16px; font-weight: 800; }
+  h1 em { font-style: normal; color: var(--am); }
+  .lead { font-size: clamp(16px, 1.9vw, 19px); color: #cbd5e1; max-width: 34em; margin: 0 0 26px; }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+  .micro { font-size: 13px; color: #94a3b8; display: flex; flex-wrap: wrap; gap: 6px 16px; padding-bottom: 48px; }
+  .micro span::before { content: '✓ '; color: #34d399; font-weight: 800; }
+  .phone { justify-self: center; width: min(340px, 82vw); border-radius: 38px 38px 0 0; padding: 12px 12px 0; background: linear-gradient(180deg, #1e293b, #0f172a); border: 1px solid rgba(255,255,255,.12); border-bottom: 0; box-shadow: 0 -20px 80px -20px rgba(16,185,129,.45); }
+  .phone img { border-radius: 28px 28px 0 0; aspect-ratio: 390 / 600; object-fit: cover; object-position: top; }
+
+  /* Secciones */
+  section.block { padding: 84px 0; }
+  .kicker { color: var(--em); font-weight: 800; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; }
+  h2 { font-size: clamp(26px, 3.4vw, 38px); line-height: 1.12; letter-spacing: -.02em; margin: 10px 0 14px; font-weight: 800; }
+  .sub { color: var(--muted); font-size: 17px; max-width: 40em; margin: 0; }
+
+  .manifesto { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 34px; display: grid; grid-template-columns: auto 1fr; gap: 22px; align-items: start; }
+  .manifesto .big { font-size: 46px; line-height: 1; }
+  .manifesto p { margin: 0; font-size: 17px; color: var(--ink2); }
+  .manifesto b { color: var(--ink); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .chip { padding: 6px 12px; border-radius: 999px; background: var(--em-l); color: var(--em-d); font-weight: 700; font-size: 13px; }
+  @media (prefers-color-scheme: dark) { .chip { color: #a7f3d0; } }
+
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 34px; }
+  .feat { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px; }
+  .feat .ic { width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; font-size: 22px; background: var(--em-l); margin-bottom: 14px; }
+  .feat:nth-child(3n+2) .ic { background: var(--am-l); }
+  .feat h3 { margin: 0 0 6px; font-size: 17px; font-weight: 800; }
+  .feat p { margin: 0; color: var(--muted); font-size: 14.5px; }
+
+  .show { display: grid; grid-template-columns: 1fr 1.25fr; gap: 40px; align-items: center; margin-top: 64px; }
+  .show.rev { grid-template-columns: 1.25fr 1fr; }
+  .show.rev .txt { order: 2; }
+  .shot { border-radius: 18px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 30px 60px -30px rgba(2,6,23,.45); background: var(--card); }
+  .show h3 { font-size: 24px; margin: 8px 0 10px; letter-spacing: -.01em; }
+  .show p { color: var(--muted); margin: 0 0 10px; }
+  .show ul { margin: 12px 0 0; padding: 0; list-style: none; }
+  .show li { padding: 6px 0 6px 28px; position: relative; color: var(--ink2); font-size: 15px; }
+  .show li::before { content: ''; position: absolute; left: 4px; top: 13px; width: 10px; height: 10px; border-radius: 3px; background: var(--em); }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 30px; counter-reset: s; }
+  .step { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px; position: relative; }
+  .step::before { counter-increment: s; content: counter(s); position: absolute; top: -14px; left: 20px; width: 30px; height: 30px; border-radius: 10px; background: var(--am); color: #111827; font-weight: 800; display: grid; place-items: center; }
+  .step h3 { margin: 6px 0 6px; font-size: 16px; }
+  .step p { margin: 0; color: var(--muted); font-size: 14.5px; }
+
+  .faq { margin-top: 26px; display: grid; gap: 10px; }
+  details { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px 20px; }
+  summary { cursor: pointer; font-weight: 800; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '+'; color: var(--em); font-size: 20px; line-height: 1; }
+  details[open] summary::after { content: '–'; }
+  details p { margin: 10px 0 0; color: var(--muted); }
+
+  .final { background: linear-gradient(135deg, #064e3b, #0f172a); color: #fff; border-radius: 28px; padding: 48px 34px; text-align: center; }
+  .final h2 { color: #fff; }
+  .final p { color: #cbd5e1; margin: 0 auto 24px; max-width: 34em; }
+
+  footer { padding: 34px 0 46px; color: var(--muted); font-size: 13.5px; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 10px 22px; justify-content: space-between; }
+  footer a { color: var(--muted); }
+
+  @media (max-width: 880px) {
+    .hero { padding-top: 40px; }
+    .hero-grid, .show, .show.rev { grid-template-columns: 1fr; }
+    .show.rev .txt { order: 0; }
+    .features, .steps { grid-template-columns: 1fr; }
+    .manifesto { grid-template-columns: 1fr; padding: 24px; }
+    section.block { padding: 60px 0; }
+    .micro { padding-bottom: 28px; }
+    .top .btn-ghost, .hide-m { display: none; }
+    .brand { font-size: 13px; }
+  }
+  @media (min-width: 881px) and (max-width: 1040px) { .features { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#"><img src="icon-192.png" alt="">PLANIFICADOR JAGPINO</a>
+    <div style="display:flex;gap:8px">
+      <a class="btn btn-ghost btn-sm" href="#funciones">Funciones</a>
+      <a class="btn btn-am btn-sm" href="./">Abrir<span class="hide-m">&nbsp;el planificador</span></a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="pill">🎓 Grado en Derecho · UNED</span>
+      <h1>Sabe cada día <em>qué estudiar</em> y cuánto, hasta el examen.</h1>
+      <p class="lead">El Planificador Jagpino reparte tu temario según la dificultad de cada asignatura, tus horas reales y las fechas oficiales de exámenes y PEC. Y se reajusta solo cuando la vida se cruza.</p>
+      <div class="cta">
+        <a class="btn btn-am" href="./">Empezar gratis →</a>
+        <a class="btn btn-ghost" href="#como">Cómo funciona</a>
+      </div>
+      <div class="micro"><span>Gratis</span><span>Sin registro</span><span>Funciona sin conexión</span><span>Android, iPhone y PC</span></div>
+    </div>
+    <div class="phone"><img src="img/movil.jpg" alt="Plan de hoy en el móvil: temas que tocan, tiempo y repasos"></div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="wrap">
+    <div class="manifesto">
+      <div class="big">🧭</div>
+      <div>
+        <p><b>Cada estudiante estudia a su manera</b>: con apuntes impresos, en PDF, con el manual subrayado, con resúmenes propios o con los exámenes de otros años. El planificador no te impone un método. <b>Planifica a partir de tus datos</b>: qué asignaturas llevas, cuántos temas tiene cada una, cuántas horas tienes cada día y qué has hecho ya.</p>
+        <div class="chips"><span class="chip">📄 Apuntes impresos</span><span class="chip">💻 PDF</span><span class="chip">📘 Manual</span><span class="chip">📝 Resúmenes</span><span class="chip">🧪 Exámenes anteriores</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="funciones" style="padding-top:0">
+  <div class="wrap">
+    <span class="kicker">Funciones</span>
+    <h2>Todo lo que necesitas para llegar al examen con el temario dado</h2>
+    <p class="sub">Pensado para quien estudia con trabajo, familia y poco tiempo.</p>
+
+    <div class="features">
+      <div class="feat"><div class="ic">📋</div><h3>Plan de hoy</h3><p>Qué tema toca, cuánto tiempo y en qué asignatura, según tu disponibilidad real de ese día.</p></div>
+      <div class="feat"><div class="ic">🔁</div><h3>Repasos a la semana y al mes</h3><p>Cada tema terminado vuelve en un repaso rápido. Nunca después del examen.</p></div>
+      <div class="feat"><div class="ic">🗓️</div><h3>Exámenes y PEC</h3><p>Fechas oficiales de la convocatoria y reparto entre las dos semanas para equilibrar la carga de repaso.</p></div>
+      <div class="feat"><div class="ic">🔥</div><h3>Constancia y previsión</h3><p>Racha de días, mapa de calor y aviso si a tu ritmo no terminas el temario a tiempo.</p></div>
+      <div class="feat"><div class="ic">🎓</div><h3>Expediente y septiembre</h3><p>Notas, créditos y media del grado. Si algo se resiste, monta el plan de septiembre en un clic.</p></div>
+      <div class="feat"><div class="ic">☁️</div><h3>En todos tus dispositivos</h3><p>Sincroniza con tu Google Drive o pasa los datos con un código QR. Instálalo como app.</p></div>
+    </div>
+
+    <div class="show">
+      <div class="txt">
+        <span class="kicker">Día a día</span>
+        <h3>Abres la app y ya sabes qué hacer</h3>
+        <p>El plan se recalcula cada día con lo que llevas hecho: si un día no puedes, el resto se reparte sin que tengas que rehacer nada.</p>
+        <ul>
+          <li>Pon nombre a tus temas y los verás en el plan</li>
+          <li>Marca días libres o vacaciones y el plan se adapta</li>
+          <li>Añade exámenes, PEC y el plan a tu calendario, con avisos</li>
+        </ul>
+      </div>
+      <div class="shot"><img src="img/plan-de-hoy.jpg" alt="Plan de hoy con temas y repasos rápidos" loading="lazy"></div>
+    </div>
+
+    <div class="show rev">
+      <div class="txt">
+        <span class="kicker">Motivación</span>
+        <h3>Tu constancia, a la vista</h3>
+        <p>La racha de días y el mapa de calor te enseñan cómo vas. La previsión te avisa a tiempo si al ritmo actual no llegas.</p>
+      </div>
+      <div class="shot"><img src="img/constancia.jpg" alt="Racha, mapa de calor y previsión del temario" loading="lazy"></div>
+    </div>
+
+    <div class="show">
+      <div class="txt">
+        <span class="kicker">Exámenes</span>
+        <h3>Dos semanas de exámenes, la misma carga</h3>
+        <p>La app propone en qué semana presentarte a cada asignatura para que las dos semanas de repaso pesen lo mismo, según la dificultad y lo que llevas estudiado.</p>
+      </div>
+      <div class="shot"><img src="img/examenes.jpg" alt="Reparto de exámenes entre las dos semanas" loading="lazy"></div>
+    </div>
+
+    <div class="show rev">
+      <div class="txt">
+        <span class="kicker">Tu grado</span>
+        <h3>Expediente, créditos y nota media</h3>
+        <p>Las 45 asignaturas del grado con sus créditos. Apunta tus notas y mira cuánto te queda.</p>
+      </div>
+      <div class="shot"><img src="img/expediente.jpg" alt="Expediente del grado con créditos y nota media" loading="lazy"></div>
+    </div>
+
+    <div class="show">
+      <div class="txt">
+        <span class="kicker">De noche</span>
+        <h3>Modo oscuro</h3>
+        <p>Automático según tu dispositivo o a tu elección, para estudiar de noche sin deslumbrarte.</p>
+      </div>
+      <div class="shot"><img src="img/oscuro.jpg" alt="El planificador en modo oscuro" loading="lazy"></div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="como" style="padding-top:0">
+  <div class="wrap">
+    <span class="kicker">Cómo empezar</span>
+    <h2>En cinco minutos tienes tu plan</h2>
+    <div class="steps">
+      <div class="step"><h3>Elige tus asignaturas</h3><p>Y cuántos temas tiene cada una, según tus apuntes o el manual.</p></div>
+      <div class="step"><h3>Di cuántas horas tienes</h3><p>Día a día: no es lo mismo un martes con trabajo que un sábado.</p></div>
+      <div class="step"><h3>Sigue el Plan de hoy</h3><p>Anota lo que estudias y marca los temas. El plan se ajusta solo.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="block" style="padding-top:0">
+  <div class="wrap">
+    <span class="kicker">Preguntas frecuentes</span>
+    <h2>Lo que suele preguntarse</h2>
+    <div class="faq">
+      <details><summary>¿Es gratis?</summary><p>Sí, totalmente. No hay registro, ni publicidad, ni versión de pago.</p></details>
+      <details><summary>¿Dónde se guardan mis datos?</summary><p>En tu propio dispositivo. Si activas la sincronización, se guarda una copia en una carpeta oculta de <b>tu</b> Google Drive que solo esta app puede ver. Más detalles en la <a href="privacidad.html">política de privacidad</a>.</p></details>
+      <details><summary>¿Funciona en iPhone, Android y ordenador?</summary><p>Sí. Ábrelo en el navegador y pulsa «Instalar»: tendrás su icono y funcionará también sin conexión.</p></details>
+      <details><summary>¿Y si no tengo cuenta de Google?</summary><p>Puedes pasar tus datos de un dispositivo a otro con un código QR o exportando una copia. También puedes crear una cuenta de Google con tu correo de siempre (Outlook, iCloud…), sin necesidad de Gmail.</p></details>
+      <details><summary>¿Sirve para otras carreras?</summary><p>Está hecho para el grado en Derecho de la UNED: lleva sus asignaturas, su dificultad relativa y su calendario oficial de exámenes y PEC.</p></details>
+      <details><summary>¿Es una herramienta oficial de la UNED?</summary><p>No. Es un proyecto personal de un estudiante del grado. Comprueba siempre las fechas oficiales en el curso virtual y en la web de la UNED.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="block" style="padding-top:0">
+  <div class="wrap">
+    <div class="final">
+      <h2>Empieza hoy tu plan</h2>
+      <p>Abre el planificador, elige tus asignaturas y deja que él haga las cuentas.</p>
+      <a class="btn btn-am" href="./">Abrir el Planificador Jagpino →</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>Planificador Jagpino · hecho por un estudiante de Derecho de la UNED. No es una herramienta oficial de la UNED.</span>
+    <span><a href="privacidad.html">Privacidad</a> · <a href="./">Abrir la app</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
