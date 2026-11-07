@@ -3333,7 +3333,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             <!-- Detailed Legal Terms Clause -->
             <div class="pt-3 border-t border-slate-100 text-[11px] text-slate-400 flex flex-col sm:flex-row justify-between gap-2">
                 <p>© 2026 <b>Jagpino</b>. Se autoriza el uso libre y gratuito para fines estrictamente académicos y personales. Queda prohibida su venta, comercialización total o parcial, así como la redistribución sin citar la autoría original.</p>
-                <span class="whitespace-nowrap font-medium text-slate-500">v30</span>
+                <span class="whitespace-nowrap font-medium text-slate-500">v30.1</span>
             </div>
         </div>
     </footer>
@@ -8314,7 +8314,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
         // cómo se usa (web, app instalada o archivo), si sincroniza con Drive y, si el alumno lo pone, su nombre de usuario.
         // Nunca se envían datos de estudio. Se puede desactivar en Datos.
         const STATS_URL = 'https://script.google.com/macros/s/AKfycbwRdxL0fvYa05e_lmOlCYfZ9IkuHmcd0YsHIIVaU3LnvOOuYjKrb-bZLNjJo2iWJHHa/exec';   // URL de la aplicación web de Google Apps Script (…/exec)
-        const APP_VERSION = 'v30';
+        const APP_VERSION = 'v30.1';
         const STATS_KEY = STORAGE_KEY + '_stats';
         const ALIAS_MAX = 30;
 
@@ -10888,6 +10888,36 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             if (f.length) html += `<div class="px-3 py-2 rounded-2xl bg-white border border-rose-200 text-[11px] text-rose-900">🧗 Prioridad de la semana: ${f.map(n => `<b>${escapeHtml(shortName(n))}</b> (hasta el ${formatShortDate(parseLocalDate(focus[n]))})`).join(', ')}.</div>`;
             return html;
         }
+
+        // ================= V30.1: CAMBIO DE DÍA CON LA APP ABIERTA =================
+        // A las 00:00 (o al volver a la app si estaba en segundo plano) se recalcula todo para el nuevo día.
+        let currentDayKey = null;
+        let midnightTimer = null;
+
+        function armMidnight() {
+            clearTimeout(midnightTimer);
+            const now = new Date();
+            const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5);
+            midnightTimer = setTimeout(() => { checkNewDay(); armMidnight(); }, Math.max(1000, next - now));
+        }
+
+        function checkNewDay() {
+            const k = todayKey();
+            if (currentDayKey === null) { currentDayKey = k; return; }
+            if (k === currentDayKey) return;
+            currentDayKey = k;
+            try { calculatePlan(); } catch (e) {}
+            try { if (currentTab === 2) renderTrackingTab(false); } catch (e) {}
+            showToast('☀️ Nuevo día: tu Plan de hoy ya está actualizado.', 'ok');
+            setTimeout(() => { try { examProposalCheck(); } catch (e) {} }, 1500);
+            armMidnight();
+        }
+
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkNewDay(); });
+        window.addEventListener('focus', checkNewDay);
+        window.addEventListener('pageshow', checkNewDay);
+        setInterval(checkNewDay, 60 * 1000);
+        document.addEventListener('DOMContentLoaded', () => { currentDayKey = todayKey(); armMidnight(); });
         let currentWizardStep = 1;
         const totalWizardSteps = 5;
 
