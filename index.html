@@ -2391,6 +2391,7 @@ html.dark .bg-rose-50{background-color:rgba(244,63,94,0.1)}
 html.dark .bg-rose-50\/50{background-color:rgba(244,63,94,0.1)}
 html.dark .bg-rose-50\/90{background-color:rgba(244,63,94,0.1)}
 html.dark .bg-rose-50\/95{background-color:rgba(244,63,94,0.1)}
+html.dark .bg-sky-100{background-color:rgba(14,165,233,0.16)}
 html.dark .bg-sky-200{background-color:rgba(14,165,233,0.26)}
 html.dark .bg-sky-50{background-color:rgba(14,165,233,0.1)}
 html.dark .bg-sky-50\/50{background-color:rgba(14,165,233,0.1)}
@@ -2482,6 +2483,7 @@ html.dark .text-rose-900{color:#fecdd3}
 html.dark .text-rose-950{color:#ffe4e6}
 html.dark .text-sky-700{color:#7dd3fc}
 html.dark .text-sky-900{color:#bae6fd}
+html.dark .text-sky-950{color:#e0f2fe}
 html.dark .text-slate-500{color:#8b9ab0}
 html.dark .text-slate-600{color:#a3b1c6}
 html.dark .text-slate-700{color:#cbd5e1}
@@ -3331,7 +3333,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             <!-- Detailed Legal Terms Clause -->
             <div class="pt-3 border-t border-slate-100 text-[11px] text-slate-400 flex flex-col sm:flex-row justify-between gap-2">
                 <p>© 2026 <b>Jagpino</b>. Se autoriza el uso libre y gratuito para fines estrictamente académicos y personales. Queda prohibida su venta, comercialización total o parcial, así como la redistribución sin citar la autoría original.</p>
-                <span class="whitespace-nowrap font-medium text-slate-500">v29.9</span>
+                <span class="whitespace-nowrap font-medium text-slate-500">v30</span>
             </div>
         </div>
     </footer>
@@ -3842,7 +3844,9 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             });
 
             const started = cal.todayIdx > 0 || realTotal > 0;
-            return { cal, subjects, done, total, real, realTotal, weekTotals, numWeeks, expected, expectedToDate, status, windowDays, started, days };
+            const prog = { cal, subjects, done, total, real, realTotal, weekTotals, numWeeks, expected, expectedToDate, status, windowDays, started, days };
+            prog.press = computePressures(prog);      // V29.10: presión de cada asignatura (ranking, plan y reparto de exámenes)
+            return prog;
         }
 
         // Carga reajustada con un conjunto dado de asignaturas pospuestas (sirve también para simular)
@@ -3905,7 +3909,8 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                 const progressPct = initial > 0 ? Math.min(100, Math.round((done / initial) * 100)) : 0;
                 const isPostponed = !!postponedSubjects[sub.name];
                 const sim = computeLoad(p, Object.assign({}, postponedSubjects, { [sub.name]: !isPostponed }));
-                const dropScore = (remaining * (1 + sub.weight)) / Math.max(1, progressPct + 10);
+                const press = p.press && p.press[sub.name] ? p.press[sub.name].P : 1;
+                const dropScore = (remaining * (1 + sub.weight)) / Math.max(1, progressPct + 10) * Math.max(1, press);
                 return { sub, done, initial, remaining, progressPct, isPostponed, simulatedDaily: sim.daily, dropScore };
             });
 
@@ -3946,7 +3951,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                             ${badgeCandidate}
                         </div>
                         <p class="text-[11px] text-slate-500">
-                            <b>${item.remaining.toFixed(1)} h pendientes</b> · ${item.progressPct}% cubierto · Examen ${item.sub.exam ? examLabel(item.sub) : '-'} · Dificultad: ${item.sub.weight.toFixed(3)}
+                            <b>${item.remaining.toFixed(1)} h pendientes</b> · ${item.progressPct}% cubierto · Examen ${item.sub.exam ? examLabel(item.sub) : '-'} · Dificultad: ${item.sub.weight.toFixed(3)}${p.press && p.press[item.sub.name] && !item.isPostponed ? ` · ${pressTxt(p.press[item.sub.name].P)}` : ''}
                         </p>
                         <p class="text-[11px] ${item.isPostponed ? 'text-slate-600' : 'text-emerald-700 font-semibold'}">
                             ${item.isPostponed
@@ -4028,28 +4033,53 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                 .filter(s => s.valid && !postponedSubjects[s.name] && officialOptions(s.name))
                 .map(s => {
                     const opts = officialOptions(s.name);
-                    return { name: s.name, need: examReviewNeed(s), opts: { 1: opts.find(o => o.week === 1), 2: opts.find(o => o.week === 2) } };
+                    const pr = lastPressure[s.name] || {};
+                    return { name: s.name, need: examReviewNeed(s), back: pr.backExam || 0, cls: pr.cls || difficultyClass(s), opts: { 1: opts.find(o => o.week === 1), 2: opts.find(o => o.week === 2) } };
                 });
         }
 
+        // V29.10: tiempo de cada semana de exámenes = su semana de repaso + los días hasta su último examen (desde hoy)
+        function examWindows() {
+            const last1 = parseLocalDate(EXAM_DATA.week1[EXAM_DATA.week1.length - 1]);
+            const last2 = parseLocalDate(EXAM_DATA.week2[EXAM_DATA.week2.length - 1]);
+            const today = startOfToday();
+            const sum = (a, b) => { let h = 0; for (let d = new Date(Math.max(a, today)); d <= b; d = addDays(d, 1)) h += availOn(d); return h; };
+            return { 1: sum(addDays(OFFICIAL_W1, -7), last1), 2: sum(addDays(last1, 1), last2) };
+        }
+
+        // Ocupación de cada semana = lo que necesitan sus asignaturas (repaso + temario que aún les faltará) ÷ su tiempo.
+        // 100 % = lo justo. Las fáciles y medias pueden recuperar temario en su semana de repaso (hasta la mitad de ella);
+        // el temario pendiente de las difíciles pesa el doble porque no se puede recuperar ahí.
         function scoreExamAssignment(items, assign) {
             let s1 = 0, s2 = 0, n1 = 0, n2 = 0, clashes = 0, sameDay = 0;
             const slots = {}, days = {};
+            const cap = examWindows();
+            const totNeed = items.reduce((a, it) => a + it.need, 0) || 1;
+            const totCap = (cap[1] + cap[2]) || 1;
+            const load = { 1: 0, 2: 0 }, back = { 1: 0, 2: 0 };
             items.forEach(it => {
                 const w = assign[it.name];
                 if (w === 1) { s1 += it.need; n1++; } else { s2 += it.need; n2++; }
+                load[w] += totCap * it.need / totNeed + (it.cls === 'hard' ? 2 * it.back : 0);
+                if (it.cls !== 'hard') back[w] += it.back;
                 const o = it.opts[w];
                 const k = `${o.date} ${o.time}`;
                 slots[k] = (slots[k] || 0) + 1;
                 days[o.date] = (days[o.date] || 0) + 1;
             });
+            [1, 2].forEach(w => {
+                const room = REVIEW_CATCHUP * cap[w];
+                load[w] += Math.min(back[w], room) + 3 * Math.max(0, back[w] - room);
+            });
             Object.values(slots).forEach(c => { if (c > 1) clashes += c - 1; });
             Object.values(days).forEach(c => { if (c > 1) sameDay += c - 1; });
-            const tot = (s1 + s2) || 1;
-            const imbalance = Math.abs(s1 - s2) / tot;
-            // Prioridad: sin choques de hora > equilibrio > evitar dos exámenes el mismo día > nº de exámenes parecido
-            const score = 10 * clashes + imbalance + 0.04 * sameDay + 0.005 * Math.abs(n1 - n2) + 0.002 * (s1 - s2) / tot;
-            return { score, imbalance, balance: 1 - imbalance, s1, s2, n1, n2, clashes, sameDay };
+            const occ1 = cap[1] > 0 ? load[1] / cap[1] : (load[1] > 0 ? 9 : 0);
+            const occ2 = cap[2] > 0 ? load[2] / cap[2] : (load[2] > 0 ? 9 : 0);
+            const maxOcc = Math.max(occ1, occ2);
+            const imbalance = Math.abs(occ1 - occ2) / ((occ1 + occ2) || 1);
+            // Prioridad: sin choques de hora > la semana más apretada lo menos apretada posible > equilibrio > evitar dos el mismo día
+            const score = 10 * clashes + maxOcc + 0.2 * Math.abs(occ1 - occ2) + 0.04 * sameDay + 0.005 * Math.abs(n1 - n2);
+            return { score, imbalance, balance: 1 - imbalance, s1, s2, n1, n2, clashes, sameDay, occ1, occ2, maxOcc, cap };
         }
 
         function bestExamAssignment(items, fixedWeek) {
@@ -4098,7 +4128,8 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             const best = bestExamAssignment(items, it => (examChoice[it.name] && examChoice[it.name].pin) ? examChoice[it.name].w : null);
             const changes = items.filter(it => best.assign[it.name] !== current[it.name]).map(it => ({ name: it.name, w: best.assign[it.name] }));
             if (!changes.length) return null;
-            const better = (best.clashes < cur.clashes) || (cur.score - best.score >= (force ? 1e-6 : BALANCE_TOLERANCE));
+            // V29.10: cualquier mejora real se propone (solo se ignoran los empates)
+            const better = (best.clashes < cur.clashes) || (cur.score - best.score > 0.005);
             return better ? { cur, best, changes } : null;
         }
 
@@ -4118,6 +4149,15 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             afterExamChange();
         }
 
+        function setExamPin(name, on) {
+            if (!DB_NAMES.has(name) || !officialOptions(name)) return;
+            const cur = currentCalculation.subjects.find(s => s.name === name);
+            const w = (examChoice[name] && examChoice[name].w) || (cur && cur.examWeek) || 1;
+            examChoice[name] = { w, pin: !!on };
+            afterExamChange();
+            if (!on) setTimeout(() => examProposalCheck(), 300);
+        }
+
         function unpinExam(name) {
             if (!examChoice[name]) return;
             examChoice[name].pin = false;
@@ -4128,6 +4168,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             const sug = examSuggestion(currentCalculation.subjects, force);
             if (!sug) return;
             sug.changes.forEach(c => { examChoice[c.name] = { w: c.w, pin: false }; });
+            rememberMovedExams(sug.changes.map(c => c.name));
             afterExamChange();
         }
 
@@ -4289,19 +4330,25 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                     </div>
                 </div>`;
 
+            const occBar = (w, v) => {
+                const c = v > 1.25 ? 'bg-rose-500' : (v > 1.0 ? 'bg-amber-400' : 'bg-emerald-500');
+                return `
+                    <div class="space-y-1">
+                        <div class="flex items-center justify-between text-[11px] font-bold text-slate-700"><span>${w}ª semana · ${group(w).length} asignatura${group(w).length === 1 ? '' : 's'}</span><span class="font-black ${v > 1.25 ? 'text-rose-700' : (v > 1.0 ? 'text-amber-700' : 'text-emerald-700')}">${pct(v)} de su tiempo · ${v > 1.25 ? 'se desborda' : (v > 1.0 ? 'justa' : 'cabe')}</span></div>
+                        <div class="h-3 rounded-full bg-slate-200 overflow-hidden"><div class="h-full ${c} rounded-full" style="width:${Math.min(100, v * 100)}%"></div></div>
+                    </div>`;
+            };
             const balanceHtml = bal ? `
                 <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
                     <div class="flex flex-wrap items-center justify-between gap-2">
-                        <p class="text-xs font-black text-slate-800"><i class="fa-solid fa-scale-balanced text-amber-500 mr-1"></i> Carga de cada semana de repaso</p>
-                        <span class="px-2.5 py-1 rounded-lg text-[11px] font-black ${bal.clashes ? 'bg-rose-100 text-rose-800' : (bal.balance >= 0.9 ? 'bg-emerald-100 text-emerald-800' : (bal.balance >= 0.75 ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'))}">
-                            ${bal.clashes ? '⚠️ Hay exámenes a la misma hora' : `Equilibrio ${pct(bal.balance)}`}
+                        <p class="text-xs font-black text-slate-800"><i class="fa-solid fa-scale-balanced text-amber-500 mr-1"></i> Ocupación de cada semana de exámenes</p>
+                        <span class="px-2.5 py-1 rounded-lg text-[11px] font-black ${bal.clashes ? 'bg-rose-100 text-rose-800' : (bal.maxOcc <= 1.0 ? 'bg-emerald-100 text-emerald-800' : (bal.maxOcc <= 1.25 ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'))}">
+                            ${bal.clashes ? '⚠️ Hay exámenes a la misma hora' : (bal.maxOcc <= 1.0 ? '✅ Las dos caben' : (bal.maxOcc <= 1.25 ? 'Justas' : '⚠️ Una semana se desborda'))}
                         </span>
                     </div>
-                    <div class="flex h-7 rounded-xl overflow-hidden border border-slate-200 text-[11px] font-black">
-                        <div class="bg-purple-500 text-white flex items-center justify-center" style="width:${Math.max(8, share1 * 100)}%">1ª · ${pct(share1)}</div>
-                        <div class="bg-amber-400 text-slate-950 flex items-center justify-center" style="width:${Math.max(8, share2 * 100)}%">2ª · ${pct(share2)}</div>
-                    </div>
-                    <p class="text-[11px] text-slate-500 leading-relaxed">Cada asignatura pesa según su <b>carga ponderada</b> (dificultad × temas), rebajada a medida que terminas temas (hasta la mitad con el temario completo). Las horas de cada semana de repaso salen de tus horas por día.</p>
+                    ${occBar(1, bal.occ1)}
+                    ${occBar(2, bal.occ2)}
+                    <p class="text-[11px] text-slate-500 leading-relaxed">Para cada semana: lo que necesitan sus asignaturas (repaso según su <b>carga ponderada</b> y lo que lleves avanzado, más el temario que les vaya a faltar a tu ritmo real) frente a su tiempo (semana de repaso + días hasta su último examen). <b>100 %</b> = el tiempo justo para repasar sus asignaturas; por encima, lo que les falte de temario tendrá que entrar en esa semana. Las fáciles y medias pueden terminar temario en su semana de repaso (hasta la mitad de ella); las difíciles no.</p>
                 </div>` : '';
 
             let actions = '';
@@ -4309,7 +4356,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                 const moves = sug.changes.map(c => `<b>${escapeHtml(shortName(c.name))}</b> → ${c.w}ª semana`).join(', ');
                 actions += `
                     <div class="p-4 rounded-2xl bg-amber-50 border border-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <p class="text-xs text-amber-950 leading-relaxed"><b>💡 Hay un reparto más equilibrado:</b> ${moves}. ${sug.best.clashes < sug.cur.clashes ? 'Además evita exámenes a la misma hora.' : `El equilibrio pasaría del ${pct(sug.cur.balance)} al ${pct(sug.best.balance)}.`}</p>
+                        <p class="text-xs text-amber-950 leading-relaxed"><b>💡 Hay un reparto más equilibrado:</b> ${moves}. ${sug.best.clashes < sug.cur.clashes ? 'Además evita exámenes a la misma hora.' : `La semana más apretada pasaría del ${pct(sug.cur.maxOcc)} al ${pct(sug.best.maxOcc)}.`}</p>
                         <button onclick="applyExamSuggestion(false)" class="shrink-0 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 text-xs font-black transition">Aplicar</button>
                     </div>`;
             }
@@ -4318,7 +4365,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                     <div class="flex flex-wrap items-center gap-2">
                         <button onclick="applyExamSuggestion(true)" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles"></i> Recalcular reparto</button>
                         ${anyPinned ? `<button onclick="unpinAllExams()" class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs font-bold transition flex items-center gap-1.5"><i class="fa-solid fa-thumbtack-slash"></i> Quitar fijaciones</button>` : ''}
-                        <span class="text-[11px] text-slate-500">${anyPinned ? 'Las asignaturas fijadas (📌) no se mueven al recalcular.' : 'Pulsa una semana en cualquier asignatura para fijarla tú.'}</span>
+                        <span class="text-[11px] text-slate-500">${anyPinned ? 'Las asignaturas fijadas (🔒) no se mueven al recalcular ni en las propuestas.' : 'Pulsa una semana en cualquier asignatura para fijarla tú.'}</span>
                     </div>`;
             }
             if (!examPlanningOpen()) {
@@ -4378,9 +4425,12 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                             }).join('')}
                         </div>
                         <div class="flex flex-wrap items-center gap-2 text-[11px]">
-                            ${ch && ch.pin
-                                ? `<span class="font-bold text-slate-700">📌 Fijada por ti</span><button data-sub="${safe}" onclick="unpinExam(this.dataset.sub)" class="font-bold text-emerald-700 hover:underline">Volver a automático</button>`
-                                : '<span class="font-bold text-emerald-700"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Elegida automáticamente</span>'}
+                            <label class="inline-flex items-center gap-1.5 font-bold ${ch && ch.pin ? 'text-slate-800' : 'text-slate-500'} cursor-pointer" title="Fijada: las propuestas de reparto nunca la moverán">
+                                <input type="checkbox" data-sub="${safe}" ${ch && ch.pin ? 'checked' : ''} onchange="setExamPin(this.dataset.sub, this.checked)" class="w-4 h-4 accent-slate-900">
+                                🔒 Fijar en esta semana
+                            </label>
+                            ${ch && ch.pin ? `<span class="text-slate-400">${ch.by === 'popup' ? '· fijada por ti al revisar una propuesta' : '· fijada por ti'}</span>` : '<span class="font-bold text-emerald-700"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Elegida automáticamente</span>'}
+                            ${recentlyMovedExam(s.name) ? '<span class="font-black text-sky-700">🔄 Cambiada por una propuesta de reparto</span>' : ''}
                             ${sameSlot.length ? `<span class="font-black text-rose-700">⚠️ A la misma hora que ${sameSlot.map(x => escapeHtml(shortName(x.name))).join(', ')}</span>` : (sameDay.length ? `<span class="font-semibold text-amber-700">Mismo día que ${sameDay.map(x => escapeHtml(shortName(x.name))).join(', ')}</span>` : '')}
                         </div>`;
                 } else {
@@ -4993,6 +5043,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                 delete t[n];
             } else {
                 t[n] = { done: toDateInputValue(startOfToday()), r1: null, r2: null };
+                if (typeof scheduleExamCheck === 'function') scheduleExamCheck();    // V29.10: ¿hay un reparto de exámenes mejor?
             }
             if (Object.keys(t).length === 0) delete topicLog[name]; else topicLog[name] = t;
             saveAllToStorage();
@@ -5273,19 +5324,8 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                 if (plan.eve) {
                     plan.blocks.push({ sub: plan.eve, hours: T, kind: 'eve' });
                 } else {
-                    const cands = studyable
-                        .filter(s => p.status[s.name].remaining > 0.05)
-                        .sort((a, b) => (p.status[b.name].debt - p.status[a.name].debt) || (a.exam - b.exam));
-                    const maxBlock = T >= 1.5 ? Math.max(0.75, roundQuarter(T * 0.6)) : T;
-                    for (let i = 0; i < cands.length && T >= 0.25 && plan.blocks.length < 3; i++) {
-                        const st = p.status[cands[i].name];
-                        let h = Math.min(maxBlock, Math.max(0.5, roundQuarter(st.debt)));
-                        if (plan.blocks.length === 2 || i === cands.length - 1 || T - h < 0.5) h = T;
-                        h = Math.min(h, T);
-                        plan.blocks.push({ sub: cands[i], hours: h, kind: 'study' });
-                        T = roundQuarter(T - h);
-                    }
-                    if (T >= 0.25 && plan.blocks.length) plan.blocks[0].hours = roundQuarter(plan.blocks[0].hours + T);
+                    // V29.10: por presión (la misma medida que el ranking) y con las horas repartidas según lo que necesita cada una
+                    plan.blocks = splitStudyBlocks(p, urgencyOrder(p, studyable.filter(s => p.status[s.name].remaining > 0.05)), T);
                 }
             }
             return plan;
@@ -5440,9 +5480,10 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                     <div class="p-3.5 rounded-2xl border ${b.kind === 'eve' ? 'border-rose-300 bg-rose-50/50' : (b.kind === 'extra' ? 'border-emerald-200 bg-emerald-50/40' : 'border-slate-200 bg-white')} shadow-sm space-y-2.5">
                         <div class="flex items-start justify-between gap-2">
                             <div class="min-w-0">
-                                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">${b.kind === 'extra' ? '<span class="text-emerald-600">Extra · adelantas</span> · ' : ''}${escapeHtml(shortName(b.sub.name))}${st.inReview ? ' · <span class="text-purple-600">semana de repaso</span>' : ''} · examen ${dayLabel(b.sub.exam)}${b.sub.examTime ? ' ' + b.sub.examTime : ''}</p>
+                                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">${b.kind === 'extra' ? `<span class="text-emerald-600">${b.fresh && plan.blocks.indexOf(b) > 0 ? '🔥 Materia fresca · 2.ª opción' : 'Extra · adelantas'}</span> · ` : ''}${escapeHtml(shortName(b.sub.name))}${st.inReview ? ' · <span class="text-purple-600">semana de repaso</span>' : ''} · examen ${dayLabel(b.sub.exam)}${b.sub.examTime ? ' ' + b.sub.examTime : ''}</p>
                                 <p class="text-sm font-black text-slate-900">${det.icon} ${det.title}${det.topic && !topicName(b.sub.name, det.topic) ? ` <button data-sub="${safe}" onclick="openTopicNames(this.dataset.sub)" class="ml-1 align-middle px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 text-[10px] font-bold" title="Escribe el nombre real de los temas de esta asignatura">✏️ Ponerle nombre</button>` : ''}</p>
                                 ${det.text ? `<p class="text-[11px] text-slate-500 leading-snug">${det.text}</p>` : ''}
+                                <p class="text-[11px] text-slate-600 leading-snug mt-1"><span class="font-black text-emerald-700">🧭 ¿Por qué hoy?</span> ${whyToday(p, b)}</p>
                             </div>
                             <span class="shrink-0 px-2.5 py-1 rounded-lg bg-slate-900 text-amber-300 text-xs font-black">${formatHM(b.hours)}</span>
                         </div>
@@ -5862,8 +5903,10 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             const closed = it => !!(it.isPostponed || it.examPassed);
 
             // Las materias pospuestas o ya examinadas van al final; el resto, de mayor a menor retraso
-            const sortedList = [...rankingList].sort((a, b) => (closed(a) - closed(b)) || (a.subDiffHrs - b.subDiffHrs));
-            const delayedCount = sortedList.filter(s => s.subDiffHrs < -1.0 && !closed(s)).length;
+            // V29.10: de mayor a menor presión (la misma medida que usa el Plan de hoy)
+            const P = it => (p.press && p.press[it.name] ? p.press[it.name].P : 0);
+            const sortedList = [...rankingList].sort((a, b) => (closed(a) - closed(b)) || (P(b) - P(a)) || (a.subDiffHrs - b.subDiffHrs));
+            const delayedCount = sortedList.filter(s => !closed(s) && (P(s) >= 1.1 || s.subDiffHrs < -1.0)).length;
 
             if (summaryBadge) {
                 if (!started) {
@@ -5894,7 +5937,9 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                 } else {
                     const weeksLeft = Math.max(1, Math.ceil(item.st.daysLeft / 7));
                     const weekNeed = item.st.weekNeed;
-                    if (index === 0 && item.subDiffHrs < -1.0 && started) {
+                    const pr = P(item);
+                    const prCls = pressureClass(pr);
+                    if (index === 0 && prCls === 'max' && started) {
                         rankBadge = `<span class="inline-flex items-center justify-center w-7 h-7 rounded-xl bg-rose-600 text-white font-black text-xs shadow-md">#1 🚨</span>`;
                         rowBgClass = 'bg-rose-50/50 hover:bg-rose-50';
                     } else if (index === 0) {
@@ -5906,14 +5951,14 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                     if (!started) {
                         alertBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">⚪ Sin Iniciar</span>`;
                         actionPlanHtml = `<span class="text-slate-500 font-medium">Asignar ≈ <b>${weekNeed.toFixed(1)} h/sem</b> para mantener el ritmo base.</span>`;
-                    } else if (item.subDiffHrs <= -3.0) {
+                    } else if (prCls === 'max') {
                         alertBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300 flex items-center gap-1 w-fit"><i class="fa-solid fa-fire text-rose-600"></i> Máxima Urgencia</span>`;
-                        const neededExtra = Math.abs(item.subDiffHrs) / weeksLeft;
-                        actionPlanHtml = `<span class="text-rose-900 font-bold">Reforzar con <b>+${neededExtra.toFixed(1)} h/sem extra</b> durante las ${weeksLeft} sem que quedan hasta su examen.</span>`;
-                    } else if (item.subDiffHrs <= -1.0) {
+                        const neededExtra = Math.max(0, -item.subDiffHrs) / weeksLeft;
+                        actionPlanHtml = `<span class="text-rose-900 font-bold">${neededExtra >= 0.1 ? `Reforzar con <b>+${neededExtra.toFixed(1)} h/sem extra</b> durante las ${weeksLeft} sem que quedan hasta su examen.` : 'Necesita bastante más ritmo del previsto para llegar: dale prioridad en el Plan de hoy.'}</span>`;
+                    } else if (prCls === 'warn') {
                         alertBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1 w-fit"><i class="fa-solid fa-triangle-exclamation text-amber-600"></i> Atención</span>`;
-                        const neededExtra = Math.abs(item.subDiffHrs) / weeksLeft;
-                        actionPlanHtml = `<span class="text-amber-900 font-medium">Aumentar <b>+${neededExtra.toFixed(1)} h/sem</b> para equilibrar el déficit acumulado de ${Math.abs(item.subDiffHrs).toFixed(1)}h.</span>`;
+                        const neededExtra = Math.max(0, -item.subDiffHrs) / weeksLeft;
+                        actionPlanHtml = `<span class="text-amber-900 font-medium">${neededExtra >= 0.1 ? `Aumentar <b>+${neededExtra.toFixed(1)} h/sem</b> para equilibrar el déficit acumulado de ${Math.abs(item.subDiffHrs).toFixed(1)}h.` : 'Va justa: el tiempo que le queda apenas cubre lo pendiente. No la dejes atrás.'}</span>`;
                     } else if (item.subDiffHrs >= 2.0) {
                         alertBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 w-fit"><i class="fa-solid fa-star text-emerald-600"></i> Con Colchón</span>`;
                         actionPlanHtml = `<span class="text-emerald-900 font-medium">Llevas <b>+${item.subDiffHrs.toFixed(1)}h de ventaja</b>. Puedes mantener ritmo suave o dedicar horas a asignaturas con retraso.</span>`;
@@ -5943,7 +5988,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                     <td class="py-3 px-3 text-center font-bold text-blue-700 bg-blue-50/40">${item.done.toFixed(1)} h</td>
                     <td class="py-3 px-3 text-center font-semibold text-slate-500">${(started ? item.expectedSubHrs : 0).toFixed(1)} h</td>
                     <td class="py-3 px-3 text-center">${diffBadge}</td>
-                    <td class="py-3 px-3 text-center">${alertBadge}</td>
+                    <td class="py-3 px-3 text-center"><div class="flex flex-col items-center gap-1">${alertBadge}${!closed(item) && started ? `<span class="text-[10px] font-bold text-slate-500" title="Ritmo que necesita para llegar a tiempo frente al previsto (1,0× = justo)">${pressTxt(P(item))}</span>` : ''}</div></td>
                     <td class="py-3 px-4 bg-amber-50/50 border-l border-amber-200/60 text-xs">${actionPlanHtml}</td>
                 `;
                 tbody.appendChild(tr);
@@ -8269,7 +8314,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
         // cómo se usa (web, app instalada o archivo), si sincroniza con Drive y, si el alumno lo pone, su nombre de usuario.
         // Nunca se envían datos de estudio. Se puede desactivar en Datos.
         const STATS_URL = 'https://script.google.com/macros/s/AKfycbwRdxL0fvYa05e_lmOlCYfZ9IkuHmcd0YsHIIVaU3LnvOOuYjKrb-bZLNjJo2iWJHHa/exec';   // URL de la aplicación web de Google Apps Script (…/exec)
-        const APP_VERSION = 'v29.9';
+        const APP_VERSION = 'v30';
         const STATS_KEY = STORAGE_KEY + '_stats';
         const ALIAS_MAX = 30;
 
@@ -8521,9 +8566,12 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             m.classList.remove('hidden');
         }
 
+        let v29ModalLocked = false;      // ventanas que exigen respuesta (no se cierran con Escape ni tocando fuera)
         function closeV29Modal() {
             const m = document.getElementById('v29Modal');
             if (m) { m.classList.add('hidden'); m.innerHTML = ''; }
+            v29ModalLocked = false;
+            if (typeof examCheckPending !== 'undefined' && examCheckPending) { examCheckPending = false; setTimeout(examProposalCheck, 500); }
         }
 
         function v29Header(icon, title, sub) {
@@ -8543,10 +8591,10 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
         document.addEventListener('keydown', e => {
             if (e.key !== 'Escape') return;
             const m = document.getElementById('v29Modal');
-            if (m && !m.classList.contains('hidden')) closeV29Modal();
+            if (m && !m.classList.contains('hidden') && !v29ModalLocked) closeV29Modal();
         });
         document.addEventListener('click', e => {
-            if (e.target && e.target.id === 'v29Modal') closeV29Modal();
+            if (e.target && e.target.id === 'v29Modal' && !v29ModalLocked) closeV29Modal();
         });
 
         // ---------- Nombres de los temas ----------
@@ -9396,6 +9444,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             renderDaysOff();
             afterUpdateCheck();
             setTimeout(() => checkForUpdate(true), 4000);
+            setTimeout(() => examProposalCheck(), 2500);    // V29.10: si hay un reparto de exámenes mejor, se plantea
         }
 
         // ---------- V29.3 / V29.4: el tiempo se anota tema a tema ----------
@@ -9638,18 +9687,48 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
         }
 
         // Con el objetivo de hoy cumplido: hasta 2 propuestas para adelantar (el siguiente tema de las asignaturas que más lo necesitan)
+        // Con el objetivo cumplido: 3 propuestas por urgencia; la materia fresca (lo que acabas de terminar), como 2.ª opción
         function extraBlocks(p, plan) {
             const studyable = p.subjects.filter(s => !postponedSubjects[s.name] && !p.status[s.name].examPassed && p.status[s.name].daysLeft > 0 && p.status[s.name].activeToday && nextPendingTopic(s));
             if (!studyable.length) return [];
             const today = todayKey();
-            const doneToday = s => { const e = topicEntries(s.name); return Object.keys(e).some(k => e[k] && e[k].done === today); };
-            return studyable
-                .sort((a, b) => (doneToday(b) - doneToday(a)) || (p.status[b.name].debt - p.status[a.name].debt) || (a.exam - b.exam))
-                .slice(0, 2)
-                .map(s => {
-                    const rh = p.status[s.name].rhythm || 1;
-                    return { sub: s, hours: Math.max(0.5, Math.min(1.5, roundQuarter(rh))), kind: 'extra' };
+            const lastDoneToday = s => {
+                const e = topicEntries(s.name);
+                const ns = Object.keys(e).map(Number).filter(k => e[k] && e[k].done === today);
+                return ns.length ? Math.max(...ns) : 0;
+            };
+            const order = urgencyOrder(p, studyable);
+            const fresh = studyable.find(s => lastDoneToday(s) > 0 && s.name !== order[0].name);
+            let pick = order.slice(0, 3);
+            if (fresh) pick = [order[0], fresh, ...order.filter(s => s !== order[0] && s !== fresh)].slice(0, 3);
+            return pick.map(s => {
+                const rh = p.status[s.name].rhythm || 1;
+                const b = { sub: s, hours: Math.max(0.5, Math.min(1.5, roundQuarter(rh))), kind: 'extra' };
+                const f = lastDoneToday(s);
+                if (f && (s === fresh || s === order[0])) b.fresh = f;
+                return b;
+            });
+        }
+
+        // Reparte T horas entre las asignaturas más urgentes: como mucho 3, bloques de 45 min o más, según lo que necesita cada una
+        function splitStudyBlocks(p, cands, T) {
+            if (!cands.length || T < 0.25) return [];
+            let k = Math.min(3, cands.length);
+            while (k > 1 && T / k < 0.75) k--;
+            for (; k >= 1; k--) {
+                const sel = cands.slice(0, k);
+                const w = sel.map(s => {
+                    const st = p.status[s.name];
+                    const need = Math.max(st.todayNeed || 0, st.debt > 0 ? Math.min(st.debt, T) : 0);
+                    return Math.max(0.1, need) * Math.max(0.5, Math.min(2.5, p.press[s.name]?.P || 1));
                 });
+                const W = w.reduce((a, x) => a + x, 0);
+                const hours = w.map(x => roundQuarter(T * x / W));
+                const diff = roundQuarter(T - hours.reduce((a, x) => a + x, 0));
+                hours[0] = roundQuarter(hours[0] + diff);
+                if (k === 1 || hours.every(h => h >= 0.75)) return sel.map((s, i) => ({ sub: s, hours: hours[i], kind: 'study' }));
+            }
+            return [{ sub: cands[0], hours: T, kind: 'study' }];
         }
 
 
@@ -10014,7 +10093,8 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                 }
             }
 
-            let html = '';
+            recordPressureWeek(p);
+            let html = hardAlertsHtml(p);
             p.subjects.forEach(A => {
                 const pc = paces[A.name];
                 if (!pc || pc.trend !== 'slow' || pc.need < 1 || paceSnoozed(A.name)) return;
@@ -10255,6 +10335,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             if (currentTab === 2) renderTrackingTab(false);
             otherDayCtx = null;
             closeV29Modal();
+            if (finish) scheduleExamCheck();
             const what = `${shortName(name)}${n ? ' · Tema ' + n : ''}`;
             showToast(`📅 ${fmtLong(date)}: ${h > 0 ? formatHM(h) + ' anotadas a ' + what : what}${finish ? ' · tema terminado' : ''}.${finish && h > 0 ? deviationToastText(name, n) : ''}`, 'ok');
         }
@@ -10442,6 +10523,370 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             renderDashboardTab();
             const h = topicHoursToday(name, n);
             showToast(`↩️ Tema ${n} de ${shortName(name)} vuelve a estar pendiente.${h > 0 ? ` El tiempo de hoy (${formatHM(h)}) se mantiene como tema en curso; quítalo con − si no lo estudiaste.` : ''}`, 'ok');
+        }
+
+        // ================= V29.10: PRESIÓN, PLAN INTELIGENTE Y REPARTO DE EXÁMENES =================
+        // Presión = el ritmo que necesita una asignatura para llegar a tiempo, frente al que tiene previsto (1,0× = justo).
+        // · Usa lo que falta en plan cubierto y tu ritmo real (desvíos tema a tema).
+        // · Fáciles y medias pueden terminar temario en su semana de repaso (como mucho la mitad de esa semana).
+        // · Difíciles no: su temario tiene que estar antes de la semana de repaso, así que se ven apuradas antes.
+        const REVIEW_CATCHUP = 0.5;
+        const DIFF_T = (() => {
+            const w = UNED_DATABASE.map(x => x.weight).filter(x => x > 0).sort((a, b) => a - b);
+            return w.length ? [w[Math.floor(w.length / 3)], w[Math.floor(2 * w.length / 3)]] : [0, 0];
+        })();
+        const DIFF_LABEL = { easy: 'fácil', mid: 'media', hard: 'difícil' };
+
+        function difficultyClass(s) {
+            const db = UNED_DATABASE.find(x => x.name === s.name);
+            const w = db ? db.weight : (s.weight || 0);
+            return w >= DIFF_T[1] ? 'hard' : (w >= DIFF_T[0] ? 'mid' : 'easy');
+        }
+
+        function pressTxt(P) {
+            return `presión ${(Math.round(P * 10) / 10).toFixed(1).replace('.', ',')}×`;
+        }
+
+        function futureReviewShare(p, s) {
+            let h = 0;
+            const i0 = Math.max(0, p.cal.todayIdx);
+            for (let i = i0; i < p.days.length; i++) {
+                const d = p.days[i];
+                if (s.exam && d.date >= s.exam) break;
+                if (s.reviewStart && d.date >= s.reviewStart) h += d.shares[s.name] || 0;
+            }
+            return h;
+        }
+
+        function paceFactor(p, s) {
+            try {
+                const pc = paceOf(p, s);
+                return pc && pc.trend === 'slow' ? Math.max(1, pc.ratio) : 1;
+            } catch (e) { return 1; }
+        }
+
+        let lastPressure = {};      // para el reparto de exámenes (que se calcula antes que el plan)
+        function computePressures(p) {
+            const out = {};
+            p.subjects.forEach(s => {
+                const st = p.status[s.name];
+                const cls = difficultyClass(s);
+                const o = { P: 0, backlog: 0, cls, pace: 1 };
+                out[s.name] = o;
+                if (!st || st.examPassed || postponedSubjects[s.name] || st.daysLeft <= 0 || !p.days || !p.days.length) return;
+                let P = st.futurePlanned >= 0.05 ? st.remaining / st.futurePlanned : (st.remaining > 0.05 ? 3 : 0);
+                if (!st.inReview && st.firstPassRemaining > 0.05 && s.reviewStart && st.cov && st.cov.mode === 'topics') {
+                    const pace = paceFactor(p, s);
+                    const fp = futureShare(p, s, null);
+                    const rv = futureReviewShare(p, s);
+                    const need = st.firstPassRemaining * pace;
+                    const cap = cls === 'hard' ? fp : fp + REVIEW_CATCHUP * rv;
+                    P = Math.max(P, cap > 0.05 ? need / cap : 3);
+                    o.backlog = Math.max(0, need - fp);
+                    // Para el reparto de exámenes: lo que faltará al empezar la 1.ª semana de repaso (hasta ahí todas
+                    // reciben tiempo igual, elijas la semana que elijas), así el reparto no cambia de opinión solo
+                    o.backExam = Math.max(0, need - futureShare(p, s, addDays(OFFICIAL_W1, -7)));
+                    o.pace = pace;
+                }
+                o.P = Math.min(9, Math.max(0, P));
+            });
+            lastPressure = out;
+            return out;
+        }
+
+        // Orden de urgencia común para el ranking, el Plan de hoy y las propuestas
+        function urgencyOrder(p, list) {
+            const focus = focusSubjects();
+            return [...list].sort((a, b) =>
+                ((focus[b.name] ? 1 : 0) - (focus[a.name] ? 1 : 0)) ||
+                ((p.press[b.name]?.P || 0) - (p.press[a.name]?.P || 0)) ||
+                (p.status[b.name].debt - p.status[a.name].debt) || (a.exam - b.exam));
+        }
+
+        function urgencyRank(p, name) {
+            const active = p.subjects.filter(s => !postponedSubjects[s.name] && !p.status[s.name].examPassed && p.status[s.name].daysLeft > 0);
+            const order = urgencyOrder(p, active).map(s => s.name);
+            return order.indexOf(name) + 1;
+        }
+
+        // «¿Por qué hoy?» de cada bloque
+        function whyToday(p, b) {
+            const s = b.sub, st = p.status[s.name], pr = p.press[s.name] || { P: 0, cls: 'mid' };
+            if (b.kind === 'eve') return 'Mañana es su examen: hoy solo toca esta.';
+            const parts = [];
+            const r = urgencyRank(p, s.name);
+            if (b.fresh) parts.push(`<b>Materia fresca</b>: acabas de terminar el Tema ${b.fresh} y lo tienes reciente; seguir ahora te cuesta menos que empezar otra`);
+            if (focusSubjects()[s.name]) parts.push('<b>prioridad de esta semana</b> (asignatura difícil)');
+            if (r) parts.push(`#${r} en urgencia`);
+            parts.push(pressTxt(pr.P));
+            if (p.started) {
+                const d = st.debt;
+                parts.push(d > 0.25 ? `va ${formatHM(roundQuarter(d))} por detrás` : (d < -0.25 ? `va ${formatHM(roundQuarter(-d))} adelantada` : 'va al día'));
+            }
+            if (s.exam) { const dd = daysBetween(p.cal.today, s.exam); parts.push(dd <= 1 ? 'examen mañana' : `examen en ${dd} días`); }
+            parts.push(DIFF_LABEL[pr.cls]);
+            if (pr.pace > 1.05) parts.push(`tus temas te llevan ${devWords(pr.pace - 1)}`);
+            return parts.join(' · ');
+        }
+
+        function pressureClass(P) { return P >= 1.3 ? 'max' : (P >= 1.1 ? 'warn' : 'ok'); }
+
+
+        // ---------- V29.10: propuesta de reparto de exámenes (tras cada tema y al abrir la app) ----------
+        const EXAM_MOVED_KEY = STORAGE_KEY + '_exam_moved';
+        let examCheckPending = false;
+
+        function recentlyMovedExam(name) {
+            try { const v = JSON.parse(localStorage.getItem(EXAM_MOVED_KEY)) || {}; return !!v[name] && Date.now() - v[name] < 14 * 864e5; } catch (e) { return false; }
+        }
+
+        function rememberMovedExams(names) {
+            let v = {};
+            try { v = JSON.parse(localStorage.getItem(EXAM_MOVED_KEY)) || {}; } catch (e) {}
+            names.forEach(n => v[n] = Date.now());
+            try { localStorage.setItem(EXAM_MOVED_KEY, JSON.stringify(v)); } catch (e) {}
+        }
+
+        function scheduleExamCheck() { setTimeout(examProposalCheck, 700); }
+
+        function otherModalOpen() {
+            return [...document.querySelectorAll('[id$="Modal"]')].some(el => el.id !== 'v29Modal' && !el.classList.contains('hidden') && el.offsetParent !== null);
+        }
+
+        function examProposalCheck() {
+            if (typeof examPlanningOpen !== 'function' || !examPlanningOpen()) return;
+            const subs = (currentCalculation.subjects || []).filter(s => s.valid);
+            const sug = examSuggestion(subs, false);
+            if (!sug) return;
+            const m = document.getElementById('v29Modal');
+            if ((m && !m.classList.contains('hidden')) || otherModalOpen()) {
+                examCheckPending = true;
+                if (otherModalOpen()) setTimeout(() => { if (examCheckPending && !otherModalOpen()) { examCheckPending = false; examProposalCheck(); } }, 5000);
+                return;
+            }
+            openExamProposal(sug);
+        }
+
+        function examSlotText(name, w) {
+            const o = (officialOptions(name) || []).find(x => x.week === w);
+            return o ? `${dayLabel(parseLocalDate(o.date))} · ${o.time}` : `${w}ª semana`;
+        }
+
+        function lockedHeader(icon, title, sub) {
+            return `
+                <div class="flex items-start gap-3">
+                    <div class="w-11 h-11 rounded-2xl bg-amber-100 flex items-center justify-center text-2xl shrink-0">${icon}</div>
+                    <div>
+                        <h3 class="text-lg font-black text-slate-900 leading-tight">${title}</h3>
+                        ${sub ? `<p class="text-xs text-slate-500 mt-0.5">${sub}</p>` : ''}
+                    </div>
+                </div>`;
+        }
+
+        let examSugNow = null;
+        function openExamProposal(sug) {
+            examSugNow = sug;
+            const subs = (currentCalculation.subjects || []).filter(s => s.valid);
+            const items = examItems(subs);
+            const cur = currentExamAssignment(items);
+            const moved = new Set(sug.changes.map(c => c.name));
+            const pct = v => `${Math.round(v * 100)} %`;
+            const col = v => v > 1.25 ? 'text-rose-700' : (v > 1.0 ? 'text-amber-700' : 'text-emerald-700');
+            const names = (assign, w, mark) => items.filter(it => assign[it.name] === w)
+                .map(it => `<span class="inline-block px-1.5 py-0.5 rounded-md text-[11px] font-bold ${mark && moved.has(it.name) ? 'bg-sky-100 text-sky-900' : 'bg-slate-100 text-slate-700'}">${escapeHtml(shortName(it.name))}${examChoice[it.name] && examChoice[it.name].pin ? ' 🔒' : ''}</span>`).join(' ') || '<span class="text-[11px] text-slate-400">Ninguna</span>';
+            const row = w => `
+                <tr class="border-t border-slate-200 align-top">
+                    <td class="py-2 pr-2 text-[11px] font-black text-slate-500 whitespace-nowrap">${w}ª semana</td>
+                    <td class="py-2 pr-2"><div class="flex flex-wrap gap-1">${names(cur, w, false)}</div><p class="text-[11px] font-black mt-1 ${col(sug.cur['occ' + w])}">${pct(sug.cur['occ' + w])} de su tiempo</p></td>
+                    <td class="py-2"><div class="flex flex-wrap gap-1">${names(sug.best.assign, w, true)}</div><p class="text-[11px] font-black mt-1 ${col(sug.best['occ' + w])}">${pct(sug.best['occ' + w])} de su tiempo</p></td>
+                </tr>`;
+            const why = sug.best.clashes < sug.cur.clashes
+                ? 'Así evitas tener dos exámenes a la misma hora.'
+                : `La semana más apretada pasa del <b>${pct(sug.cur.maxOcc)}</b> al <b>${pct(sug.best.maxOcc)}</b> de su tiempo.`;
+            v29ModalLocked = false;
+            openV29Modal(`
+                ${lockedHeader('📅', 'Hay un reparto mejor de tus exámenes', 'Con lo que has avanzado, ha cambiado lo que necesita cada semana de exámenes.')}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead><tr class="text-[10px] uppercase tracking-wider text-slate-400"><th></th><th class="pb-1">Ahora</th><th class="pb-1">Propuesto</th></tr></thead>
+                        <tbody>${row(1)}${row(2)}</tbody>
+                    </table>
+                </div>
+                <div class="p-3 rounded-2xl bg-sky-50 border border-sky-200 text-xs text-sky-950 space-y-1">
+                    ${sug.changes.map(c => `<p>🔄 <b>${escapeHtml(shortName(c.name))}</b> pasa a la ${c.w}ª semana: <b>${examSlotText(c.name, c.w)}</b></p>`).join('')}
+                    <p class="text-sky-900">${why}</p>
+                </div>
+                <p class="text-[11px] text-slate-500">% = lo que necesitan sus asignaturas frente al tiempo de esa semana (repaso + días hasta su último examen); 100 % es lo justo para repasar. Las asignaturas con 🔒 están fijadas y no se mueven.</p>
+                <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-1">
+                    <button onclick="rejectExamProposal()" class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs font-bold">No puedo hacer este cambio</button>
+                    <button onclick="acceptExamProposal()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black">✓ Aceptar el cambio</button>
+                </div>`, true);
+            v29ModalLocked = true;
+        }
+
+        function acceptExamProposal() {
+            const sug = examSugNow;
+            if (!sug) return;
+            sug.changes.forEach(c => { examChoice[c.name] = { w: c.w, pin: false }; });
+            rememberMovedExams(sug.changes.map(c => c.name));
+            examSugNow = null;
+            closeV29Modal();
+            afterExamChange();
+            showToast(`📅 Exámenes reorganizados: ${sug.changes.map(c => `${shortName(c.name)} → ${examSlotText(c.name, c.w)}`).join(' · ')}. Tu plan ya está recalculado.`, 'ok');
+        }
+
+        function rejectExamProposal() {
+            const sug = examSugNow;
+            if (!sug) return;
+            const subs = (currentCalculation.subjects || []).filter(s => s.valid);
+            const items = examItems(subs);
+            const cur = currentExamAssignment(items);
+            const pinned = items.filter(it => examChoice[it.name] && examChoice[it.name].pin);
+            const cb = (id, name, label) => `
+                <label class="flex items-center gap-2 p-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-800 cursor-pointer hover:bg-slate-50">
+                    <input type="checkbox" class="${id} w-4 h-4 accent-slate-900" value="${escapeHtml(name)}"> ${label}
+                </label>`;
+            openV29Modal(`
+                ${lockedHeader('🤔', '¿Qué te lo impide?', 'Así la próxima propuesta ya tendrá en cuenta lo que no puedes cambiar.')}
+                <div class="space-y-1.5">
+                    <p class="text-xs font-black text-slate-700">De este cambio, marca las que <u>no puedes</u> mover:</p>
+                    ${sug.changes.map(c => cb('exNo', c.name, `${escapeHtml(shortName(c.name))} <span class="font-semibold text-slate-500">(ahora en la ${cur[c.name]}ª semana)</span>`)).join('')}
+                    <p class="text-[11px] text-slate-500">Si no marcas ninguna, entenderé que no puedes mover ninguna de ellas.</p>
+                </div>
+                ${pinned.length ? `
+                <div class="space-y-1.5">
+                    <p class="text-xs font-black text-slate-700">Y de las que ya tienes fijadas, ¿alguna <u>sí</u> se puede mover?</p>
+                    ${pinned.map(it => cb('exYes', it.name, `${escapeHtml(shortName(it.name))} <span class="font-semibold text-slate-500">🔒 ${cur[it.name]}ª semana</span>`)).join('')}
+                </div>` : ''}
+                <div class="flex justify-end pt-1">
+                    <button onclick="submitExamReject()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black">Buscar otro reparto</button>
+                </div>`);
+            v29ModalLocked = true;
+        }
+
+        function submitExamReject() {
+            const sug = examSugNow;
+            if (!sug) return;
+            const m = document.getElementById('v29Modal');
+            const no = [...m.querySelectorAll('input.exNo:checked')].map(i => i.value);
+            const yes = [...m.querySelectorAll('input.exYes:checked')].map(i => i.value);
+            const block = no.length ? no : sug.changes.map(c => c.name);
+            const subs = (currentCalculation.subjects || []).filter(s => s.valid);
+            const cur = currentExamAssignment(examItems(subs));
+            block.forEach(n => { examChoice[n] = { w: cur[n] || 1, pin: true, by: 'popup' }; });
+            yes.forEach(n => { if (examChoice[n]) examChoice[n].pin = false; });
+            examSugNow = null;
+            v29ModalLocked = false;
+            closeV29Modal();
+            afterExamChange();
+            const next = examSuggestion((currentCalculation.subjects || []).filter(s => s.valid), false);
+            if (next) { openExamProposal(next); return; }
+            const fixed = Object.keys(examChoice).filter(n => examChoice[n].pin && officialOptions(n));
+            openV29Modal(`
+                ${lockedHeader('✅', 'Tu reparto actual es el mejor posible', 'Con estas asignaturas fijas, no hay otro reparto mejor.')}
+                ${fixed.length ? `<div class="flex flex-wrap gap-1">${fixed.map(n => `<span class="px-2 py-1 rounded-lg bg-slate-100 text-[11px] font-bold text-slate-700">🔒 ${escapeHtml(shortName(n))} · ${examChoice[n].w}ª semana</span>`).join('')}</div>` : ''}
+                <p class="text-xs text-slate-600 leading-relaxed">Las tendré <b>siempre fijas</b> en mis cálculos y no te propondré moverlas, a no ser que desmarques <b>«🔒 Fijar en esta semana»</b> en la pestaña Exámenes.</p>
+                <div class="flex justify-end"><button onclick="closeV29Modal()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black">Entendido</button></div>`);
+        }
+
+        // ---------- V29.10: que las difíciles no se vayan quedando atrás ----------
+        const FOCUS_KEY = STORAGE_KEY + '_focus';
+        const HARD_SNOOZE_KEY = STORAGE_KEY + '_hard_snooze';
+        const PRESS_HIST_KEY = STORAGE_KEY + '_press_hist';
+        const readLS = k => { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch (e) { return {}; } };
+        const writeLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+
+        function focusSubjects() {
+            const v = readLS(FOCUS_KEY), t = todayKey(), out = {};
+            Object.keys(v).forEach(n => { if (v[n] >= t) out[n] = v[n]; });
+            return out;
+        }
+
+        function nextMondayIso() {
+            const d = startOfToday();
+            const add = ((8 - d.getDay()) % 7) || 7;
+            return toDateInputValue(addDays(d, add));
+        }
+
+        function lastStudiedIso(name) {
+            let last = '';
+            Object.keys(dayLog).forEach(d => { if ((dayLog[d] || {})[name] > 0 && d > last) last = d; });
+            Object.keys(topicTime).forEach(d => { if (topicTime[d] && topicTime[d][name] && d > last) last = d; });
+            const e = topicEntries(name);
+            Object.keys(e).forEach(k => { if (e[k] && !e[k].est && e[k].done && e[k].done > last) last = e[k].done; });
+            return last;
+        }
+
+        function recordPressureWeek(p) {
+            const cw = p.cal.currentWeek;
+            if (!(cw >= 1)) return;
+            const h = readLS(PRESS_HIST_KEY);
+            h[cw] = {};
+            p.subjects.forEach(s => { if (p.press[s.name]) h[cw][s.name] = round2(p.press[s.name].P); });
+            Object.keys(h).map(Number).filter(w => w < cw - 6).forEach(w => delete h[w]);
+            writeLS(PRESS_HIST_KEY, h);
+        }
+
+        function hardAlerts(p) {
+            const cw = p.cal.currentWeek;
+            if (!(cw >= 1)) return [];
+            const hist = readLS(PRESS_HIST_KEY), snooze = readLS(HARD_SNOOZE_KEY), focus = focusSubjects(), t = todayKey();
+            const out = [];
+            p.subjects.forEach(s => {
+                const st = p.status[s.name], pr = p.press[s.name];
+                if (!st || !pr || pr.cls !== 'hard' || postponedSubjects[s.name] || st.examPassed || st.daysLeft <= 0 || st.inReview || st.remTopics === 0) return;
+                if (focus[s.name] || (snooze[s.name] && snooze[s.name] > t)) return;
+                const last = lastStudiedIso(s.name);
+                const idle = last ? daysBetween(parseLocalDate(last), p.cal.today) : daysBetween(p.cal.start, p.cal.today);
+                const prev = hist[cw - 1] && hist[cw - 1][s.name];
+                const reasons = [];
+                if (idle >= 7) reasons.push(last ? `${idle} días sin tocarla` : 'aún no la has empezado');
+                if (pr.P >= 1.15 && prev >= 1.15) reasons.push(`${pressTxt(pr.P)} dos semanas seguidas`);
+                if (reasons.length) out.push({ s, P: pr.P, reasons });
+            });
+            return out;
+        }
+
+        function focusHard(name) {
+            const v = readLS(FOCUS_KEY);
+            v[name] = toDateInputValue(addDays(startOfToday(), 6));
+            writeLS(FOCUS_KEY, v);
+            renderDashboardTab();
+            showToast(`🧗 ${shortName(name)} irá primera en tu Plan de hoy durante esta semana.`, 'ok');
+        }
+
+        function snoozeHard(name) {
+            const v = readLS(HARD_SNOOZE_KEY);
+            v[name] = nextMondayIso();
+            writeLS(HARD_SNOOZE_KEY, v);
+            renderDashboardTab();
+            showToast(`De acuerdo: te lo vuelvo a recordar el lunes si ${shortName(name)} sigue atrás.`, 'ok');
+        }
+
+        function hardAlertsHtml(p) {
+            const list = hardAlerts(p);
+            const focus = focusSubjects();
+            let html = list.map(a => {
+                const safe = escapeHtml(a.s.name);
+                return `
+                    <section class="p-4 rounded-2xl border border-rose-300 bg-rose-50 space-y-2.5">
+                        <div class="flex items-start gap-3">
+                            <div class="text-2xl leading-none shrink-0">🧗</div>
+                            <div class="min-w-0 space-y-1">
+                                <p class="text-sm font-black text-rose-950">${escapeHtml(shortName(a.s.name))} es de las difíciles y se está quedando atrás</p>
+                                <p class="text-xs text-rose-900 leading-relaxed">${a.reasons.join(' · ')} (${pressTxt(a.P)}). Las difíciles no se pueden recuperar en la semana de repaso: si se deja, acaba abandonándose.</p>
+                                <p class="text-xs text-rose-900">Te propongo darle prioridad esta semana: irá primera en tu Plan de hoy durante 7 días.</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 pl-9">
+                            <button data-sub="${safe}" onclick="focusHard(this.dataset.sub)" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-black transition">🧗 Darle prioridad esta semana</button>
+                            <button data-sub="${safe}" onclick="snoozeHard(this.dataset.sub)" class="px-3 py-1.5 rounded-xl bg-white hover:bg-rose-100 border border-rose-300 text-rose-800 text-[11px] font-bold transition">Recordármelo el lunes</button>
+                        </div>
+                    </section>`;
+            }).join('');
+            const f = Object.keys(focus).filter(n => p.subjects.some(s => s.name === n));
+            if (f.length) html += `<div class="px-3 py-2 rounded-2xl bg-white border border-rose-200 text-[11px] text-rose-900">🧗 Prioridad de la semana: ${f.map(n => `<b>${escapeHtml(shortName(n))}</b> (hasta el ${formatShortDate(parseLocalDate(focus[n]))})`).join(', ')}.</div>`;
+            return html;
         }
         let currentWizardStep = 1;
         const totalWizardSteps = 5;
