@@ -2380,6 +2380,7 @@ html.dark .bg-emerald-50\/60{background-color:rgba(16,185,129,0.1)}
 html.dark .bg-emerald-50\/70{background-color:rgba(16,185,129,0.1)}
 html.dark .bg-emerald-50\/90{background-color:rgba(16,185,129,0.1)}
 html.dark .bg-orange-200{background-color:rgba(249,115,22,0.26)}
+html.dark .bg-orange-50{background-color:rgba(249,115,22,0.1)}
 html.dark .bg-orange-50\/95{background-color:rgba(249,115,22,0.1)}
 html.dark .bg-purple-100{background-color:rgba(168,85,247,0.16)}
 html.dark .bg-purple-50{background-color:rgba(168,85,247,0.1)}
@@ -2413,6 +2414,7 @@ html.dark .border-blue-200{border-color:rgba(59,130,246,0.38)}
 html.dark .border-blue-300{border-color:rgba(59,130,246,0.5)}
 html.dark .border-emerald-200{border-color:rgba(16,185,129,0.38)}
 html.dark .border-emerald-300{border-color:rgba(16,185,129,0.5)}
+html.dark .border-orange-200{border-color:rgba(249,115,22,0.38)}
 html.dark .border-orange-300{border-color:rgba(249,115,22,0.5)}
 html.dark .border-purple-200{border-color:rgba(168,85,247,0.38)}
 html.dark .border-rose-200{border-color:rgba(244,63,94,0.38)}
@@ -2429,6 +2431,7 @@ html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]){border-color:#2b3a
 html.dark .hover\:bg-amber-100:hover{background-color:rgba(245,158,11,0.24)}
 html.dark .hover\:bg-amber-50:hover{background-color:rgba(245,158,11,0.18)}
 html.dark .hover\:bg-emerald-100:hover{background-color:rgba(16,185,129,0.24)}
+html.dark .hover\:bg-emerald-50:hover{background-color:rgba(16,185,129,0.18)}
 html.dark .hover\:bg-rose-100:hover{background-color:rgba(244,63,94,0.24)}
 html.dark .hover\:bg-rose-50:hover{background-color:rgba(244,63,94,0.18)}
 html.dark .hover\:bg-slate-100:hover{background-color:#2b3a52}
@@ -2473,6 +2476,7 @@ html.dark .text-rose-700{color:#fda4af}
 html.dark .text-rose-800{color:#fecdd3}
 html.dark .text-rose-900{color:#fecdd3}
 html.dark .text-rose-950{color:#ffe4e6}
+html.dark .text-sky-700{color:#7dd3fc}
 html.dark .text-sky-900{color:#bae6fd}
 html.dark .text-slate-500{color:#8b9ab0}
 html.dark .text-slate-600{color:#a3b1c6}
@@ -2495,6 +2499,8 @@ html.dark .from-amber-400 [class*="text-slate-9"],html.dark .bg-amber-300 [class
 html.dark .bg-slate-200\/70{background-color:#2b3a52}
 html.dark .border-slate-200.bg-transparent{border-color:#2b3a52}
 html.dark #installPointer *{color:inherit}
+html.dark #todayPlanBody .bg-slate-900,html.dark #v29Modal .bg-slate-900{background-color:#334155}
+html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
 
     </style>
     <script>try{var t=localStorage.getItem("jagpino_theme");if(t==="dark"||(t!=="light"&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}</script>
@@ -2530,6 +2536,10 @@ html.dark #installPointer *{color:inherit}
                         <span class="hidden sm:inline">Guardado automático</span>
                     </span>
 
+                    <button id="btnSettings" onclick="switchTab(currentTab === 5 ? 1 : 5)" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 border border-white/20 flex items-center justify-center transition" title="Ajustes: asignaturas, fechas, horas y días libres" aria-label="Ajustes">
+                        <i class="fa-solid fa-gear text-sm"></i>
+                    </button>
+
                     <button id="btnTheme" onclick="cycleTheme()" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 border border-white/20 flex items-center justify-center transition" title="Tema">
                         <i class="fa-solid fa-circle-half-stroke text-sm"></i>
                     </button>
@@ -2554,15 +2564,15 @@ html.dark #installPointer *{color:inherit}
                         <span id="dataReminderDot" class="hidden absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-400 border-2 border-slate-900 animate-pulse" title="Hace más de 14 días que no exportas una copia"></span>
                     </button>
 
-                    <!-- 3 pestañas -->
+                    <!-- 4 pestañas (Ajustes va aparte, con el botón ⚙️) -->
                     <nav class="flex max-w-full overflow-x-auto rounded-xl bg-slate-800/80 p-1 border border-slate-700/60 shadow-inner">
                         <button id="btnTab1" onclick="switchTab(1)" class="px-2 sm:px-4 py-2 rounded-lg text-[11px] sm:text-xs font-extrabold transition-all flex items-center gap-1 sm:gap-2 tab-active">
-                            <i class="fa-solid fa-gauge-high text-amber-400"></i>
-                            <span class="sm:hidden">Panel</span><span class="hidden sm:inline">1. Panel y Plan</span>
+                            <i class="fa-solid fa-sun text-amber-400"></i>
+                            <span class="sm:hidden">Hoy</span><span class="hidden sm:inline">1. Hoy</span>
                         </button>
                         <button id="btnTab2" onclick="switchTab(2)" class="px-2 sm:px-4 py-2 rounded-lg text-[11px] sm:text-xs font-bold transition-all flex items-center gap-1 sm:gap-2 tab-inactive">
-                            <i class="fa-solid fa-calendar-check text-emerald-400"></i>
-                            <span class="sm:hidden">Registro</span><span class="hidden sm:inline">2. Registro Semanal</span>
+                            <i class="fa-solid fa-chart-line text-emerald-400"></i>
+                            <span class="sm:hidden">Progreso</span><span class="hidden sm:inline">2. Progreso</span>
                         </button>
                         <button id="btnTab3" onclick="switchTab(3)" class="px-2 sm:px-4 py-2 rounded-lg text-[11px] sm:text-xs font-bold transition-all flex items-center gap-1 sm:gap-2 tab-inactive">
                             <i class="fa-solid fa-flag-checkered text-rose-400"></i>
@@ -2597,13 +2607,11 @@ html.dark #installPointer *{color:inherit}
                 <button onclick="toggleDataModal(true)" class="shrink-0 px-4 py-2 rounded-xl bg-slate-900 text-amber-300 text-xs font-black">Exportar copia</button>
             </div>
 
-            <!-- ================= TAB 1: PANEL Y PLAN INTEGRADO ================= -->
+            <!-- ================= TAB 1: HOY ================= -->
             <div id="tabContent1" class="space-y-6">
 
-                <!-- Dynamic Diagnostic Alert Banner -->
-                <section id="mainDiagnosticBanner" class="p-5 rounded-2xl border shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 bg-white">
-                    <!-- Injected via JS -->
-                </section>
+                <!-- V29.6: resumen de un vistazo -->
+                <div id="todayStatusBar" class="empty:hidden"></div>
 
                 <!-- PLAN DE HOY -->
                 <section class="bg-white rounded-2xl shadow-sm border border-emerald-200 overflow-hidden">
@@ -2620,8 +2628,18 @@ html.dark #installPointer *{color:inherit}
                     <div id="todayPlanBody" class="p-5"></div>
                 </section>
 
-                <!-- V29.5: RITMO REAL Y REASIGNACIÓN DE HORAS -->
+                <!-- V29.5/29.6: RITMO, DESVÍOS Y AJUSTES DE HORAS -->
                 <div id="paceSection" class="space-y-3 empty:hidden"></div>
+
+                            </div>
+
+            <!-- ================= TAB 2: PROGRESO ================= -->
+            <div id="tabContent2" class="hidden space-y-6">
+
+                <!-- Dynamic Diagnostic Alert Banner -->
+                <section id="mainDiagnosticBanner" class="p-5 rounded-2xl border shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 bg-white">
+                    <!-- Injected via JS -->
+                </section>
 
                 <!-- V29: CONSTANCIA Y PREVISIÓN -->
                 <div id="motivationSection" class="grid grid-cols-1 lg:grid-cols-2 gap-6 empty:hidden"></div>
@@ -2694,7 +2712,7 @@ html.dark #installPointer *{color:inherit}
                             <span class="w-7 h-7 rounded-full bg-amber-400 text-slate-950 text-xs flex items-center justify-center shadow"><i class="fa-solid fa-calendar-days"></i></span>
                             <div>
                                 <h2 class="font-bold text-sm tracking-wide">Calendario del Semestre</h2>
-                                <p class="text-[11px] text-slate-400">Pulsa una semana para anotar sus horas</p>
+                                <p class="text-[11px] text-slate-400">Pulsa una semana para ver o corregir sus horas</p>
                             </div>
                         </div>
                         <span id="weekCalendarInfo" class="text-xs font-bold text-amber-300"></span>
@@ -2715,105 +2733,43 @@ html.dark #installPointer *{color:inherit}
                     </div>
                 </section>
 
-                <!-- SECTION: SETUP & SUBJECT CONFIGURATION -->
-                <section class="bg-white rounded-2xl shadow-sm border border-slate-200/90 overflow-hidden">
-                    <div class="bg-slate-900 text-white px-6 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div class="flex items-center gap-2.5">
-                            <span class="w-7 h-7 rounded-full bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center shadow">⚙️</span>
-                            <div>
-                                <h2 class="font-bold text-sm tracking-wide">Configuración del Semestre y Materias</h2>
-                                <p class="text-[11px] text-slate-400">Modifica las casillas amarillas con tus fechas, horas y asignaturas</p>
-                            </div>
+                                <section id="historySection" class="bg-white rounded-2xl shadow-sm border border-slate-200/90 overflow-hidden scroll-mt-4">
+                    <div class="bg-slate-900 text-white px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h2 class="font-bold text-base flex items-center gap-2">
+                                <i class="fa-solid fa-calendar-check text-emerald-400"></i>
+                                Historial por semanas
+                            </h2>
+                            <p class="text-xs text-slate-400 mt-0.5">Tus horas reales semana a semana. Se rellenan solas desde el Plan de hoy; aquí puedes corregirlas.</p>
                         </div>
-                        <span class="text-xs font-bold text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-xl border border-emerald-500/30">
-                            <i class="fa-solid fa-brain mr-1.5"></i>Algoritmo de Ponderación
-                        </span>
+                        <button onclick="openOtherDayModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs transition shadow flex items-center gap-2">
+                            <i class="fa-solid fa-calendar-plus"></i>
+                            <span>Anotar otro día</span>
+                        </button>
                     </div>
 
-                    <div class="p-6 space-y-6">
-                        <!-- 4 Input Parameters -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200/70">
-                            <div class="space-y-1">
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                                    <i class="fa-solid fa-book-open text-amber-500 mr-1"></i> Nº Asignaturas
-                                </label>
-                                <input type="number" id="numAsignaturas" min="1" max="10" value="6" oninput="renderSubjectInputs()" 
-                                       class="w-full px-3.5 py-1.5 rounded-xl font-black text-slate-900 input-highlight shadow-sm text-sm">
-                            </div>
+                    <div class="p-3 sm:p-6">
+                        <!-- Vista móvil: una semana cada vez (se rellena por JS) -->
+                        <div id="trackingMobile" class="hidden"></div>
 
-                            <div class="space-y-1">
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                                    <i class="fa-solid fa-clock text-amber-500 mr-1"></i> Horas / Semana (total)
-                                </label>
-                                <input type="number" id="horasSemana" min="1" max="100" step="0.25" value="14" oninput="onWeeklyHoursChange()" title="Al cambiarlo se reparte entre tus días respetando los días libres" 
-                                       class="w-full px-3.5 py-1.5 rounded-xl font-black text-slate-900 input-highlight shadow-sm text-sm">
-                            </div>
-
-                            <div class="space-y-1">
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                                    <i class="fa-solid fa-calendar-day text-amber-500 mr-1"></i> Inicio Estudio
-                                </label>
-                                <input type="date" id="fechaInicio" value="2025-09-15" onchange="calculatePlan()" 
-                                       class="w-full px-3.5 py-1.5 rounded-xl font-black text-slate-900 input-highlight shadow-sm text-sm">
-                            </div>
-
-                            <div class="space-y-1">
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider" title="Solo para asignaturas sin fecha oficial (2º cuatrimestre). Las demás usan su semana de la pestaña Exámenes y PEC.">
-                                    <i class="fa-solid fa-flag-checkered text-amber-500 mr-1"></i> Examen por defecto
-                                </label>
-                                <input type="date" id="fechaExamenes" value="2026-01-19" onchange="calculatePlan()" 
-                                       class="w-full px-3.5 py-1.5 rounded-xl font-black text-slate-900 input-highlight shadow-sm text-sm">
-                            </div>
-                        </div>
-
-                        <!-- Disponibilidad por día -->
-                        <div class="flex flex-col lg:flex-row lg:items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-200/70">
-                            <div class="lg:w-64 shrink-0">
-                                <p class="text-xs font-bold text-slate-700 uppercase tracking-wider"><i class="fa-solid fa-calendar-week text-amber-500 mr-1"></i> Horas por día</p>
-                                <p class="text-[11px] text-slate-500 leading-snug mt-0.5">Tu disponibilidad real cada día. Pon 0 en tus días libres; la suma es tu total semanal.</p>
-                            </div>
-                            <div id="dayHoursRow" class="flex flex-wrap gap-2"></div>
-                            <button onclick="spreadDayHoursEvenly()" class="lg:ml-auto self-start lg:self-center px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-bold transition flex items-center gap-1.5">
-                                <i class="fa-solid fa-equals"></i> Repartir igual
-                            </button>
-                        </div>
-
-                        <!-- V29: días libres -->
-                        <div id="daysOffBox" class="flex flex-col lg:flex-row lg:items-start gap-3 p-4 rounded-xl bg-sky-50/50 border border-sky-200/70"></div>
-
-                        <!-- Subjects Selector Table -->
-                        <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
-                            <table class="w-full text-left text-xs">
-                                <thead class="bg-slate-800 text-white font-bold uppercase text-[11px] tracking-wider">
-                                    <tr>
-                                        <th class="py-3 px-3 w-8 text-center">#</th>
-                                        <th class="py-3 px-4">Asignatura (Elige en la lista desplegable)</th>
-                                        <th class="py-3 px-3 text-center w-24">Nº Temas</th>
-                                        <th class="py-3 px-3 text-center w-40">Examen</th>
-                                        <th class="py-3 px-3 text-center w-32">Dificultad</th>
-                                        <th class="py-3 px-3 text-center w-28">Carga Ponderada</th>
-                                        <th class="py-3 px-3 text-center w-32">Horas Iniciales</th>
-                                        <th class="py-3 px-3 text-center w-32 bg-amber-400 text-slate-950 font-black">Ritmo Inicial / Tema</th>
+                        <!-- Vista escritorio: tabla completa -->
+                        <div id="trackingDesktopWrap">
+                        <div id="trackingScroll" class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm max-h-[580px]">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead class="bg-slate-800 text-white font-bold uppercase sticky top-0 z-10 text-[11px]">
+                                    <tr id="trackingTableHeader">
+                                        <!-- Dynamic Headers -->
                                     </tr>
                                 </thead>
-                                <tbody id="subjectsContainer" class="divide-y divide-slate-200 bg-white">
-                                    <!-- Dynamic Subject Rows -->
+                                <tbody id="trackingTableBody" class="divide-y divide-slate-200 bg-white">
+                                    <!-- Dynamic Weekly Rows -->
                                 </tbody>
-                                <tfoot class="bg-slate-900 text-white font-black text-xs">
-                                    <tr>
-                                        <td colspan="2" class="py-3 px-4 text-right uppercase tracking-wider">Totales Iniciales:</td>
-                                        <td id="footTotalTemas" class="py-3 px-3 text-center text-amber-400 font-black">0</td>
-                                        <td id="footExamRange" class="py-3 px-3 text-center text-slate-300 text-[11px] font-bold">-</td>
-                                        <td id="footAvgDificultad" class="py-3 px-3 text-center text-slate-300">-</td>
-                                        <td id="footTotalCarga" class="py-3 px-3 text-center text-purple-300">0</td>
-                                        <td id="footTotalHoras" class="py-3 px-3 text-center text-emerald-400 font-black">0 h</td>
-                                        <td id="footAvgHoraTema" class="py-3 px-3 text-center text-slate-950 font-black bg-amber-400">0h 0m</td>
-                                    </tr>
+                                <tfoot class="bg-slate-900 text-white font-black text-xs sticky bottom-0 z-10" id="trackingTableFooter">
+                                    <!-- Dynamic Totals -->
                                 </tfoot>
                             </table>
                         </div>
-                        <p id="dupWarning" class="hidden px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-300 text-xs font-semibold text-amber-900"></p>
-                        <p class="text-[11px] text-slate-500"><i class="fa-solid fa-circle-info text-amber-500 mr-1"></i>La <b>fecha de examen</b> sale del calendario oficial (pestaña <button onclick="switchTab(3)" class="font-bold text-emerald-700 hover:underline">Exámenes y PEC</button>), donde la app reparte tus asignaturas entre la 1ª y la 2ª semana. La semana anterior a cada semana de exámenes es de <b>repaso</b> y se dedica solo a esas asignaturas. Las <b>horas iniciales</b> incluyen las de repaso; el <b>ritmo por tema</b> se calcula solo con las de primera vuelta.</p>
+                        </div>
                     </div>
                 </section>
 
@@ -2827,9 +2783,9 @@ html.dark #installPointer *{color:inherit}
                                 <p class="text-xs text-slate-400">Avance real frente a lo planificado y tiempo por tema recalculado</p>
                             </div>
                         </div>
-                        <button onclick="switchTab(2)" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black rounded-xl transition shadow flex items-center gap-2">
-                            <i class="fa-solid fa-pen-to-square"></i>
-                            <span>Anotar Horas Semanales</span>
+                        <button onclick="goToWeek(getCalendarInfo().currentWeek)" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black rounded-xl transition shadow flex items-center gap-2">
+                            <i class="fa-solid fa-calendar-check"></i>
+                            <span>Historial por semanas</span>
                         </button>
                     </div>
 
@@ -2966,49 +2922,6 @@ html.dark #installPointer *{color:inherit}
                 </section>
             </div>
 
-            <!-- ================= TAB 2: REGISTRO SEMANAL ================= -->
-            <div id="tabContent2" class="hidden space-y-6">
-                <section class="bg-white rounded-2xl shadow-sm border border-slate-200/90 overflow-hidden">
-                    <div class="bg-slate-900 text-white px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div>
-                            <h2 class="font-bold text-base flex items-center gap-2">
-                                <i class="fa-solid fa-calendar-check text-emerald-400"></i>
-                                Registro de Horas de Estudio Semana a Semana
-                            </h2>
-                            <p class="text-xs text-slate-400 mt-0.5">Anota en las casillas las horas reales que estudias cada semana. El Panel calculará los reajustes automáticamente.</p>
-                        </div>
-                        <button onclick="switchTab(1)" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs transition shadow flex items-center gap-2">
-                            <i class="fa-solid fa-gauge-high"></i>
-                            <span>Ver Panel y Diagnóstico</span>
-                        </button>
-                    </div>
-
-                    <div class="p-3 sm:p-6">
-                        <!-- Vista móvil: una semana cada vez (se rellena por JS) -->
-                        <div id="trackingMobile" class="hidden"></div>
-
-                        <!-- Vista escritorio: tabla completa -->
-                        <div id="trackingDesktopWrap">
-                        <div id="trackingScroll" class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm max-h-[580px]">
-                            <table class="w-full text-left text-xs border-collapse">
-                                <thead class="bg-slate-800 text-white font-bold uppercase sticky top-0 z-10 text-[11px]">
-                                    <tr id="trackingTableHeader">
-                                        <!-- Dynamic Headers -->
-                                    </tr>
-                                </thead>
-                                <tbody id="trackingTableBody" class="divide-y divide-slate-200 bg-white">
-                                    <!-- Dynamic Weekly Rows -->
-                                </tbody>
-                                <tfoot class="bg-slate-900 text-white font-black text-xs sticky bottom-0 z-10" id="trackingTableFooter">
-                                    <!-- Dynamic Totals -->
-                                </tfoot>
-                            </table>
-                        </div>
-                        </div>
-                    </div>
-                </section>
-            </div>
-
             <!-- ================= TAB 3: EXÁMENES Y PEC ================= -->
             <div id="tabContent3" class="hidden space-y-6">
                 <div class="p-4 rounded-2xl bg-white border border-emerald-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -3021,6 +2934,118 @@ html.dark #installPointer *{color:inherit}
             <!-- ================= TAB 4: EXPEDIENTE ================= -->
             <div id="tabContent4" class="hidden space-y-6">
                 <div id="recordTabBody" class="space-y-6"></div>
+            </div>
+
+            <!-- ================= AJUSTES (botón ⚙️) ================= -->
+            <div id="tabContent5" class="hidden space-y-6">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h2 class="text-lg font-black text-slate-900 flex items-center gap-2"><i class="fa-solid fa-gear text-slate-500"></i> Ajustes</h2>
+                        <p class="text-xs text-slate-500">Asignaturas, fechas, horas por día y días libres. Los cambios se aplican al momento.</p>
+                    </div>
+                    <button onclick="switchTab(1)" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-2"><i class="fa-solid fa-check"></i> Listo · volver a Hoy</button>
+                </div>
+                <!-- SECTION: SETUP & SUBJECT CONFIGURATION -->
+                <section class="bg-white rounded-2xl shadow-sm border border-slate-200/90 overflow-hidden">
+                    <div class="bg-slate-900 text-white px-6 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-7 h-7 rounded-full bg-amber-400 text-slate-950 font-black text-xs flex items-center justify-center shadow">⚙️</span>
+                            <div>
+                                <h2 class="font-bold text-sm tracking-wide">Ajustes del cuatrimestre</h2>
+                                <p class="text-[11px] text-slate-400">Modifica las casillas amarillas con tus fechas, horas y asignaturas</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-xl border border-emerald-500/30">
+                            <i class="fa-solid fa-brain mr-1.5"></i>Algoritmo de Ponderación
+                        </span>
+                    </div>
+
+                    <div class="p-6 space-y-6">
+                        <!-- 4 Input Parameters -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200/70">
+                            <div class="space-y-1">
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                    <i class="fa-solid fa-book-open text-amber-500 mr-1"></i> Nº Asignaturas
+                                </label>
+                                <input type="number" id="numAsignaturas" min="1" max="10" value="6" oninput="renderSubjectInputs()" 
+                                       class="w-full px-3.5 py-1.5 rounded-xl font-black text-slate-900 input-highlight shadow-sm text-sm">
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                    <i class="fa-solid fa-clock text-amber-500 mr-1"></i> Horas / Semana (total)
+                                </label>
+                                <input type="number" id="horasSemana" min="1" max="100" step="0.25" value="14" oninput="onWeeklyHoursChange()" title="Al cambiarlo se reparte entre tus días respetando los días libres" 
+                                       class="w-full px-3.5 py-1.5 rounded-xl font-black text-slate-900 input-highlight shadow-sm text-sm">
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                    <i class="fa-solid fa-calendar-day text-amber-500 mr-1"></i> Inicio Estudio
+                                </label>
+                                <input type="date" id="fechaInicio" value="2025-09-15" onchange="calculatePlan()" 
+                                       class="w-full px-3.5 py-1.5 rounded-xl font-black text-slate-900 input-highlight shadow-sm text-sm">
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider" title="Solo para asignaturas sin fecha oficial (2º cuatrimestre). Las demás usan su semana de la pestaña Exámenes y PEC.">
+                                    <i class="fa-solid fa-flag-checkered text-amber-500 mr-1"></i> Examen por defecto
+                                </label>
+                                <input type="date" id="fechaExamenes" value="2026-01-19" onchange="calculatePlan()" 
+                                       class="w-full px-3.5 py-1.5 rounded-xl font-black text-slate-900 input-highlight shadow-sm text-sm">
+                            </div>
+                        </div>
+
+                        <!-- Disponibilidad por día -->
+                        <div class="flex flex-col lg:flex-row lg:items-center gap-3 p-4 rounded-xl bg-slate-50 border border-slate-200/70">
+                            <div class="lg:w-64 shrink-0">
+                                <p class="text-xs font-bold text-slate-700 uppercase tracking-wider"><i class="fa-solid fa-calendar-week text-amber-500 mr-1"></i> Horas por día</p>
+                                <p class="text-[11px] text-slate-500 leading-snug mt-0.5">Tu disponibilidad real cada día. Pon 0 en tus días libres; la suma es tu total semanal.</p>
+                            </div>
+                            <div id="dayHoursRow" class="flex flex-wrap gap-2"></div>
+                            <button onclick="spreadDayHoursEvenly()" class="lg:ml-auto self-start lg:self-center px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-bold transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-equals"></i> Repartir igual
+                            </button>
+                        </div>
+
+                        <!-- V29: días libres -->
+                        <div id="daysOffBox" class="flex flex-col lg:flex-row lg:items-start gap-3 p-4 rounded-xl bg-sky-50/50 border border-sky-200/70"></div>
+
+                        <!-- Subjects Selector Table -->
+                        <div class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-800 text-white font-bold uppercase text-[11px] tracking-wider">
+                                    <tr>
+                                        <th class="py-3 px-3 w-8 text-center">#</th>
+                                        <th class="py-3 px-4">Asignatura (Elige en la lista desplegable)</th>
+                                        <th class="py-3 px-3 text-center w-24">Nº Temas</th>
+                                        <th class="py-3 px-3 text-center w-40">Examen</th>
+                                        <th class="py-3 px-3 text-center w-32">Dificultad</th>
+                                        <th class="py-3 px-3 text-center w-28">Carga Ponderada</th>
+                                        <th class="py-3 px-3 text-center w-32">Horas Iniciales</th>
+                                        <th class="py-3 px-3 text-center w-32 bg-amber-400 text-slate-950 font-black">Ritmo Inicial / Tema</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="subjectsContainer" class="divide-y divide-slate-200 bg-white">
+                                    <!-- Dynamic Subject Rows -->
+                                </tbody>
+                                <tfoot class="bg-slate-900 text-white font-black text-xs">
+                                    <tr>
+                                        <td colspan="2" class="py-3 px-4 text-right uppercase tracking-wider">Totales Iniciales:</td>
+                                        <td id="footTotalTemas" class="py-3 px-3 text-center text-amber-400 font-black">0</td>
+                                        <td id="footExamRange" class="py-3 px-3 text-center text-slate-300 text-[11px] font-bold">-</td>
+                                        <td id="footAvgDificultad" class="py-3 px-3 text-center text-slate-300">-</td>
+                                        <td id="footTotalCarga" class="py-3 px-3 text-center text-purple-300">0</td>
+                                        <td id="footTotalHoras" class="py-3 px-3 text-center text-emerald-400 font-black">0 h</td>
+                                        <td id="footAvgHoraTema" class="py-3 px-3 text-center text-slate-950 font-black bg-amber-400">0h 0m</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        <p id="dupWarning" class="hidden px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-300 text-xs font-semibold text-amber-900"></p>
+                        <p class="text-[11px] text-slate-500"><i class="fa-solid fa-circle-info text-amber-500 mr-1"></i>La <b>fecha de examen</b> sale del calendario oficial (pestaña <button onclick="switchTab(3)" class="font-bold text-emerald-700 hover:underline">Exámenes y PEC</button>), donde la app reparte tus asignaturas entre la 1ª y la 2ª semana. La semana anterior a cada semana de exámenes es de <b>repaso</b> y se dedica solo a esas asignaturas. Las <b>horas iniciales</b> incluyen las de repaso; el <b>ritmo por tema</b> se calcula solo con las de primera vuelta.</p>
+                    </div>
+                </section>
             </div>
 
         </main>
@@ -3168,7 +3193,7 @@ html.dark #installPointer *{color:inherit}
                 </p>
                 <div class="flex items-center gap-2 w-full sm:w-auto">
                     <button onclick="toggleDecisionModal(false)" class="w-full sm:w-auto px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-black rounded-xl text-xs transition shadow">
-                        Aplicar y Volver al Panel
+                        Aplicar y volver
                     </button>
                 </div>
             </div>
@@ -3247,7 +3272,7 @@ html.dark #installPointer *{color:inherit}
             <!-- Detailed Legal Terms Clause -->
             <div class="pt-3 border-t border-slate-100 text-[11px] text-slate-400 flex flex-col sm:flex-row justify-between gap-2">
                 <p>© 2026 <b>Jagpino</b>. Se autoriza el uso libre y gratuito para fines estrictamente académicos y personales. Queda prohibida su venta, comercialización total o parcial, así como la redistribución sin citar la autoría original.</p>
-                <span class="whitespace-nowrap font-medium text-slate-500">v29.5</span>
+                <span class="whitespace-nowrap font-medium text-slate-500">v29.6</span>
             </div>
         </div>
     </footer>
@@ -4440,30 +4465,37 @@ html.dark #installPointer *{color:inherit}
 
         // ================= NAVEGACIÓN =================
         function switchTab(tabNum) {
+            if (!document.getElementById(`tabContent${tabNum}`)) tabNum = 1;
+            if (tabNum !== currentTab) window.scrollTo(0, 0);
             currentTab = tabNum;
-            [1, 2, 3, 4].forEach(i => {
-                document.getElementById(`tabContent${i}`).classList.add('hidden');
-                document.getElementById(`btnTab${i}`).className = 'px-2 sm:px-4 py-2 rounded-lg text-[11px] sm:text-xs font-bold transition-all flex items-center gap-1 sm:gap-2 tab-inactive';
+            [1, 2, 3, 4, 5].forEach(i => {
+                const c = document.getElementById(`tabContent${i}`);
+                if (c) c.classList.add('hidden');
+                const b = document.getElementById(`btnTab${i}`);
+                if (b) b.className = 'px-2 sm:px-4 py-2 rounded-lg text-[11px] sm:text-xs font-bold transition-all flex items-center gap-1 sm:gap-2 tab-inactive';
             });
-
             document.getElementById(`tabContent${tabNum}`).classList.remove('hidden');
-            document.getElementById(`btnTab${tabNum}`).className = 'px-2 sm:px-4 py-2 rounded-lg text-[11px] sm:text-xs font-extrabold transition-all flex items-center gap-1 sm:gap-2 tab-active';
+            const btn = document.getElementById(`btnTab${tabNum}`);
+            if (btn) btn.className = 'px-2 sm:px-4 py-2 rounded-lg text-[11px] sm:text-xs font-extrabold transition-all flex items-center gap-1 sm:gap-2 tab-active';
+            const gear = document.getElementById('btnSettings');
+            if (gear) gear.classList.toggle('ring-2', tabNum === 5), gear.classList.toggle('ring-amber-400', tabNum === 5);
 
-            if (tabNum === 1) {
+            if (tabNum === 1 || tabNum === 2) {
                 renderDashboardTab();
-            } else if (tabNum === 2) {
-                renderTrackingTab(true);
+                if (tabNum === 2) renderTrackingTab(true);
             } else if (tabNum === 3) {
                 renderExamTab();
-            } else {
+            } else if (tabNum === 4) {
                 renderRecordTab();
             }
         }
 
+        // Calendario del semestre → su semana en el Historial (pestaña Progreso)
         function goToWeek(w) {
             pendingWeekFocus = w;
-            switchTab(2);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (currentTab !== 2) switchTab(2); else renderTrackingTab(true);
+            const h = document.getElementById('historySection');
+            if (h) setTimeout(() => h.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
         }
 
         // ================= CONFIGURACIÓN DE ASIGNATURAS =================
@@ -5253,8 +5285,8 @@ html.dark #installPointer *{color:inherit}
                     badge.innerText = 'Sin plan para hoy';
                 }
                 const texts = {
-                    nosubjects: ['📚', 'Elige tus asignaturas', 'Configúralas más abajo y aquí aparecerá cada día qué estudiar y durante cuánto tiempo.'],
-                    nodates: ['📅', 'Revisa las fechas', 'Indica una fecha de inicio y otra de exámenes válidas para generar el plan diario.'],
+                    nosubjects: ['📚', 'Elige tus asignaturas', 'Abre <button onclick="switchTab(5)" class="font-black underline">⚙️ Ajustes</button> y elige tus asignaturas: aquí aparecerá cada día qué estudiar y durante cuánto tiempo.'],
+                    nodates: ['📅', 'Revisa las fechas', 'En <button onclick="switchTab(5)" class="font-black underline">⚙️ Ajustes</button>, indica una fecha de inicio y otra de exámenes válidas para generar el plan diario.'],
                     before: ['⏳', `Empiezas el ${cal.start ? formatShortDate(cal.start) : ''}`, `Faltan ${-cal.todayIdx} días. Ese día verás aquí qué tema toca y cuánto tiempo dedicarle.`],
                     after: ['🎓', 'Periodo de exámenes terminado', 'Actualiza las fechas en la configuración para planificar el siguiente cuatrimestre.']
                 }[plan.state];
@@ -5392,7 +5424,11 @@ html.dark #installPointer *{color:inherit}
                     </div>`;
             }
 
-            html += `<p class="text-[10px] text-slate-400"><i class="fa-solid fa-circle-info mr-1"></i>«Anotar» y los repasos suman el tiempo a la semana actual del Registro Semanal. Si los usas, no lo apuntes otra vez a mano.</p>`;
+            html += `
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+                    <p class="text-[10px] text-slate-400 min-w-0"><i class="fa-solid fa-circle-info mr-1"></i>«Anotar», «Tema terminado» y los repasos guardan tu tiempo solos, tema a tema. No hace falta apuntarlo en ningún otro sitio.</p>
+                    <button onclick="openOtherDayModal()" class="shrink-0 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-bold transition flex items-center gap-1.5"><i class="fa-solid fa-calendar-plus text-emerald-600"></i> Anotar otro día</button>
+                </div>`;
             body.innerHTML = `<div class="space-y-4">${html}</div>`;
         }
 
@@ -5530,6 +5566,7 @@ html.dark #installPointer *{color:inherit}
                 2: ['text-blue-600', 'text-blue-700 font-bold', `<i class="fa-solid fa-mug-hot text-blue-500"></i><span>Tramo 2/5: ${d} h/día (Aviso Suave)</span>`],
                 1: ['text-emerald-600', 'text-emerald-700 font-bold', `<i class="fa-solid fa-circle-check text-emerald-500"></i><span>Tramo 1/5: ${d} h/día (Óptimo)</span>`]
             };
+            renderTodayStatus(p, notStarted ? 0 : stage, dailyHoursNeeded, newRequiredHrsPerWeek, balanceHours, started);
             metaSemEl.className = `text-2xl font-black ${kpiStages[stage][0]} mt-1`;
             metaDiaEl.className = `text-xs ${kpiStages[stage][1]} mt-0.5 flex items-center gap-1`;
             metaDiaEl.innerHTML = kpiStages[stage][2];
@@ -5537,7 +5574,7 @@ html.dark #installPointer *{color:inherit}
             // ---- Banner de diagnóstico ----
             const banner = document.getElementById('mainDiagnosticBanner');
             const hWeek = `${d} h/día (${newRequiredHrsPerWeek.toFixed(1)} h/sem)`;
-            const btnRegister = (cls, label) => `<button onclick="switchTab(2)" class="px-4 py-2 ${cls} text-white rounded-xl text-xs font-bold transition shadow whitespace-nowrap shrink-0">${label}</button>`;
+            const btnRegister = (cls, label) => `<button onclick="switchTab(1)" class="px-4 py-2 ${cls} text-white rounded-xl text-xs font-bold transition shadow whitespace-nowrap shrink-0">${label}</button>`;
 
             if (notStarted) {
                 banner.className = "p-5 rounded-2xl border border-slate-200 bg-slate-50/90 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm";
@@ -5551,9 +5588,9 @@ html.dark #installPointer *{color:inherit}
                             <p class="text-xs text-slate-600 mt-0.5">Tu meta inicial es de <b>${round2(hrsWeek)} h/semana (${baseDaily.toFixed(1)} h/día de media)</b>. El semáforo te avisará en 5 niveles progresivos si te acercas al umbral límite de <b>4 h/día</b>.</p>
                         </div>
                     </div>
-                    <button onclick="switchTab(2)" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition shadow whitespace-nowrap flex items-center gap-2">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                        <span>Anotar Mi Primera Semana</span>
+                    <button onclick="switchTab(1)" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition shadow whitespace-nowrap flex items-center gap-2">
+                        <i class="fa-solid fa-sun"></i>
+                        <span>Ir al Plan de hoy</span>
                     </button>
                 `;
             } else {
@@ -5570,21 +5607,21 @@ html.dark #installPointer *{color:inherit}
                         title: 'text-orange-950', text: `Tramo 4/5 · Nivel Estado de Alarma: Modo Codos de Hierro (${d} h/día · ${newRequiredHrsPerWeek.toFixed(1)} h/sem)`,
                         chip: 'bg-orange-200 text-orange-900', chipText: 'A 1 paso del asistente', p: 'text-orange-900',
                         msg: '¡Estás a milímetros del límite crítico de 4h/día! Toca encerrarse en la cueva, silenciar los grupos de WhatsApp y estudiar como si estuvieras redactando una sentencia histórica a contrarreloj. Si no aprietas esta semana, el Asistente te obligará a posponer materias.',
-                        actions: `<div class="flex items-center gap-2 shrink-0"><button onclick="toggleDecisionModal(true)" class="px-3.5 py-2 bg-orange-200 hover:bg-orange-300 text-orange-950 border border-orange-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap"><i class="fa-solid fa-sliders"></i> Ver simulación</button>${btnRegister('bg-slate-900 hover:bg-slate-800', 'Anotar horas')}</div>`
+                        actions: `<div class="flex items-center gap-2 shrink-0"><button onclick="toggleDecisionModal(true)" class="px-3.5 py-2 bg-orange-200 hover:bg-orange-300 text-orange-950 border border-orange-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap"><i class="fa-solid fa-sliders"></i> Ver simulación</button>${btnRegister('bg-slate-900 hover:bg-slate-800', 'Ir al Plan de hoy')}</div>`
                     },
                     3: {
                         box: 'border border-amber-300 bg-amber-50/95 shadow-sm', icon: 'bg-amber-500 text-slate-950 text-xl shadow', emoji: '⚡',
                         title: 'text-amber-950', text: `Tramo 3/5 · Tensión en el Tribunal: ${hWeek}`,
                         chip: 'bg-amber-200 text-amber-900', chipText: 'Atención preventiva', p: 'text-amber-900',
                         msg: 'El desvío acumulado empieza a notarse. Menos debate doctrinal en foros y más codos en la mesa esta semana. ¡Un apretón ahora te mantendrá a salvo de la barrera de las 4h diarias!',
-                        actions: btnRegister('bg-slate-900 hover:bg-slate-800', 'Anotar semana')
+                        actions: btnRegister('bg-slate-900 hover:bg-slate-800', 'Ir al Plan de hoy')
                     },
                     2: {
                         box: 'border border-blue-200 bg-blue-50/90 shadow-sm', icon: 'bg-blue-600 text-white text-xl shadow', emoji: '☕',
                         title: 'text-blue-950', text: `Tramo 2/5 · Nivel Doble Espresso: ${hWeek}`,
                         chip: 'bg-blue-200 text-blue-900', chipText: 'Ligero reajuste', p: 'text-blue-900',
                         msg: 'El plan te pide un cafecito extra de concentración. Vas con buen margen, pero no te despistes con los resúmenes eternos. ¡Mantén el compás!',
-                        actions: btnRegister('bg-blue-700 hover:bg-blue-800', 'Registrar semana')
+                        actions: btnRegister('bg-blue-700 hover:bg-blue-800', 'Ir al Plan de hoy')
                     },
                     1: {
                         box: 'border border-emerald-200 bg-emerald-50/90 shadow-sm', icon: 'bg-emerald-600 text-white text-xl shadow', emoji: '🌿',
@@ -5593,7 +5630,7 @@ html.dark #installPointer *{color:inherit}
                         chipText: postponedCount > 0 ? `${postponedCount} materia${postponedCount > 1 ? 's' : ''} pospuesta${postponedCount > 1 ? 's' : ''}` : 'Ritmo Perfecto',
                         p: 'text-emerald-800',
                         msg: 'Vas como un tiro. Con este ritmo te va a sobrar tiempo hasta para explicar el principio de legalidad a tus amigos. ¡Sigue con esta constancia impecable!',
-                        actions: `<div class="flex items-center gap-2 shrink-0">${postponedCount > 0 ? `<button onclick="toggleDecisionModal(true)" class="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs font-bold transition whitespace-nowrap"><i class="fa-solid fa-gear mr-1"></i>Ajustar materias</button>` : ''}${btnRegister('bg-emerald-700 hover:bg-emerald-800', 'Registrar semana')}</div>`
+                        actions: `<div class="flex items-center gap-2 shrink-0">${postponedCount > 0 ? `<button onclick="toggleDecisionModal(true)" class="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs font-bold transition whitespace-nowrap"><i class="fa-solid fa-gear mr-1"></i>Ajustar materias</button>` : ''}${btnRegister('bg-emerald-700 hover:bg-emerald-800', 'Ir al Plan de hoy')}</div>`
                     }
                 }[stage];
 
@@ -6155,7 +6192,7 @@ html.dark #installPointer *{color:inherit}
                         </div>
                         <button onclick="changeMobileWeek(1)" aria-label="Semana siguiente" class="w-11 h-11 rounded-xl bg-slate-900 text-white ${w >= p.numWeeks ? 'opacity-30' : ''}"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
-                    ${subjects.length ? cards : '<p class="text-xs text-slate-500">Elige asignaturas en el Panel para poder anotar horas.</p>'}
+                    ${subjects.length ? cards : '<p class="text-xs text-slate-500">Elige tus asignaturas en ⚙️ Ajustes para poder anotar horas.</p>'}
                     <div id="mobileWeekSummary" class="p-4 rounded-2xl bg-slate-50 border border-slate-200 sticky bottom-2 shadow-lg">${mobileSummaryHtml(w, p)}</div>
                 </div>`;
 
@@ -8159,7 +8196,7 @@ html.dark #installPointer *{color:inherit}
         // cómo se usa (web, app instalada o archivo), si sincroniza con Drive y, si el alumno lo pone, su nombre de usuario.
         // Nunca se envían datos de estudio. Se puede desactivar en Datos.
         const STATS_URL = 'https://script.google.com/macros/s/AKfycbwRdxL0fvYa05e_lmOlCYfZ9IkuHmcd0YsHIIVaU3LnvOOuYjKrb-bZLNjJo2iWJHHa/exec';   // URL de la aplicación web de Google Apps Script (…/exec)
-        const APP_VERSION = 'v29.5';
+        const APP_VERSION = 'v29.6';
         const STATS_KEY = STORAGE_KEY + '_stats';
         const ALIAS_MAX = 30;
 
@@ -8571,7 +8608,7 @@ html.dark #installPointer *{color:inherit}
                     if (d > today) { cls = 'bg-transparent border border-slate-200'; title = formatShortDate(d); }
                     else if (h > 0) { cls = heatColor(h); title = `${formatShortDate(d)} · ${formatHM(h)}`; }
                     else if (off) { cls = 'bg-sky-200'; title = `${formatShortDate(d)} · día libre${off.label ? ': ' + off.label : ''}`; }
-                    else if (weekly) { cls = 'bg-amber-200'; title = `${formatShortDate(d)} · semana anotada en el Registro semanal (sin detalle por día)`; }
+                    else if (weekly) { cls = 'bg-amber-200'; title = `${formatShortDate(d)} · semana anotada en el historial (sin detalle por día)`; }
                     else { cls = 'bg-slate-200/70'; title = `${formatShortDate(d)} · sin estudio`; }
                     if (d.getTime() === today.getTime()) cls += ' ring-2 ring-amber-400';
                     cells += `<div class="${cell} rounded-[3px] ${cls}" title="${escapeHtml(title)}"></div>`;
@@ -9271,8 +9308,11 @@ html.dark #installPointer *{color:inherit}
         }
 
         function addTopicTime(name, n, h) {
+            addTopicTimeOn(todayKey(), name, n, h);
+        }
+
+        function addTopicTimeOn(k, name, n, h) {
             if (!n || !h) return;
-            const k = todayKey();
             if (!topicTime[k]) topicTime[k] = {};
             if (!topicTime[k][name]) topicTime[k][name] = {};
             const v = round2((topicTime[k][name][n] || 0) + h);
@@ -9331,17 +9371,71 @@ html.dark #installPointer *{color:inherit}
             if (!DB_NAMES.has(name)) return;
             const wasDone = !!topicEntry(name, n);
             if (!wasDone) markTopicDone(name, n);
-            let logged = 0;
-            // Si hoy no habías anotado tiempo a este tema, se anota el tiempo del bloque al terminarlo
-            if (!wasDone && !blockLogged(name, n) && hours > 0 && canLogToday()) {
-                addTopicTime(name, n, hours);
-                adjustStudyHours(name, hours);
-                logged = hours;
-            }
             renderDashboardTab();
-            showToast(logged
-                ? `✅ Tema ${n} de ${shortName(name)} terminado · anotadas ${formatHM(logged)} a este tema. Si fue otro tiempo, ajústalo con − / +.`
-                : `✅ Tema ${n} de ${shortName(name)} terminado.`, 'ok');
+            // Si hoy ya anotaste tiempo a este tema, no hace falta preguntar
+            if (wasDone || blockLogged(name, n) || !canLogToday()) {
+                showToast(`✅ Tema ${n} de ${shortName(name)} terminado.${deviationToastText(name, n)}`, 'ok');
+                return;
+            }
+            openFinishTimeModal(name, n, hours);
+        }
+
+        // ¿Cuánto te ha llevado hoy? (el tiempo real por tema alimenta el aviso de desvío)
+        let finishCtx = null;
+        function openFinishTimeModal(name, n, hours) {
+            const s = subjectByName(name);
+            const slot = s ? topicSlotCredit(s, n) : 0;
+            const before = (trackedTopicHours(name, null)[n] || 0) - topicHoursToday(name, n);
+            const def = roundQuarter(Math.max(0.25, before > 0 ? Math.max(0.25, slot - before) : (hours || slot || 1)));
+            finishCtx = { name, n, h: Math.min(12, def) };
+            const nm = topicName(name, n);
+            const chips = [0.5, 1, 1.5, 2, 3].map(h => `<button onclick="setFinishTime(${h})" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold">${formatHM(h)}</button>`).join('');
+            openV29Modal(`
+                ${v29Header('✅', `Tema ${n} de ${escapeHtml(shortName(name))} terminado`, nm ? escapeHtml(nm) : 'Ya cuenta para tu plan de hoy')}
+                <p class="text-sm text-slate-700 font-bold">¿Cuánto tiempo le has dedicado <u>hoy</u>?</p>
+                ${before > 0 ? `<p class="text-xs text-slate-500 -mt-2">Ya llevabas ${formatHM(before)} de otros días.</p>` : ''}
+                <div class="flex items-center justify-center gap-3 py-1">
+                    <button onclick="setFinishTime(finishCtx.h - 0.25)" class="w-11 h-11 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xl font-black" aria-label="Restar 15 minutos">−</button>
+                    <span id="finishTimeVal" class="min-w-[7rem] text-center text-3xl font-black text-slate-900">${formatHM(finishCtx.h)}</span>
+                    <button onclick="setFinishTime(finishCtx.h + 0.25)" class="w-11 h-11 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xl font-black" aria-label="Sumar 15 minutos">+</button>
+                </div>
+                <div class="flex flex-wrap justify-center gap-1.5">${chips}${slot > 0 ? `<button onclick="setFinishTime(${roundQuarter(Math.max(0.25, slot - Math.max(0, before)))})" class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold">Lo previsto · ${formatHM(roundQuarter(Math.max(0.25, slot - Math.max(0, before))))}</button>` : ''}</div>
+                <p class="text-[11px] text-slate-500 leading-snug">Tu plan ya cuenta el tema entero (${formatHM(slot)} previstas). Este tiempo es tu esfuerzo real: con él la app detecta si un tema se te alarga.</p>
+                <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-1">
+                    <button onclick="saveFinishTime(0)" class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs font-bold">Hoy no le he dedicado tiempo</button>
+                    <button onclick="saveFinishTime(finishCtx.h)" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black">Guardar</button>
+                </div>`);
+            refreshFinishSave();
+        }
+
+        function refreshFinishSave() {
+            const m = document.getElementById('v29Modal');
+            if (!m || !finishCtx) return;
+            const v = document.getElementById('finishTimeVal');
+            if (v) v.textContent = formatHM(finishCtx.h);
+            const btns = m.querySelectorAll('button');
+            const save = btns[btns.length - 1];
+            if (save) save.textContent = `Guardar ${formatHM(finishCtx.h)}`;
+        }
+
+        function setFinishTime(h) {
+            if (!finishCtx) return;
+            finishCtx.h = Math.min(12, Math.max(0.25, roundQuarter(h)));
+            refreshFinishSave();
+        }
+
+        function saveFinishTime(h) {
+            if (!finishCtx) return;
+            const { name, n } = finishCtx;
+            finishCtx = null;
+            closeV29Modal();
+            if (h > 0 && canLogToday()) {
+                addTopicTime(name, n, h);
+                adjustStudyHours(name, h);
+            } else {
+                renderDashboardTab();
+            }
+            showToast(`✅ Tema ${n} de ${shortName(name)} terminado${h > 0 ? ` · ${formatHM(h)} anotadas` : ''}.${deviationToastText(name, n)}`, 'ok');
         }
 
         // −/+ de un tema en «Hoy, tema a tema». Al sumar, primero se usa el tiempo de hoy que no tenía tema.
@@ -9405,8 +9499,10 @@ html.dark #installPointer *{color:inherit}
                             const allDone = Object.keys(topicEntries(b.s.name)).map(Number).filter(k => k >= 1 && k <= b.s.topics).sort((x, y) => x - y);
                             const rank = allDone.indexOf(n) + 1;
                             const slot = e ? topicCreditUpTo(b.s, rank) - topicCreditUpTo(b.s, rank - 1) : topicCreditUpTo(b.s, allDone.length + 1) - topicCreditUpTo(b.s, allDone.length);
+                            const dv = doneToday ? topicDeviation(b.s, n) : null;
+                            const dvTag = dv && dv.kind !== 'ok' ? ` <span class="text-[10px] font-black ${dv.kind === 'slow' ? 'text-amber-700' : 'text-sky-700'}">${dv.kind === 'slow' ? '🐢' : '🚀'} ${pctTxt(dv.dev)}</span>` : '';
                             const planTag = slot > 0 ? (doneToday
-                                ? ` <span class="text-[10px] font-semibold text-emerald-700">· cuenta ${formatHM(slot)} de plan</span>`
+                                ? ` <span class="text-[10px] font-semibold text-emerald-700">· cuenta ${formatHM(slot)} de plan</span>${dvTag}`
                                 : (!e ? ` <span class="text-[10px] font-semibold text-emerald-700">· previsto ${formatHM(slot)}</span>` : '')) : '';
                             return `
                                 <div class="flex flex-wrap items-center justify-between gap-2 pl-2">
@@ -9572,30 +9668,74 @@ html.dark #installPointer *{color:inherit}
             return { covered: topicCredit + partial + revMin / 60 + p2, mode, D, est, partial, revMin, p2, topicCredit, slot };
         }
 
-        // Ritmo real frente al planificado, medido solo con temas terminados que tienen su tiempo anotado tema a tema
-        // (al menos 3). need > 0: horas que le faltarán antes de su semana de repaso; need < 0: le sobran.
-        const PACE_MIN_TOPICS = 3;
+        // ---------- V29.6: desvío tema a tema ----------
+        // Cada tema terminado con su tiempo anotado se compara con lo que el plan le daba.
+        // 1 tema desviado (≥ 25 %) → aviso suave. 2 seguidos en la misma dirección → tendencia: propuesta de reajuste.
+        // Si el siguiente tema va bien, el aviso se olvida.
+        const DEV_THRESHOLD = 0.25;
+
+        function topicSlotCredit(s, n) {
+            const ent = topicEntries(s.name);
+            const allDone = Object.keys(ent).map(Number).filter(k => k >= 1 && k <= s.topics).sort((x, y) => x - y);
+            const r = allDone.indexOf(n) + 1;
+            if (r > 0) return topicCreditUpTo(s, r) - topicCreditUpTo(s, r - 1);
+            return topicCreditUpTo(s, allDone.length + 1) - topicCreditUpTo(s, allDone.length);
+        }
+
+        function topicDeviation(s, n, tracked) {
+            tracked = tracked || trackedTopicHours(s.name, null);
+            const e = topicEntry(s.name, n);
+            const h = tracked[n] || 0;
+            if (!e || e.est || !(h > 0)) return null;
+            const credit = topicSlotCredit(s, n);
+            if (!(credit > 0)) return null;
+            const dev = h / credit - 1;
+            const sig = Math.abs(dev) >= DEV_THRESHOLD && Math.abs(h - credit) >= 0.25;
+            return { n, h, credit, dev, kind: sig ? (dev > 0 ? 'slow' : 'fast') : 'ok', done: e.done || '' };
+        }
+
+        function deviationTrend(s) {
+            const tracked = trackedTopicHours(s.name, null);
+            const ent = topicEntries(s.name);
+            const hist = Object.keys(ent).map(Number).filter(n => n >= 1 && n <= s.topics)
+                .map(n => topicDeviation(s, n, tracked)).filter(Boolean)
+                .sort((a, b) => a.done.localeCompare(b.done) || a.n - b.n);
+            const last = hist[hist.length - 1] || null;
+            if (!last || last.kind === 'ok') return { trend: null, level: 0, streak: [], last, hist };
+            const streak = [];
+            for (let i = hist.length - 1; i >= 0 && hist[i].kind === last.kind; i--) streak.unshift(hist[i]);
+            return { trend: last.kind, level: streak.length >= 2 ? 2 : 1, streak, last, hist };
+        }
+
+        function devWords(dev) { return `un ${Math.round(Math.abs(dev) * 100)} % ${dev > 0 ? 'más' : 'menos'}`; }
+        function pctTxt(dev) { return `${dev > 0 ? '+' : '−'}${Math.round(Math.abs(dev) * 100)} %`; }
+
+        function deviationToastText(name, n) {
+            const s = subjectByName(name);
+            if (!s) return '';
+            const d = topicDeviation(s, n);
+            if (!d || d.kind === 'ok') return '';
+            const t = deviationTrend(s);
+            const second = t.trend === d.kind && t.level === 2 && t.last && t.last.n === n;
+            if (d.kind === 'slow') return second
+                ? ` Te ha llevado ${devWords(d.dev)} de lo previsto por segunda vez seguida: tienes una propuesta de reajuste en «Hoy».`
+                : ` Te ha llevado ${devWords(d.dev)} de lo previsto: si se repite, te propondré reajustar.`;
+            return ` ¡Te ha llevado ${devWords(d.dev)} de lo previsto: vas rápido!`;
+        }
+
+        // Tendencia confirmada (2 temas seguidos desviados): cuántas horas le faltarán (need > 0) o le sobran (need < 0)
         function paceOf(p, s) {
             const st = p.status[s.name], c = st && st.cov;
             if (!c || c.mode !== 'topics' || postponedSubjects[s.name] || st.examPassed || st.inReview || st.remTopics === 0 || !s.reviewStart) return null;
             if (!(c.slot > 0)) return null;
-            const ent = topicEntries(s.name);
-            const tracked = trackedTopicHours(s.name, null);
-            const allDone = Object.keys(ent).map(Number).filter(n => n >= 1 && n <= s.topics).sort((x, y) => x - y);
-            const sample = allDone.filter(n => !ent[n].est && tracked[n] > 0);
-            if (sample.length < PACE_MIN_TOPICS) return null;
-            let realR = 0, creditR = 0;
-            sample.forEach(n => {
-                const r = allDone.indexOf(n) + 1;
-                realR += tracked[n];
-                creditR += topicCreditUpTo(s, r) - topicCreditUpTo(s, r - 1);
-            });
-            if (creditR < 0.5) return null;
-            const ratio = realR / creditR;
-            const realPerTopic = realR / sample.length;
+            const t = deviationTrend(s);
+            if (t.level < 2) return null;
+            const realR = t.streak.reduce((a, d) => a + d.h, 0);
+            const creditR = t.streak.reduce((a, d) => a + d.credit, 0);
+            const realPerTopic = realR / t.streak.length;
             const remEq = Math.max(0, s.topics - c.D - c.partial / c.slot);
             const remCredit = Math.max(0, s.firstPassHours - c.topicCredit - c.partial);
-            return { ratio, need: remEq * realPerTopic - remCredit, realPerTopic, remEq, remCredit, sample: sample.length };
+            return { trend: t.trend, streak: t.streak, ratio: realR / creditR, need: remEq * realPerTopic - remCredit, realPerTopic, remEq, remCredit };
         }
 
         // Horas que el plan aún da a B desde hoy hasta 'until' (exclusive)
@@ -9616,9 +9756,9 @@ html.dark #installPointer *{color:inherit}
                     !p.status[B.name].inReview && p.status[B.name].remTopics > 0 && B.exam && A.exam && B.exam >= A.exam)
                 .map(B => {
                     const pc = paces[B.name];
-                    let margin = pc ? (pc.need < 0 ? -pc.need : 0) : -p.status[B.name].debt;
+                    let margin = pc ? (pc.trend === 'fast' && pc.need < 0 ? -pc.need : 0) : -p.status[B.name].debt;
                     margin = Math.min(margin, futureShare(p, B, A.reviewStart) * 0.4);
-                    return { B, margin: roundQuarter(margin), surplus: !!(pc && pc.need < 0) };
+                    return { B, margin: roundQuarter(margin), surplus: !!(pc && pc.trend === 'fast' && pc.need < 0) };
                 })
                 .filter(x => x.margin >= 0.5)
                 .sort((a, b) => (b.surplus - a.surplus) || (b.margin - a.margin) || (b.B.exam - a.B.exam));
@@ -9724,9 +9864,9 @@ html.dark #installPointer *{color:inherit}
             const made = [];
             p.subjects.forEach(S => {
                 const ps = paces[S.name];
-                if (!ps || ps.ratio > 0.8 || ps.need > -2) return;
+                if (!ps || ps.trend !== 'fast' || ps.need > -2) return;
                 let surplus = Math.min(-ps.need, futureShare(p, S, null) * 0.4);
-                p.subjects.filter(A => A.name !== S.name && paces[A.name] && paces[A.name].ratio >= 1.2 && paces[A.name].need >= 1 && A.exam && S.exam && A.exam <= S.exam)
+                p.subjects.filter(A => A.name !== S.name && paces[A.name] && paces[A.name].trend === 'slow' && paces[A.name].need >= 1 && A.exam && S.exam && A.exam <= S.exam)
                     .sort((a, b) => paces[b.name].need - paces[a.name].need)
                     .forEach(A => {
                         if (surplus < 1 || planMoves.some(m => recent(m) && m.from === S.name && m.to === A.name)) return;
@@ -9772,19 +9912,19 @@ html.dark #installPointer *{color:inherit}
             let html = '';
             p.subjects.forEach(A => {
                 const pc = paces[A.name];
-                if (!pc || pc.ratio < 1.2 || pc.need < 1 || paceSnoozed(A.name)) return;
+                if (!pc || pc.trend !== 'slow' || pc.need < 1 || paceSnoozed(A.name)) return;
                 const plan = pacePlanFor(p, A, pc, paces);
                 const safe = escapeHtml(A.name);
                 const rs = formatShortDate(A.reviewStart);
-                const takesHtml = plan.takes.map(t => `<li>• <b>${formatHM(t.h)}</b> de <b>${escapeHtml(shortName(t.B.name))}</b>, que ${t.surplus ? `va más rápida de lo previsto (${t.pc.ratio.toFixed(1).replace('.', ',')}×)` : `va ${formatHM(-t.debt)} adelantada`} y se examina ${t.B.exam > A.exam ? 'después' : 'el mismo día'}.</li>`).join('');
+                const takesHtml = plan.takes.map(t => `<li>• <b>${formatHM(t.h)}</b> de <b>${escapeHtml(shortName(t.B.name))}</b>, que ${t.surplus ? `va más rápida de lo previsto (${pctTxt(t.pc.ratio - 1)})` : `va ${formatHM(-t.debt)} adelantada`} y se examina ${t.B.exam > A.exam ? 'después' : 'el mismo día'}.</li>`).join('');
                 const extraBtn = plan.extraH > 0 ? `<button data-sub="${safe}" onclick="applyPaceExtra(this.dataset.sub)" class="px-3 py-1.5 rounded-xl bg-white hover:bg-amber-100 border border-amber-300 text-amber-900 text-[11px] font-bold transition">${plan.takes.length ? 'Prefiero ampliar mis horas' : 'Ampliar mis horas'}: ≈ +${formatHM(plan.perDay)} por día de estudio hasta el ${rs}</button>` : '';
                 html += `
                     <section class="p-4 rounded-2xl border border-amber-300 bg-amber-50 space-y-2.5">
                         <div class="flex items-start gap-3">
                             <div class="text-2xl leading-none shrink-0">⚠️</div>
                             <div class="min-w-0 space-y-1">
-                                <p class="text-sm font-black text-amber-950">${escapeHtml(shortName(A.name))} va más lenta de lo previsto</p>
-                                <p class="text-xs text-amber-900 leading-relaxed">A tu ritmo real (<b>${pc.ratio.toFixed(1).replace('.', ',')}×</b> lo planificado: unas ${formatHM(pc.realPerTopic)} por tema) le faltan unas <b>${formatHM(plan.need)}</b> antes de su semana de repaso (${rs}).</p>
+                                <p class="text-sm font-black text-amber-950">${escapeHtml(shortName(A.name))} se está alargando: reajustemos</p>
+                                <p class="text-xs text-amber-900 leading-relaxed">${pc.streak.length === 2 ? 'Los dos últimos temas' : `Los ${pc.streak.length} últimos temas`} te han llevado <b>${devWords(pc.ratio - 1)}</b> de lo previsto (${pc.streak.map(d => `T${d.n}: ${formatHM(d.h)} de ${formatHM(d.credit)}`).join(' · ')}). A ese ritmo le faltan unas <b>${formatHM(plan.need)}</b> antes de su semana de repaso (${rs}).</p>
                                 ${plan.takes.length ? `<p class="text-xs text-amber-900 font-bold pt-1">Para cubrirlas te propongo:</p><ul class="text-xs text-amber-900 space-y-0.5">${takesHtml}</ul>` : '<p class="text-xs text-amber-900">Ninguna otra asignatura tiene margen para cederle horas sin quedarse corta.</p>'}
                                 ${plan.takes.length && plan.left >= 0.5 ? `<p class="text-[11px] text-amber-800">Aun así quedan unas ${formatHM(plan.left)}: puedes ampliar tus horas o mirar el Asistente.</p>` : ''}
                                 ${!plan.enough && !plan.takes.length ? '<p class="text-[11px] font-bold text-rose-700">Ni con 1 h más al día llega: mira el Asistente de decisión.</p>' : ''}
@@ -9799,10 +9939,28 @@ html.dark #installPointer *{color:inherit}
                     </section>`;
             });
 
-            // Asignaturas que van más rápidas: solo informativo
-            const fast = p.subjects.filter(S => paces[S.name] && paces[S.name].ratio <= 0.8 && paces[S.name].need <= -2);
-            if (fast.length) {
-                html += `<div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 space-y-0.5">${fast.map(S => `<p>🚀 Vas más rápido en <b>${escapeHtml(shortName(S.name))}</b> (${paces[S.name].ratio.toFixed(1).replace('.', ',')}× lo planificado): te sobran unas ${formatHM(-paces[S.name].need)}. Si otra asignatura que se examina antes o el mismo día las necesita, pueden ir a ella: lo verás en «Ajustes de horas».</p>`).join('')}</div>`;
+            // Cómo te van los temas: primer desvío (aviso suave) y tendencias rápidas
+            const notes = [];
+            p.subjects.forEach(S => {
+                const st = p.status[S.name];
+                if (!st || st.examPassed || postponedSubjects[S.name]) return;
+                const t = deviationTrend(S);
+                if (!t.trend) return;
+                const d = t.last, name = `<b>${escapeHtml(shortName(S.name))}</b>`;
+                const what = `el Tema ${d.n} te llevó ${formatHM(d.h)} de ${formatHM(d.credit)} previstas (${pctTxt(d.dev)})`;
+                if (t.trend === 'slow' && t.level === 1) notes.push(`<p>🐢 ${name}: ${what}. Si el siguiente también se alarga, te propondré reajustar.</p>`);
+                else if (t.trend === 'fast' && t.level === 1) notes.push(`<p>🚀 ${name}: ${what}. ¡Buen ritmo!</p>`);
+                else if (t.trend === 'fast' && paces[S.name]) {
+                    const sp = -paces[S.name].need;
+                    notes.push(`<p>🚀 ${name}: ${t.streak.length} temas seguidos más rápidos de lo previsto (${pctTxt(paces[S.name].ratio - 1)}).${sp >= 1 ? ` Te sobran unas ${formatHM(sp)}: si otra asignatura que se examina antes o el mismo día las necesita, pasarán a ella y lo verás en «Ajustes de horas».` : ''}</p>`);
+                }
+            });
+            if (notes.length) {
+                html += `
+                    <div class="p-3 rounded-2xl bg-white border border-slate-200 space-y-1.5">
+                        <p class="text-[11px] font-black uppercase tracking-wider text-slate-500">📏 Cómo te van los temas</p>
+                        <div class="text-xs text-slate-700 space-y-1 leading-relaxed">${notes.join('')}</div>
+                    </div>`;
             }
 
             const today = todayKey();
@@ -9819,6 +9977,181 @@ html.dark #installPointer *{color:inherit}
                     </div>`;
             }
             box.innerHTML = html;
+        }
+
+        // ================= V29.6: RESUMEN DE «HOY» Y «ANOTAR OTRO DÍA» =================
+        const STAGE_CHIP = {
+            0: ['bg-slate-100 text-slate-700 border-slate-200', '🏁'],
+            1: ['bg-emerald-50 text-emerald-800 border-emerald-200', '🌿'],
+            2: ['bg-blue-50 text-blue-800 border-blue-200', '☕'],
+            3: ['bg-amber-50 text-amber-900 border-amber-200', '⚡'],
+            4: ['bg-orange-50 text-orange-900 border-orange-200', '🔥'],
+            5: ['bg-rose-50 text-rose-800 border-rose-200', '🚨']
+        };
+
+        function renderTodayStatus(p, stage, daily, weekly, balance, started) {
+            const box = document.getElementById('todayStatusBar');
+            if (!box) return;
+            if (!p.subjects.length || !p.cal.start) { box.innerHTML = ''; return; }
+            const chip = (cls, inner, title) => `<span class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-[11px] font-bold whitespace-nowrap ${cls}"${title ? ` title="${title}"` : ''}>${inner}</span>`;
+            const [cls, icon] = STAGE_CHIP[stage] || STAGE_CHIP[0];
+            const parts = [];
+            parts.push(chip(cls, stage ? `${icon} Tramo ${stage}/5 · ${daily.toFixed(1).replace('.', ',')} h/día` : `${icon} Plan listo para empezar`, 'Semáforo: lo que necesitas de media cada día desde hoy'));
+            if (started) {
+                const b = Math.round(balance * 10) / 10;
+                parts.push(b > 1 ? chip('bg-emerald-50 text-emerald-800 border-emerald-200', `⚖️ +${b.toFixed(1).replace('.', ',')} h de adelanto`)
+                    : (b < -1 ? chip('bg-rose-50 text-rose-800 border-rose-200', `⚖️ ${(-b).toFixed(1).replace('.', ',')} h de retraso`)
+                        : chip('bg-blue-50 text-blue-800 border-blue-200', '⚖️ Al día')));
+            }
+            const st = studyStreaks();
+            if (st.current > 0) parts.push(chip('bg-amber-50 text-amber-900 border-amber-200', `🔥 ${st.current} día${st.current === 1 ? '' : 's'} seguido${st.current === 1 ? '' : 's'}`));
+            const next = p.subjects.filter(s => s.exam && !postponedSubjects[s.name] && daysBetween(p.cal.today, s.exam) >= 0).sort((a, b) => a.exam - b.exam)[0];
+            if (next) {
+                const d = daysBetween(p.cal.today, next.exam);
+                parts.push(chip('bg-white text-slate-700 border-slate-200', `📝 ${escapeHtml(shortName(next.name))} ${d === 0 ? 'hoy' : (d === 1 ? 'mañana' : `en ${d} días`)}`));
+            }
+            box.innerHTML = `
+                <div class="flex items-center gap-2 overflow-x-auto sm:flex-wrap -mx-4 px-4 sm:mx-0 sm:px-0 pb-0.5" style="scrollbar-width:none">
+                    ${parts.join('')}
+                    <button onclick="switchTab(2)" class="shrink-0 sm:ml-auto px-3 py-1 rounded-xl text-[11px] font-black text-emerald-700 hover:bg-emerald-50 transition whitespace-nowrap">Ver tu progreso →</button>
+                </div>`;
+        }
+
+        // Suma horas a cualquier día pasado (semana del historial, día y racha)
+        function adjustHoursOn(dateIso, name, hours) {
+            const cal = getCalendarInfo();
+            const d = parseLocalDate(dateIso);
+            if (!DB_NAMES.has(name) || !hours || !d || !cal.start || d < cal.start || d > cal.today) return false;
+            const w = Math.floor(daysBetween(cal.start, d) / 7) + 1;
+            if (!weeklyLog[w]) weeklyLog[w] = {};
+            const wv = Math.min(60, round2((parseFloat(weeklyLog[w][name]) || 0) + hours));
+            if (wv > 0) weeklyLog[w][name] = wv; else delete weeklyLog[w][name];
+            if (Object.keys(weeklyLog[w]).length === 0) delete weeklyLog[w];
+            if (!dayLog[dateIso]) dayLog[dateIso] = {};
+            const dv = round2((dayLog[dateIso][name] || 0) + hours);
+            if (dv > 0) dayLog[dateIso][name] = dv; else delete dayLog[dateIso][name];
+            if (Object.keys(dayLog[dateIso]).length === 0) delete dayLog[dateIso];
+            addDayHist(dateIso, hours);
+            pruneDayLog();
+            return true;
+        }
+
+        let otherDayCtx = null;
+        const fmtLong = iso => { const d = parseLocalDate(iso); return d ? `${dayLabel(d)}` : iso; };
+
+        function openOtherDayModal() {
+            const cal = getCalendarInfo();
+            if (!cal.start || cal.today < cal.start) { showToast('Tu periodo de estudio aún no ha empezado.', 'warn'); return; }
+            const subs = currentCalculation.subjects.filter(s => s.valid && !postponedSubjects[s.name]);
+            if (!subs.length) { showToast('Primero elige tus asignaturas en ⚙️ Ajustes.', 'warn'); return; }
+            const yesterday = addDays(cal.today, -1);
+            const def = yesterday >= cal.start ? toDateInputValue(yesterday) : toDateInputValue(cal.today);
+            otherDayCtx = { h: 1 };
+            const opts = subs.map(s => `<option value="${escapeHtml(s.name)}">${escapeHtml(shortName(s.name))}</option>`).join('');
+            openV29Modal(`
+                ${v29Header('📅', 'Anotar otro día', '¿Se te olvidó anotar? Apúntalo en su día y cuenta como si lo hubieras hecho entonces.')}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label class="block text-xs font-bold text-slate-700">Día
+                        <input id="odDate" type="date" value="${def}" min="${toDateInputValue(cal.start)}" max="${toDateInputValue(cal.today)}" onchange="refreshOtherDay()" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold">
+                    </label>
+                    <label class="block text-xs font-bold text-slate-700">Asignatura
+                        <select id="odSub" onchange="refreshOtherDay(true)" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold">${opts}</select>
+                    </label>
+                </div>
+                <label class="block text-xs font-bold text-slate-700">Tema
+                    <select id="odTopic" onchange="refreshOtherDay()" class="mt-1 w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold"></select>
+                </label>
+                <div>
+                    <p class="text-xs font-bold text-slate-700">Tiempo</p>
+                    <div class="flex items-center gap-3 mt-1">
+                        <button onclick="setOtherDayTime(otherDayCtx.h - 0.25)" class="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-lg font-black" aria-label="Restar 15 minutos">−</button>
+                        <span id="odTime" class="min-w-[6rem] text-center text-2xl font-black text-slate-900">1h</span>
+                        <button onclick="setOtherDayTime(otherDayCtx.h + 0.25)" class="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-lg font-black" aria-label="Sumar 15 minutos">+</button>
+                        <div class="flex flex-wrap gap-1">${[0.5, 1, 1.5, 2, 3].map(h => `<button onclick="setOtherDayTime(${h})" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold">${formatHM(h)}</button>`).join('')}</div>
+                    </div>
+                </div>
+                <label id="odFinWrap" class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+                    <input id="odFin" type="checkbox" class="w-4 h-4 accent-emerald-600"> <span id="odFinText">Terminé este tema ese día</span>
+                </label>
+                <p id="odInfo" class="text-[11px] text-slate-500 leading-snug"></p>
+                <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-1">
+                    <button onclick="closeV29Modal()" class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs font-bold">Cancelar</button>
+                    <button onclick="saveOtherDay()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black">Guardar</button>
+                </div>`);
+            refreshOtherDay(true);
+        }
+
+        function setOtherDayTime(h) {
+            if (!otherDayCtx) return;
+            otherDayCtx.h = Math.min(16, Math.max(0, roundQuarter(h)));
+            const el = document.getElementById('odTime');
+            if (el) el.textContent = otherDayCtx.h > 0 ? formatHM(otherDayCtx.h) : '0 min';
+        }
+
+        function refreshOtherDay(subjectChanged) {
+            const name = document.getElementById('odSub')?.value;
+            const s = name && subjectByName(name);
+            const sel = document.getElementById('odTopic');
+            if (!s || !sel) return;
+            if (subjectChanged) {
+                const ent = topicEntries(s.name);
+                const next = nextPendingTopic(s);
+                let html = '<option value="0">Sin tema concreto (repaso, esquemas, test…)</option>';
+                for (let n = 1; n <= s.topics; n++) {
+                    const e = ent[n];
+                    const nm = topicName(s.name, n);
+                    html += `<option value="${n}"${n === next ? ' selected' : ''}>Tema ${n}${nm ? ' · ' + escapeHtml(nm.slice(0, 50)) : ''}${e ? ` — ✅ terminado ${e.done ? formatShortDate(parseLocalDate(e.done)) : ''}` : (n === next ? ' — 📖 el siguiente' : '')}</option>`;
+                }
+                sel.innerHTML = html;
+            }
+            setOtherDayTime(otherDayCtx ? otherDayCtx.h : 1);
+            const n = parseInt(sel.value) || 0;
+            const e = n ? topicEntry(s.name, n) : null;
+            const fin = document.getElementById('odFin'), finWrap = document.getElementById('odFinWrap'), finText = document.getElementById('odFinText');
+            if (fin) {
+                finWrap.classList.toggle('hidden', !n);
+                fin.disabled = !!e;
+                if (e) fin.checked = false;
+                finText.textContent = e ? 'Este tema ya está terminado' : 'Terminé este tema ese día';
+            }
+            const date = document.getElementById('odDate')?.value;
+            const info = document.getElementById('odInfo');
+            if (info && date) {
+                const dl = dayLog[date] || {};
+                const items = Object.keys(dl).filter(k => dl[k] > 0).map(k => `${escapeHtml(shortName(k))} ${formatHM(dl[k])}`);
+                const total = dayHist[date] || 0;
+                info.innerHTML = items.length ? `Ese día ya tenías anotado: ${items.join(' · ')}.` : (total > 0 ? `Ese día ya tenías anotadas ${formatHM(total)}.` : 'Ese día no tienes nada anotado todavía.');
+            }
+        }
+
+        function saveOtherDay() {
+            if (!otherDayCtx) return;
+            const date = document.getElementById('odDate')?.value;
+            const name = document.getElementById('odSub')?.value;
+            const n = parseInt(document.getElementById('odTopic')?.value) || 0;
+            const fin = !!document.getElementById('odFin')?.checked;
+            const h = otherDayCtx.h;
+            const cal = getCalendarInfo();
+            const d = parseLocalDate(date);
+            if (!d || d < cal.start || d > cal.today) { showToast('Elige un día entre el inicio del cuatrimestre y hoy.', 'warn'); return; }
+            if (!(h > 0) && !fin) { showToast('Indica el tiempo o marca que terminaste el tema.', 'warn'); return; }
+            const finish = fin && n && !topicEntry(name, n);
+            if (date === todayKey()) {
+                if (n && h > 0) addTopicTime(name, n, h);
+                if (finish) { if (!topicLog[name]) topicLog[name] = {}; topicLog[name][n] = { done: date, r1: null, r2: null }; }
+                if (h > 0) adjustStudyHours(name, h); else { saveAllToStorage(); renderDashboardTab(); }
+            } else {
+                if (h > 0) adjustHoursOn(date, name, h);
+                if (n && h > 0) addTopicTimeOn(date, name, n, h);
+                if (finish) { if (!topicLog[name]) topicLog[name] = {}; topicLog[name][n] = { done: date, r1: null, r2: null }; }
+                saveAllToStorage();
+                renderDashboardTab();
+            }
+            if (currentTab === 2) renderTrackingTab(false);
+            otherDayCtx = null;
+            closeV29Modal();
+            const what = `${shortName(name)}${n ? ' · Tema ' + n : ''}`;
+            showToast(`📅 ${fmtLong(date)}: ${h > 0 ? formatHM(h) + ' anotadas a ' + what : what}${finish ? ' · tema terminado' : ''}.${finish && h > 0 ? deviationToastText(name, n) : ''}`, 'ok');
         }
         let currentWizardStep = 1;
         const totalWizardSteps = 5;
@@ -9863,7 +10196,7 @@ html.dark #installPointer *{color:inherit}
                         <div class="p-3.5 rounded-xl bg-white border border-emerald-300 shadow-xs space-y-2 text-xs">
                             <p class="font-bold text-slate-900">Dos botones que te ahorran el registro manual:</p>
                             <p class="text-slate-600 leading-relaxed">
-                                <b>«Anotar»</b> suma ese tiempo a la semana actual del Registro Semanal y <b>«Tema terminado»</b> lo marca en el temario. La víspera de cada examen, el plan dedica el día entero a repasar esa asignatura.
+                                <b>«Anotar»</b> suma ese tiempo al tema y a tu historial, y <b>«Tema terminado»</b> lo marca en el temario y te pregunta cuánto te ha llevado. ¿Se te olvidó un día? Usa <b>«Anotar otro día»</b>. La víspera de cada examen, el plan dedica el día entero a repasar esa asignatura.
                             </p>
                         </div>
                     </div>`
