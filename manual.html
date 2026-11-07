@@ -96,8 +96,8 @@
 
 <section class="hero">
   <div class="in">
-    <span class="pill">📘 Versión 29.4 · noviembre 2026</span>
-    <h1>📘 Manual del Planificador Jagpino v29.4</h1>
+    <span class="pill">📘 Versión 29.5 · noviembre 2026</span>
+    <h1>📘 Manual del Planificador Jagpino v29.5</h1>
     <p>Todo lo que hace el Planificador, paso a paso: desde instalarlo y pasar tus datos de la v26 hasta el expediente, la sincronización entre dispositivos y las preguntas frecuentes.</p>
   </div>
 </section>
@@ -405,7 +405,7 @@
 <li>En el bloque del tema en curso verás también «hoy llevas X con este tema».</li>
 <li>🚀 <strong>¿Te quedan ganas? Sigue con…</strong>: cuando cumples el objetivo del día, te propone el siguiente tema de las asignaturas que más lo necesitan, por si quieres adelantar.</li>
 <li>🔁 <strong>Repasos rápidos</strong>: los que te tocan hoy, con su botón «✓ Hecho» (apartado siguiente).</li>
-<li>📊 <strong>Hecho hoy</strong>: barra de progreso del objetivo del día.</li>
+<li>📊 <strong>Hecho hoy</strong>: barra de progreso del objetivo del día, medida en <strong>plan cubierto</strong> (ver «Plan cubierto y horas reales»). Si no coincide con lo que has estudiado de verdad, al lado verás también tus horas reales.</li>
 <li>🧾 <strong>Anotado hoy</strong>: lo que has anotado; la ✕ lo deshace.</li>
 </ul>
 <p>Y estos avisos, cuando tocan:</p>
@@ -453,12 +453,12 @@
 </thead>
 <tbody>
 <tr>
-<td>⏱️ Horas estudiadas</td>
-<td>Total anotado frente a lo previsto <strong>hasta ayer</strong></td>
+<td>⏱️ Plan cubierto</td>
+<td>Avance en horas de plan frente a lo previsto <strong>hasta ayer</strong>, y tus horas reales</td>
 </tr>
 <tr>
 <td>⚖️ Balance / Desvío</td>
-<td>Horas de adelanto (verde) o de retraso (rojo)</td>
+<td>Horas de plan de adelanto (verde) o de retraso (rojo)</td>
 </tr>
 <tr>
 <td>📆 Semanas restantes</td>
@@ -474,6 +474,50 @@
 </tr>
 </tbody>
 </table></div>
+<h3 id="plan-cubierto-y-horas-reales">⚖️ Plan cubierto y horas reales</h3>
+<p>La app lleva <strong>dos contadores</strong> por asignatura:</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>Contador</th>
+<th>Qué mide</th>
+<th>Para qué sirve</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🎯 <strong>Plan cubierto</strong> (avance)</td>
+<td>Cada tema terminado vale el tiempo que le daba el plan, <strong>ni más ni menos</strong>. El tema en curso cuenta lo que llevas anotado, hasta el <strong>80 %</strong> de su tiempo; el resto se gana al pulsar «Tema terminado».</td>
+<td>Retraso o adelanto, objetivo de hoy, «Hecho hoy», meta semanal y semáforo</td>
+</tr>
+<tr>
+<td>⏱️ <strong>Horas reales</strong> (esfuerzo)</td>
+<td>Lo que anotas, tal cual</td>
+<td>Racha, mapa de calor, Registro Semanal y tu ritmo real</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li>⚡ <strong>Terminas un tema antes de tiempo</strong>: cuenta entero. Ejemplo: el tema tenía 2 h, lo terminas en 1 h 15 min → «Hecho hoy» suma 2 h. No aparece un déficit que no existe.</li>
+<li>🐢 <strong>Te pasas de tiempo</strong>: lo que excede no cuenta como avance. Ejemplo: tema de 2 h que te lleva 3 h → avance 2 h, horas reales 3 h. Ese tiempo de más no se pierde: sirve para calcular tu ritmo real.</li>
+<li>🧩 <strong>Hasta que marcas el primer tema</strong> de una asignatura, el avance se mide en horas reales.</li>
+<li>🔁 Los <strong>repasos rápidos</strong> y, en la semana de repaso (o con el temario ya terminado), el tiempo sin tema concreto cuentan tal cual.</li>
+<li>🎓 Los temas que marcas como ya sabidos también cuentan como plan cubierto.</li>
+</ul>
+<h3 id="ritmo-real-y-ajustes-de-horas">🐢 Ritmo real y ajustes de horas</h3>
+<p>Cuando en una asignatura has terminado <strong>al menos 3 temas con su tiempo anotado tema a tema</strong>, la app compara lo que te cuestan de verdad con lo previsto.</p>
+<ul>
+<li>⚠️ <strong>Si vas más lenta</strong> (al menos un 20 % más de tiempo y con más de 1 h de falta antes de su semana de repaso), sale un aviso con lo que le falta y opciones:
+  1. <strong>✓ Aplicar</strong>: pasa horas de las asignaturas con margen, es decir, las que van más rápidas de lo previsto o adelantadas. Solo cuentan las que se examinan el mismo día o después. Nunca se toca una que va justa.
+  2. <strong>Ampliar mis horas</strong>: un poco más cada día de estudio de esa asignatura hasta su semana de repaso (como mucho 1 h al día).
+  3. <strong>Asistente de decisión</strong>: si ni así llega.
+  4. <strong>Ahora no</strong>: no vuelve a avisar en 7 días.</li>
+<li>🚀 <strong>Si vas más rápida</strong> (al menos un 20 % menos de tiempo), te lo indica. Si otra asignatura que se examina antes o el mismo día necesita horas, la app le pasa las que te sobran <strong>automáticamente</strong> y te avisa.</li>
+<li>⚖️ <strong>Ajustes de horas</strong>: cada ajuste aparece en el Panel con un botón <strong>Deshacer</strong> para volver al plan anterior.</li>
+</ul>
+<blockquote class="callout">
+<p>ℹ️ Las horas que pasan a una asignatura se reparten entre sus temas pendientes, así que el tiempo previsto por tema sube. Las que salen de otra bajan el tiempo de sus temas pendientes. Los temas ya terminados no cambian.</p>
+</blockquote>
 <h3 id="calendario-del-semestre">🗓️ Calendario del semestre</h3>
 <p>Una casilla por semana con sus horas anotadas. Púsala para ir a esa semana del Registro.</p>
 <ul>
@@ -775,7 +819,7 @@
 <h3 id="3-balance-y-reajuste">3️⃣ Balance y reajuste</h3>
 <ul>
 <li><strong>Previsto hasta ayer</strong>: lo que el plan te daba hasta ayer. Hoy no cuenta, porque aún lo estás estudiando.</li>
-<li><strong>Balance</strong> = horas hechas − previstas hasta ayer.</li>
+<li><strong>Balance</strong> = plan cubierto − previsto hasta ayer.</li>
 <li><strong>Reajuste</strong>: si te faltan más horas de las que el plan tiene previstas desde hoy, cada día te pide más en esa proporción.</li>
 </ul>
 <div class="formula" data-tex="\text{factor} = \frac{\text{horas que te faltan}}{\text{horas que el plan aún tiene previstas}} \qquad \text{meta} = \text{factor} \times \text{lo previsto para esos días}
@@ -964,6 +1008,7 @@
 <p><strong>Hoy no me aparece una asignatura, ¿es un error?</strong> No. Puede que estés en la semana de repaso de otras asignaturas, que ya te hayas examinado, que esté pospuesta o que hoy tengan prioridad otras (como mucho salen 3 bloques al día).</p>
 <p><strong>He marcado un tema sin querer.</strong> Vuelve a pulsar su número en el Temario para desmarcarlo. Si ya tenía repasos hechos, la app te pide confirmación.</p>
 <p><strong>He terminado el tema del día, ¿cuenta para el plan?</strong> Sí. Al pulsar «Tema N terminado» se anota el tiempo del bloque (si no lo habías anotado ya) y la barra «Hecho hoy» avanza. Si le dedicaste otro tiempo, ajústalo con − / + en «Hoy, tema a tema».</p>
+<p><strong>He terminado un tema en menos tiempo del previsto, ¿me penaliza?</strong> No. Cuenta como plan cubierto el tiempo que el plan le daba. Si tardas más, el exceso no cuenta como avance, pero sirve para calcular tu ritmo real. Si una asignatura va lenta de forma sostenida, el Panel te propondrá cómo reasignar horas.</p>
 <p><strong>Terminé un tema y empecé el siguiente: ¿a qué tema va cada hora?</strong> Cada una al suyo. Por ejemplo: terminas el Tema 4 en 2 h y luego anotas 1 h en el bloque del Tema 5. Verás «✅ Tema 4 · 2 h» y «📖 Tema 5 · en curso · 1 h», y la asignatura suma 3 h hoy.</p>
 <p><strong>He anotado horas de más.</strong> Si fue hoy desde el Plan de hoy, pulsa la ✕ en «Anotado hoy». Si fue otro día, corrige la casilla en el Registro Semanal.</p>
 <p><strong>¿Puedo cambiar el número de temas a mitad de curso?</strong> Sí. El plan se recalcula al momento y los temas que ya marcaste se conservan.</p>

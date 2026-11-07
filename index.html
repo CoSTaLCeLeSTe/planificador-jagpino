@@ -2426,6 +2426,7 @@ html.dark .border-slate-200\/90{border-color:#2b3a52}
 html.dark .border-slate-300{border-color:#3b4b66}
 html.dark .border-teal-200{border-color:rgba(20,184,166,0.38)}
 html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]){border-color:#2b3a52}
+html.dark .hover\:bg-amber-100:hover{background-color:rgba(245,158,11,0.24)}
 html.dark .hover\:bg-amber-50:hover{background-color:rgba(245,158,11,0.18)}
 html.dark .hover\:bg-emerald-100:hover{background-color:rgba(16,185,129,0.24)}
 html.dark .hover\:bg-rose-100:hover{background-color:rgba(244,63,94,0.24)}
@@ -2619,6 +2620,9 @@ html.dark #installPointer *{color:inherit}
                     <div id="todayPlanBody" class="p-5"></div>
                 </section>
 
+                <!-- V29.5: RITMO REAL Y REASIGNACIÓN DE HORAS -->
+                <div id="paceSection" class="space-y-3 empty:hidden"></div>
+
                 <!-- V29: CONSTANCIA Y PREVISIÓN -->
                 <div id="motivationSection" class="grid grid-cols-1 lg:grid-cols-2 gap-6 empty:hidden"></div>
 
@@ -2626,7 +2630,7 @@ html.dark #installPointer *{color:inherit}
                 <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/90 flex items-center justify-between">
                         <div>
-                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Horas Estudiadas</p>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider" title="Cada tema terminado cuenta el tiempo que le daba el plan, ni más ni menos">Plan cubierto</p>
                             <h3 id="dashHorasHechas" class="text-2xl font-black text-blue-700 mt-1">0 h</h3>
                             <p id="dashHorasPrevistasFecha" class="text-xs text-slate-500 font-semibold mt-0.5">Plan pendiente de iniciar</p>
                         </div>
@@ -2837,7 +2841,7 @@ html.dark #installPointer *{color:inherit}
                                         <th class="py-3 px-3 w-8 text-center">#</th>
                                         <th class="py-3 px-4">Asignatura</th>
                                         <th class="py-3 px-3 text-center">Plan Inicial</th>
-                                        <th class="py-3 px-3 text-center bg-blue-900/60">Horas Hechas</th>
+                                        <th class="py-3 px-3 text-center bg-blue-900/60" title="Temas terminados × tiempo previsto, más lo que llevas del tema en curso">Plan cubierto</th>
                                         <th class="py-3 px-3 text-center bg-purple-900/60">Horas Restantes</th>
                                         <th class="py-3 px-3 text-center w-52">Estado y Progreso Temporal</th>
                                         <th class="py-3 px-3 text-center bg-amber-400 text-slate-950 font-black">Nuevo Ritmo / Tema ⏱️</th>
@@ -3243,7 +3247,7 @@ html.dark #installPointer *{color:inherit}
             <!-- Detailed Legal Terms Clause -->
             <div class="pt-3 border-t border-slate-100 text-[11px] text-slate-400 flex flex-col sm:flex-row justify-between gap-2">
                 <p>© 2026 <b>Jagpino</b>. Se autoriza el uso libre y gratuito para fines estrictamente académicos y personales. Queda prohibida su venta, comercialización total o parcial, así como la redistribución sin citar la autoría original.</p>
-                <span class="whitespace-nowrap font-medium text-slate-500">v29.4</span>
+                <span class="whitespace-nowrap font-medium text-slate-500">v29.5</span>
             </div>
         </div>
     </footer>
@@ -3332,6 +3336,7 @@ html.dark #installPointer *{color:inherit}
         let topicNames = {};         // { nombreAsignatura: { nºTema: 'Nombre del tema' } }
         let daysOff = [];            // [{ from: 'AAAA-MM-DD', to: 'AAAA-MM-DD', label }] · días sin estudio
         let topicTime = {};          // { 'AAAA-MM-DD': { nombreAsignatura: { nºTema: horas } } } · tiempo anotado tema a tema (V29.4)
+        let planMoves = [];          // [{ id, t: 'mv'|'ex', to, from, h, start, end, d0to, d0from, auto, at }] · horas reasignadas (V29.5)
         let record = {};             // { nombreAsignatura: { st: 'ok'|'ko'|'np'|'conv', nota, conv: 'feb'|'jun'|'sep', year } } · expediente
 
         let currentTab = 1;
@@ -3643,23 +3648,36 @@ html.dark #installPointer *{color:inherit}
             const subjects = currentCalculation.subjects.filter(s => s.valid);
             const numWeeks = cal.numWeeks;
 
-            // ---- Horas reales registradas ----
-            const done = {};
-            subjects.forEach(s => done[s.name] = 0);
-            let total = 0;
+            // ---- Horas reales registradas (esfuerzo) ----
+            const real = {};
+            subjects.forEach(s => real[s.name] = 0);
+            let realTotal = 0;
             const weekTotals = {};
             Object.keys(weeklyLog).forEach(wk => {
                 let wt = 0;
                 const log = weeklyLog[wk];
                 for (const name in log) {
                     const v = parseFloat(log[name]) || 0;
-                    if (v > 0 && name in done) {
-                        done[name] += v;
+                    if (v > 0 && name in real) {
+                        real[name] += v;
                         wt += v;
                     }
                 }
                 weekTotals[parseInt(wk)] = wt;
-                total += wt;
+                realTotal += wt;
+            });
+
+            // ---- V29.5: plan cubierto (avance). Cada tema terminado vale lo que el plan le daba, ni más ni menos ----
+            const todayIso = toDateInputValue(cal.today);
+            const todayLogged = dayLog[todayIso] || {};
+            const done = {}, cov = {}, covStart = {};
+            let total = 0;
+            subjects.forEach(s => {
+                const r = real[s.name], rt = todayLogged[s.name] || 0;
+                cov[s.name] = coverageOf(s, r, todayIso, false);
+                covStart[s.name] = coverageOf(s, Math.max(0, r - rt), todayIso, true, cov[s.name].mode);
+                done[s.name] = cov[s.name].covered;
+                total += done[s.name];
             });
 
             // ---- Horas previstas HASTA AYER: el día de hoy aún está en juego ----
@@ -3680,14 +3698,15 @@ html.dark #installPointer *{color:inherit}
             const i0 = Math.max(0, cal.todayIdx);
             const windowDays = Math.max(1, Math.min(7, days.length - i0));
             const todayDay = (cal.todayIdx >= 0 && cal.todayIdx < days.length) ? days[cal.todayIdx] : null;
-            const todayLogged = dayLog[toDateInputValue(cal.today)] || {};
 
             const status = {};
             subjects.forEach(s => {
                 const doneH = done[s.name];
                 const remaining = Math.max(0, s.allocatedHours - doneH);
                 // Lo pendiente al empezar el día: así el objetivo de hoy no baja mientras anotas
-                const remainingAtDayStart = Math.max(0, s.allocatedHours - (doneH - (todayLogged[s.name] || 0)));
+                const remainingAtDayStart = Math.max(0, s.allocatedHours - covStart[s.name].covered);
+                const coveredToday = doneH - covStart[s.name].covered;
+                const realH = real[s.name], realToday = todayLogged[s.name] || 0;
                 const futurePlanned = Math.max(0, s.allocatedHours - expected[s.name]);
                 const ref = (cal.start && cal.today < cal.start) ? cal.start : cal.today;
                 const toExam = s.exam ? daysBetween(cal.today, s.exam) : null;
@@ -3733,12 +3752,13 @@ html.dark #installPointer *{color:inherit}
 
                 status[s.name] = {
                     doneH, remaining, futurePlanned, daysLeft, examPassed, examToday, inReview, activeToday, todayShare,
-                    weekNeed, todayNeed, doneT, remTopics, firstPassRemaining, rhythm, rhythmFromReview, debt
+                    weekNeed, todayNeed, doneT, remTopics, firstPassRemaining, rhythm, rhythmFromReview, debt,
+                    realH, realToday, coveredToday, cov: cov[s.name]
                 };
             });
 
-            const started = cal.todayIdx > 0 || total > 0;
-            return { cal, subjects, done, total, weekTotals, numWeeks, expected, expectedToDate, status, windowDays, started, days };
+            const started = cal.todayIdx > 0 || realTotal > 0;
+            return { cal, subjects, done, total, real, realTotal, weekTotals, numWeeks, expected, expectedToDate, status, windowDays, started, days };
         }
 
         // Carga reajustada con un conjunto dado de asignaturas pospuestas (sirve también para simular)
@@ -4621,6 +4641,8 @@ html.dark #installPointer *{color:inherit}
                     reviewStart: null,
                     allocatedHours: 0,
                     firstPassHours: 0,
+                    firstPassBase: 0,
+                    moves: [],
                     reviewHours: 0,
                     hoursPerTopic: 0
                 });
@@ -4700,6 +4722,10 @@ html.dark #installPointer *{color:inherit}
                 totalHours += cap;
             }
             const numWeeks = Math.ceil(totalDays / 7);
+
+            // ---- V29.5: horas reasignadas (de otra asignatura o añadidas a tu disponibilidad) ----
+            valids.forEach(s => { s.firstPassBase = s.firstPassHours; s.moves = []; });
+            totalHours += applyPlanMoves(days, valids, weekTargets);
 
             let sumFirstPass = 0;
             subjectsData.forEach(sub => {
@@ -5119,7 +5145,9 @@ html.dark #installPointer *{color:inherit}
 
             const logged = dayLog[toDateInputValue(cal.today)] || {};
             plan.logged = Object.keys(logged).filter(n => logged[n] > 0).map(n => ({ name: n, hours: logged[n] }));
-            plan.doneToday = plan.logged.reduce((a, x) => a + x.hours, 0);
+            plan.realToday = plan.logged.reduce((a, x) => a + x.hours, 0);
+            // V29.5: lo hecho hoy se mide en plan cubierto (un tema terminado antes de tiempo cuenta entero)
+            plan.doneToday = Math.max(0, round2(p.subjects.reduce((a, s) => a + (p.status[s.name].coveredToday || 0), 0)));
             plan.target = computeLoad(p, postponedSubjects).today;
             // Con mucho retraso el objetivo puede no caber en un día: se limita y se avisa
             const cap = Math.max(4, availOn(cal.today) * 2);
@@ -5274,7 +5302,7 @@ html.dark #installPointer *{color:inherit}
                 html += `
                     <div>
                         <div class="flex items-center justify-between text-[11px] font-bold text-slate-500 mb-1">
-                            <span>Hecho hoy: ${formatHM(plan.doneToday)} de ${formatHM(plan.target)}</span>
+                            <span>Hecho hoy: ${formatHM(plan.doneToday)} de ${formatHM(plan.target)}${Math.abs(plan.realToday - plan.doneToday) >= 0.05 ? ` <span class="font-semibold text-slate-400" title="El avance cuenta cada tema por el tiempo que le daba el plan; las horas reales son las que has anotado.">· ${formatHM(plan.realToday)} reales</span>` : ''}</span>
                             <span>${pct}%</span>
                         </div>
                         <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
@@ -5425,13 +5453,14 @@ html.dark #installPointer *{color:inherit}
 
             renderTodayPlan(p);
             renderMotivation(p);
+            renderPace(p);
             const offBox = document.getElementById('daysOffBox');
             if (offBox && !offBox.contains(document.activeElement)) renderDaysOff();
 
             // ---- KPIs ----
             document.getElementById('dashHorasHechas').innerText = `${totalActualHours.toFixed(1)} h`;
             document.getElementById('dashHorasPrevistasFecha').innerText = started
-                ? `vs ${expectedHoursToDate.toFixed(1)} h previstas hasta ayer`
+                ? `vs ${expectedHoursToDate.toFixed(1)} h previstas hasta ayer · ${p.realTotal.toFixed(1)} h reales`
                 : "Plan pendiente de iniciar";
 
             const balEl = document.getElementById('dashBalance');
@@ -5657,7 +5686,7 @@ html.dark #installPointer *{color:inherit}
                     ? `<span class="text-[10px] text-slate-500 font-semibold">${done.toFixed(1)}h guardadas · Carga excluida del plan ordinario</span>`
                     : (!started
                         ? `<span class="text-[10px] text-slate-400 font-medium">0 h de ${initial.toFixed(1)} h planificadas</span>`
-                        : `<span class="text-[10px] text-slate-500 font-medium">${done.toFixed(1)}h hechas <span class="text-slate-400">(prev. hasta ayer: ${expectedSubHrs.toFixed(1)}h)</span></span>`);
+                        : `<span class="text-[10px] text-slate-500 font-medium">${done.toFixed(1)}h de plan cubierto · ${st.realH.toFixed(1)}h reales <span class="text-slate-400">(prev. hasta ayer: ${expectedSubHrs.toFixed(1)}h)</span></span>`);
 
                 let rhythmCell;
                 if (isPostponed) rhythmCell = 'Pospuesta';
@@ -5684,7 +5713,7 @@ html.dark #installPointer *{color:inherit}
                         <span class="block text-[10px] font-normal text-slate-400">${sub.topics} temas (<b class="text-emerald-600">${st.doneT} hechos</b>) · Examen ${sub.exam ? escapeHtml(examLabel(sub)) : '-'} · Dificultad: ${sub.weight.toFixed(3)}</span>
                     </td>
                     <td class="py-3 px-3 text-center font-semibold text-slate-600">${initial.toFixed(1)} h</td>
-                    <td class="py-3 px-3 text-center font-black text-blue-700 bg-blue-50/50">${done.toFixed(1)} h</td>
+                    <td class="py-3 px-3 text-center font-black text-blue-700 bg-blue-50/50" title="${st.cov.mode === 'hours' ? 'Aún no has marcado temas: se cuentan tus horas reales' : 'Temas terminados × tiempo previsto por tema, más lo que llevas del tema en curso'}">${done.toFixed(1)} h${Math.abs(st.realH - done) >= 0.05 ? `<span class="block text-[9px] font-semibold text-slate-400">${st.realH.toFixed(1)} h reales</span>` : ''}</td>
                     <td class="py-3 px-3 text-center font-black ${isClosed ? 'text-slate-400 line-through' : 'text-purple-700 bg-purple-50/50'}">${remaining.toFixed(1)} h</td>
                     <td class="py-2.5 px-3">
                         <div class="w-full">
@@ -6231,6 +6260,7 @@ html.dark #installPointer *{color:inherit}
                 topicNames: clone(topicNames),
                 daysOff: clone(daysOff),
                 topicTime: clone(topicTime),
+                planMoves: clone(planMoves),
                 record: clone(record)
             };
         }
@@ -6446,6 +6476,17 @@ html.dark #installPointer *{color:inherit}
                     });
                 });
             });
+            // V29.5: horas reasignadas entre asignaturas o añadidas
+            const moves = (Array.isArray(raw.planMoves) ? raw.planMoves : []).filter(m =>
+                m && (m.t === 'mv' || m.t === 'ex') && DB_NAMES.has(m.to) && (m.t === 'ex' || (DB_NAMES.has(m.from) && m.from !== m.to)) &&
+                parseFloat(m.h) > 0 && isDate(m.start) && isDate(m.end) && m.end > m.start
+            ).slice(-60).map(m => ({
+                id: String(m.id || Math.random().toString(36).slice(2, 10)).slice(0, 16),
+                t: m.t, to: m.to, from: m.t === 'mv' ? m.from : null,
+                h: Math.min(200, round2(parseFloat(m.h))), start: m.start, end: m.end,
+                d0to: clampInt(m.d0to, 0, 60, 0), d0from: clampInt(m.d0from, 0, 60, 0),
+                auto: !!m.auto, at: isDate(m.at) ? m.at : m.start
+            }));
             const rec = {};
             Object.keys(obj(raw.record)).forEach(name => {
                 const e = raw.record[name];
@@ -6477,6 +6518,7 @@ html.dark #installPointer *{color:inherit}
                 topicNames: tnames,
                 daysOff: offs,
                 topicTime: ttime,
+                planMoves: moves,
                 record: rec
             };
         }
@@ -6499,6 +6541,7 @@ html.dark #installPointer *{color:inherit}
             topicNames = state.topicNames || {};
             daysOff = state.daysOff || [];
             topicTime = state.topicTime || {};
+            planMoves = state.planMoves || [];
             record = state.record || {};
             // Vaciar la tabla evita que renderSubjectInputs relea las filas antiguas del DOM
             document.getElementById('subjectsContainer').innerHTML = '';
@@ -8116,7 +8159,7 @@ html.dark #installPointer *{color:inherit}
         // cómo se usa (web, app instalada o archivo), si sincroniza con Drive y, si el alumno lo pone, su nombre de usuario.
         // Nunca se envían datos de estudio. Se puede desactivar en Datos.
         const STATS_URL = 'https://script.google.com/macros/s/AKfycbwRdxL0fvYa05e_lmOlCYfZ9IkuHmcd0YsHIIVaU3LnvOOuYjKrb-bZLNjJo2iWJHHa/exec';   // URL de la aplicación web de Google Apps Script (…/exec)
-        const APP_VERSION = 'v29.4';
+        const APP_VERSION = 'v29.5';
         const STATS_KEY = STORAGE_KEY + '_stats';
         const ALIAS_MAX = 30;
 
@@ -9358,9 +9401,16 @@ html.dark #installPointer *{color:inherit}
                             const h = topicHoursToday(b.s.name, n);
                             const state = doneToday ? '✅' : (e ? '✔️' : '📖');
                             const tag = doneToday ? '' : (e ? '' : ' <span class="text-[10px] font-bold text-emerald-600">· en curso</span>');
+                            // V29.5: lo que cuenta para el plan
+                            const allDone = Object.keys(topicEntries(b.s.name)).map(Number).filter(k => k >= 1 && k <= b.s.topics).sort((x, y) => x - y);
+                            const rank = allDone.indexOf(n) + 1;
+                            const slot = e ? topicCreditUpTo(b.s, rank) - topicCreditUpTo(b.s, rank - 1) : topicCreditUpTo(b.s, allDone.length + 1) - topicCreditUpTo(b.s, allDone.length);
+                            const planTag = slot > 0 ? (doneToday
+                                ? ` <span class="text-[10px] font-semibold text-emerald-700">· cuenta ${formatHM(slot)} de plan</span>`
+                                : (!e ? ` <span class="text-[10px] font-semibold text-emerald-700">· previsto ${formatHM(slot)}</span>` : '')) : '';
                             return `
                                 <div class="flex flex-wrap items-center justify-between gap-2 pl-2">
-                                    <p class="text-xs text-emerald-950 min-w-0">${state} ${topicLabel(b.s.name, n)}${tag}</p>
+                                    <p class="text-xs text-emerald-950 min-w-0">${state} ${topicLabel(b.s.name, n)}${tag}${planTag}</p>
                                     <div class="flex items-center gap-1.5 shrink-0">
                                         <span class="text-[11px] font-bold text-emerald-800 min-w-[3.5rem] text-right">${h > 0 ? formatHM(h) : '—'}</span>
                                         ${btn(`data-sub="${safe}" onclick="adjustTopicTime(this.dataset.sub, ${n}, -0.25)"`, '−', 'Restar 15 min a este tema', h < 0.25)}
@@ -9379,7 +9429,7 @@ html.dark #installPointer *{color:inherit}
                                 </div>` : '';
                         return `
                             <div class="space-y-1.5">
-                                <p class="text-xs text-emerald-950"><b>${escapeHtml(shortName(b.s.name))}</b> · ⏱️ ${b.total > 0 ? formatHM(b.total) + ' hoy' : 'sin tiempo anotado hoy'}</p>
+                                <p class="text-xs text-emerald-950"><b>${escapeHtml(shortName(b.s.name))}</b> · ⏱️ ${b.total > 0 ? formatHM(b.total) + ' reales hoy' : 'sin tiempo anotado hoy'}${(p.status[b.s.name] && p.status[b.s.name].coveredToday > 0.04) ? ` · <b>${formatHM(p.status[b.s.name].coveredToday)} de plan cubierto</b>` : ''}</p>
                                 ${rows}${freeRow}
                             </div>`;
                     }).join('<div class="border-t border-emerald-200"></div>')}
@@ -9401,6 +9451,375 @@ html.dark #installPointer *{color:inherit}
                 });
         }
 
+
+        // ================= V29.5: PLAN CUBIERTO, RITMO REAL Y REASIGNACIÓN DE HORAS =================
+        // Avance («plan cubierto»): cada tema terminado vale el tiempo que le daba el plan, ni más ni menos.
+        // El tema en curso cuenta lo que llevas, hasta el 80 % de su tiempo; el último tramo se gana al terminarlo.
+        // Esfuerzo («horas reales»): lo que anotas. Sirve para la racha, el mapa de calor y para medir tu ritmo real.
+        const PARTIAL_CAP = 0.8;
+        const PACE_SNOOZE_KEY = STORAGE_KEY + '_pace_snooze';
+        let paceAutoBusy = false;
+
+        // Reparte en el calendario las horas reasignadas. Devuelve las horas añadidas a tu disponibilidad.
+        function applyPlanMoves(days, valids, weekTargets) {
+            const byName = {};
+            valids.forEach(s => byName[s.name] = s);
+            let added = 0;
+            planMoves.forEach(m => {
+                m._eff = 0;
+                const A = byName[m.to], B = m.t === 'mv' ? byName[m.from] : null;
+                if (!A || (m.t === 'mv' && !B)) return;
+                const start = parseLocalDate(m.start);
+                let end = parseLocalDate(m.end);
+                if (A.reviewStart && A.reviewStart < end) end = A.reviewStart;
+                const idx = [];
+                days.forEach((d, i) => {
+                    if (d.date < start || d.date >= end || !(d.shares[A.name] > 0)) return;
+                    if (B && !(d.shares[B.name] > 0)) return;
+                    idx.push(i);
+                });
+                if (!idx.length) return;
+                const per = m.h / idx.length;
+                let effA = 0, effB = 0;
+                idx.forEach(i => {
+                    const d = days[i];
+                    const amt = B ? Math.min(per, d.shares[B.name] * 0.5) : per;
+                    if (!(amt > 0)) return;
+                    d.shares[A.name] += amt;
+                    A.allocatedHours += amt;
+                    A.firstPassHours += amt;
+                    effA += amt;
+                    if (B) {
+                        d.shares[B.name] -= amt;
+                        B.allocatedHours -= amt;
+                        if (!B.reviewStart || d.date < B.reviewStart) { B.firstPassHours -= amt; effB += amt; }
+                    } else {
+                        d.cap += amt;
+                        weekTargets[d.w] = (weekTargets[d.w] || 0) + amt;
+                        added += amt;
+                    }
+                });
+                m._eff = effA;
+                A.moves.push({ x: effA, d0: m.d0to });
+                if (B && effB > 0) B.moves.push({ x: -effB, d0: m.d0from });
+            });
+            return added;
+        }
+
+        // Tiempo de plan que suman los k primeros temas terminados (las horas reasignadas se reparten entre los temas que quedaban)
+        function topicCreditUpTo(s, k) {
+            if (!s.topics) return 0;
+            k = Math.max(0, Math.min(s.topics, k));
+            const base = (s.firstPassBase || s.firstPassHours || 0) / s.topics;
+            let c = k * base;
+            (s.moves || []).forEach(m => {
+                const rest = s.topics - m.d0;
+                if (rest > 0) c += m.x * Math.max(0, Math.min(rest, k - m.d0)) / rest;
+            });
+            return Math.max(0, c);
+        }
+
+        function trackedTopicHours(name, beforeIso) {
+            const out = {};
+            Object.keys(topicTime).forEach(d => {
+                if (beforeIso && d >= beforeIso) return;
+                const e = topicTime[d] && topicTime[d][name];
+                if (!e) return;
+                Object.keys(e).forEach(n => out[n] = (out[n] || 0) + e[n]);
+            });
+            return out;
+        }
+
+        // Plan cubierto de una asignatura (ahora, o al empezar el día si atStart)
+        function coverageOf(s, realH, todayIso, atStart, mode) {
+            const ent = topicEntries(s.name);
+            const ok = d => !atStart || (!!d && d < todayIso);
+            let D = 0, est = 0, lastDone = '', revMin = 0;
+            const revByDay = {}, doneSet = new Set();
+            for (let n = 1; n <= s.topics; n++) {
+                const e = ent[n];
+                if (!e) continue;
+                if (ok(e.done)) { D++; doneSet.add(n); if (e.est) est++; if ((e.done || '') > lastDone) lastDone = e.done; }
+                [1, 2].forEach(st => {
+                    const r = e['r' + st];
+                    if (r && ok(r)) { const m = e['m' + st] || 0; revMin += m; revByDay[r] = (revByDay[r] || 0) + m; }
+                });
+            }
+            const tracked = trackedTopicHours(s.name, atStart ? todayIso : null);
+            // Hasta que marcas el primer tema (o anotas tiempo a un tema), el avance se mide en horas
+            if (!mode) mode = (D > 0 || Object.keys(tracked).length) ? 'topics' : 'hours';
+            const empty = { mode, D, est, partial: 0, revMin, p2: 0, topicCredit: 0, slot: s.topics ? topicCreditUpTo(s, 1) : 0 };
+            if (mode === 'hours' || !s.topics) return Object.assign(empty, { covered: realH });
+            const topicCredit = topicCreditUpTo(s, D);
+            const slot = Math.max(0, topicCreditUpTo(s, D + 1) - topicCredit);
+            let partial = 0;
+            Object.keys(tracked).forEach(k => {
+                const n = +k;
+                if (n < 1 || n > s.topics || doneSet.has(n)) return;
+                partial += Math.min(PARTIAL_CAP * slot, tracked[k]);
+            });
+            // Fase de repaso (o temario terminado antes): cuenta el tiempo sin tema concreto, tal cual
+            let p2 = 0;
+            let p2start = s.reviewStart ? toDateInputValue(s.reviewStart) : '';
+            if (D >= s.topics && lastDone && (!p2start || lastDone < p2start)) p2start = lastDone;
+            if (p2start) Object.keys(dayLog).forEach(d => {
+                if (d < p2start || !ok(d)) return;
+                const h = (dayLog[d] || {})[s.name] || 0;
+                if (!h) return;
+                const t = Object.values(((topicTime[d] || {})[s.name]) || {}).reduce((a, x) => a + x, 0);
+                p2 += Math.max(0, h - t - (revByDay[d] || 0) / 60);
+            });
+            return { covered: topicCredit + partial + revMin / 60 + p2, mode, D, est, partial, revMin, p2, topicCredit, slot };
+        }
+
+        // Ritmo real frente al planificado, medido solo con temas terminados que tienen su tiempo anotado tema a tema
+        // (al menos 3). need > 0: horas que le faltarán antes de su semana de repaso; need < 0: le sobran.
+        const PACE_MIN_TOPICS = 3;
+        function paceOf(p, s) {
+            const st = p.status[s.name], c = st && st.cov;
+            if (!c || c.mode !== 'topics' || postponedSubjects[s.name] || st.examPassed || st.inReview || st.remTopics === 0 || !s.reviewStart) return null;
+            if (!(c.slot > 0)) return null;
+            const ent = topicEntries(s.name);
+            const tracked = trackedTopicHours(s.name, null);
+            const allDone = Object.keys(ent).map(Number).filter(n => n >= 1 && n <= s.topics).sort((x, y) => x - y);
+            const sample = allDone.filter(n => !ent[n].est && tracked[n] > 0);
+            if (sample.length < PACE_MIN_TOPICS) return null;
+            let realR = 0, creditR = 0;
+            sample.forEach(n => {
+                const r = allDone.indexOf(n) + 1;
+                realR += tracked[n];
+                creditR += topicCreditUpTo(s, r) - topicCreditUpTo(s, r - 1);
+            });
+            if (creditR < 0.5) return null;
+            const ratio = realR / creditR;
+            const realPerTopic = realR / sample.length;
+            const remEq = Math.max(0, s.topics - c.D - c.partial / c.slot);
+            const remCredit = Math.max(0, s.firstPassHours - c.topicCredit - c.partial);
+            return { ratio, need: remEq * realPerTopic - remCredit, realPerTopic, remEq, remCredit, sample: sample.length };
+        }
+
+        // Horas que el plan aún da a B desde hoy hasta 'until' (exclusive)
+        function futureShare(p, B, until) {
+            let h = 0;
+            const i0 = Math.max(0, p.cal.todayIdx);
+            for (let i = i0; i < p.days.length; i++) {
+                const d = p.days[i];
+                if (until && d.date >= until) break;
+                if (B.reviewStart && d.date >= B.reviewStart) break;
+                h += d.shares[B.name] || 0;
+            }
+            return h;
+        }
+
+        function paceDonors(p, A, paces) {
+            return p.subjects.filter(B => B.name !== A.name && !postponedSubjects[B.name] && !p.status[B.name].examPassed &&
+                    !p.status[B.name].inReview && p.status[B.name].remTopics > 0 && B.exam && A.exam && B.exam >= A.exam)
+                .map(B => {
+                    const pc = paces[B.name];
+                    let margin = pc ? (pc.need < 0 ? -pc.need : 0) : -p.status[B.name].debt;
+                    margin = Math.min(margin, futureShare(p, B, A.reviewStart) * 0.4);
+                    return { B, margin: roundQuarter(margin), surplus: !!(pc && pc.need < 0) };
+                })
+                .filter(x => x.margin >= 0.5)
+                .sort((a, b) => (b.surplus - a.surplus) || (b.margin - a.margin) || (b.B.exam - a.B.exam));
+        }
+
+        function studyDaysUntil(p, A) {
+            const out = [];
+            const i0 = Math.max(0, p.cal.todayIdx);
+            for (let i = i0; i < p.days.length; i++) {
+                const d = p.days[i];
+                if (A.reviewStart && d.date >= A.reviewStart) break;
+                if (d.shares[A.name] > 0) out.push(d);
+            }
+            return out;
+        }
+
+        function pacePlanFor(p, A, pc, paces) {
+            const need = roundQuarter(pc.need);
+            const takes = [];
+            let left = need;
+            paceDonors(p, A, paces).forEach(x => {
+                if (left < 0.5) return;
+                const h = roundQuarter(Math.min(left, x.margin));
+                if (h >= 0.5) { takes.push({ B: x.B, h, surplus: x.surplus, debt: p.status[x.B.name].debt, pc: paces[x.B.name] }); left = roundQuarter(left - h); }
+            });
+            const days = studyDaysUntil(p, A);
+            const perDayFull = days.length ? Math.ceil((need / days.length) * 4) / 4 : 0;
+            const perDay = Math.min(1, perDayFull);
+            return { need, takes, left, days: days.length, perDay, extraH: round2(Math.min(need, perDay * days.length)), enough: perDayFull <= 1 };
+        }
+
+        function paceSnoozed(name) {
+            try { const v = JSON.parse(localStorage.getItem(PACE_SNOOZE_KEY)) || {}; return v[name] && v[name] > todayKey(); } catch (e) { return false; }
+        }
+
+        function snoozePace(name) {
+            let v = {};
+            try { v = JSON.parse(localStorage.getItem(PACE_SNOOZE_KEY)) || {}; } catch (e) {}
+            v[name] = toDateInputValue(addDays(startOfToday(), 7));
+            try { localStorage.setItem(PACE_SNOOZE_KEY, JSON.stringify(v)); } catch (e) {}
+            renderDashboardTab();
+            showToast('De acuerdo: no te lo vuelvo a proponer en 7 días.', 'ok');
+        }
+
+        function newMoveId() { return Math.random().toString(36).slice(2, 10); }
+
+        function subjectByName(name) {
+            return currentCalculation.subjects.find(s => s.name === name && s.valid);
+        }
+
+        function doneCountOf(name) {
+            const s = subjectByName(name);
+            return s ? doneTopicsOf(s) : 0;
+        }
+
+        function minIso(a, b) { return !a ? b : (!b ? a : (a < b ? a : b)); }
+
+        // Aplicar la propuesta: pasa horas de las asignaturas con margen
+        function applyPaceTransfer(name) {
+            const p = getProgress();
+            const A = p.subjects.find(s => s.name === name);
+            const paces = {};
+            p.subjects.forEach(s => { const pc = paceOf(p, s); if (pc) paces[s.name] = pc; });
+            if (!A || !paces[name]) return;
+            const plan = pacePlanFor(p, A, paces[name], paces);
+            if (!plan.takes.length) return;
+            const today = todayKey();
+            plan.takes.forEach(t => planMoves.push({
+                id: newMoveId(), t: 'mv', to: A.name, from: t.B.name, h: t.h, start: today,
+                end: minIso(toDateInputValue(A.reviewStart), toDateInputValue(t.B.reviewStart)),
+                d0to: doneCountOf(A.name), d0from: doneCountOf(t.B.name), auto: false, at: today
+            }));
+            calculatePlan();
+            showToast(`⚖️ ${formatHM(plan.takes.reduce((a, t) => a + t.h, 0))} más para ${shortName(A.name)}. Puedes deshacerlo en «Ajustes de horas».`, 'ok');
+        }
+
+        // Ampliar horas: un poco más cada día de estudio hasta la semana de repaso de esa asignatura
+        function applyPaceExtra(name) {
+            const p = getProgress();
+            const A = p.subjects.find(s => s.name === name);
+            const pc = A && paceOf(p, A);
+            if (!pc) return;
+            const plan = pacePlanFor(p, A, pc, {});
+            if (!(plan.extraH > 0)) return;
+            const today = todayKey();
+            planMoves.push({ id: newMoveId(), t: 'ex', to: A.name, from: null, h: plan.extraH, start: today, end: toDateInputValue(A.reviewStart), d0to: doneCountOf(A.name), d0from: 0, auto: false, at: today });
+            calculatePlan();
+            showToast(`⏱️ +${formatHM(plan.perDay)} por día de estudio para ${shortName(A.name)} hasta su semana de repaso.`, 'ok');
+        }
+
+        function undoPlanMove(id) {
+            const i = planMoves.findIndex(m => m.id === id);
+            if (i < 0) return;
+            planMoves.splice(i, 1);
+            calculatePlan();
+            showToast('Ajuste deshecho: el plan vuelve a como estaba.', 'ok');
+        }
+
+        // Si una asignatura va más rápida y otra más lenta, las horas sobrantes pasan a la que las necesita (con aviso)
+        function autoPaceMoves(p, paces) {
+            const today = todayKey();
+            const recent = m => m.auto && m.at && daysBetween(parseLocalDate(m.at), startOfToday()) < 7;
+            const made = [];
+            p.subjects.forEach(S => {
+                const ps = paces[S.name];
+                if (!ps || ps.ratio > 0.8 || ps.need > -2) return;
+                let surplus = Math.min(-ps.need, futureShare(p, S, null) * 0.4);
+                p.subjects.filter(A => A.name !== S.name && paces[A.name] && paces[A.name].ratio >= 1.2 && paces[A.name].need >= 1 && A.exam && S.exam && A.exam <= S.exam)
+                    .sort((a, b) => paces[b.name].need - paces[a.name].need)
+                    .forEach(A => {
+                        if (surplus < 1 || planMoves.some(m => recent(m) && m.from === S.name && m.to === A.name)) return;
+                        const h = roundQuarter(Math.min(surplus, paces[A.name].need, futureShare(p, S, A.reviewStart) * 0.4));
+                        if (h < 1) return;
+                        planMoves.push({
+                            id: newMoveId(), t: 'mv', to: A.name, from: S.name, h, start: today,
+                            end: minIso(toDateInputValue(A.reviewStart), toDateInputValue(S.reviewStart)),
+                            d0to: doneCountOf(A.name), d0from: doneCountOf(S.name), auto: true, at: today
+                        });
+                        surplus -= h;
+                        made.push({ A, S, h });
+                    });
+            });
+            return made;
+        }
+
+        function moveText(m) {
+            const fmt = iso => formatShortDate(parseLocalDate(iso));
+            const eff = m._eff || 0;
+            const h = formatHM(roundQuarter(eff || m.h));
+            if (m.t === 'ex') return `+${h} para <b>${escapeHtml(shortName(m.to))}</b> (más tiempo de estudio hasta el ${fmt(m.end)})`;
+            return `${h} de <b>${escapeHtml(shortName(m.from))}</b> → <b>${escapeHtml(shortName(m.to))}</b>${m.auto ? ' <span class="text-[10px] font-bold text-emerald-700">· automático</span>' : ''} <span class="text-slate-400">(desde el ${fmt(m.at)})</span>`;
+        }
+
+        function renderPace(p) {
+            const box = document.getElementById('paceSection');
+            if (!box) return;
+            if (!p.subjects.length || !p.cal.start || p.cal.currentWeek < 1) { box.innerHTML = ''; return; }
+            const paces = {};
+            p.subjects.forEach(s => { const pc = paceOf(p, s); if (pc) paces[s.name] = pc; });
+
+            if (!paceAutoBusy) {
+                const made = autoPaceMoves(p, paces);
+                if (made.length) {
+                    paceAutoBusy = true;
+                    setTimeout(() => { calculatePlan(); paceAutoBusy = false; }, 0);
+                    made.forEach(x => showToast(`🔄 Te sobraban horas de ${shortName(x.S.name)}: he pasado unas ${formatHM(x.h)} a ${shortName(x.A.name)}.`, 'ok'));
+                    return;
+                }
+            }
+
+            let html = '';
+            p.subjects.forEach(A => {
+                const pc = paces[A.name];
+                if (!pc || pc.ratio < 1.2 || pc.need < 1 || paceSnoozed(A.name)) return;
+                const plan = pacePlanFor(p, A, pc, paces);
+                const safe = escapeHtml(A.name);
+                const rs = formatShortDate(A.reviewStart);
+                const takesHtml = plan.takes.map(t => `<li>• <b>${formatHM(t.h)}</b> de <b>${escapeHtml(shortName(t.B.name))}</b>, que ${t.surplus ? `va más rápida de lo previsto (${t.pc.ratio.toFixed(1).replace('.', ',')}×)` : `va ${formatHM(-t.debt)} adelantada`} y se examina ${t.B.exam > A.exam ? 'después' : 'el mismo día'}.</li>`).join('');
+                const extraBtn = plan.extraH > 0 ? `<button data-sub="${safe}" onclick="applyPaceExtra(this.dataset.sub)" class="px-3 py-1.5 rounded-xl bg-white hover:bg-amber-100 border border-amber-300 text-amber-900 text-[11px] font-bold transition">${plan.takes.length ? 'Prefiero ampliar mis horas' : 'Ampliar mis horas'}: ≈ +${formatHM(plan.perDay)} por día de estudio hasta el ${rs}</button>` : '';
+                html += `
+                    <section class="p-4 rounded-2xl border border-amber-300 bg-amber-50 space-y-2.5">
+                        <div class="flex items-start gap-3">
+                            <div class="text-2xl leading-none shrink-0">⚠️</div>
+                            <div class="min-w-0 space-y-1">
+                                <p class="text-sm font-black text-amber-950">${escapeHtml(shortName(A.name))} va más lenta de lo previsto</p>
+                                <p class="text-xs text-amber-900 leading-relaxed">A tu ritmo real (<b>${pc.ratio.toFixed(1).replace('.', ',')}×</b> lo planificado: unas ${formatHM(pc.realPerTopic)} por tema) le faltan unas <b>${formatHM(plan.need)}</b> antes de su semana de repaso (${rs}).</p>
+                                ${plan.takes.length ? `<p class="text-xs text-amber-900 font-bold pt-1">Para cubrirlas te propongo:</p><ul class="text-xs text-amber-900 space-y-0.5">${takesHtml}</ul>` : '<p class="text-xs text-amber-900">Ninguna otra asignatura tiene margen para cederle horas sin quedarse corta.</p>'}
+                                ${plan.takes.length && plan.left >= 0.5 ? `<p class="text-[11px] text-amber-800">Aun así quedan unas ${formatHM(plan.left)}: puedes ampliar tus horas o mirar el Asistente.</p>` : ''}
+                                ${!plan.enough && !plan.takes.length ? '<p class="text-[11px] font-bold text-rose-700">Ni con 1 h más al día llega: mira el Asistente de decisión.</p>' : ''}
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 pl-9">
+                            ${plan.takes.length ? `<button data-sub="${safe}" onclick="applyPaceTransfer(this.dataset.sub)" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-[11px] font-black transition">✓ Aplicar</button>` : ''}
+                            ${extraBtn}
+                            ${(!plan.enough || plan.left >= 0.5 || !plan.takes.length) ? `<button onclick="toggleDecisionModal(true)" class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-[11px] font-bold transition">Asistente de decisión</button>` : ''}
+                            <button data-sub="${safe}" onclick="snoozePace(this.dataset.sub)" class="px-3 py-1.5 rounded-xl text-amber-800 hover:bg-amber-100 text-[11px] font-bold transition">Ahora no</button>
+                        </div>
+                    </section>`;
+            });
+
+            // Asignaturas que van más rápidas: solo informativo
+            const fast = p.subjects.filter(S => paces[S.name] && paces[S.name].ratio <= 0.8 && paces[S.name].need <= -2);
+            if (fast.length) {
+                html += `<div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 space-y-0.5">${fast.map(S => `<p>🚀 Vas más rápido en <b>${escapeHtml(shortName(S.name))}</b> (${paces[S.name].ratio.toFixed(1).replace('.', ',')}× lo planificado): te sobran unas ${formatHM(-paces[S.name].need)}. Si otra asignatura que se examina antes o el mismo día las necesita, pueden ir a ella: lo verás en «Ajustes de horas».</p>`).join('')}</div>`;
+            }
+
+            const today = todayKey();
+            const active = planMoves.filter(m => m.end > today);
+            if (active.length) {
+                html += `
+                    <div class="p-3 rounded-2xl bg-white border border-slate-200 space-y-1.5">
+                        <p class="text-[11px] font-black uppercase tracking-wider text-slate-500">⚖️ Ajustes de horas</p>
+                        ${active.map(m => `
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <p class="text-xs text-slate-700 min-w-0">${moveText(m)}</p>
+                                <button onclick="undoPlanMove('${m.id}')" class="shrink-0 text-[11px] font-bold text-slate-500 hover:text-rose-600">Deshacer</button>
+                            </div>`).join('')}
+                    </div>`;
+            }
+            box.innerHTML = html;
+        }
         let currentWizardStep = 1;
         const totalWizardSteps = 5;
 
