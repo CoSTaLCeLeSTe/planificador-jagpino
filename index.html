@@ -3242,7 +3242,7 @@ html.dark #installPointer *{color:inherit}
             <!-- Detailed Legal Terms Clause -->
             <div class="pt-3 border-t border-slate-100 text-[11px] text-slate-400 flex flex-col sm:flex-row justify-between gap-2">
                 <p>© 2026 <b>Jagpino</b>. Se autoriza el uso libre y gratuito para fines estrictamente académicos y personales. Queda prohibida su venta, comercialización total o parcial, así como la redistribución sin citar la autoría original.</p>
-                <span class="whitespace-nowrap font-medium text-slate-500">v29.2</span>
+                <span class="whitespace-nowrap font-medium text-slate-500">v29.3</span>
             </div>
         </div>
     </footer>
@@ -5306,36 +5306,40 @@ html.dark #installPointer *{color:inherit}
                         <button data-sub="${escapeHtml(r.sub.name)}" onclick="undoReview(this.dataset.sub, ${r.n}, ${r.stage})" class="shrink-0 text-[10px] font-bold text-emerald-700 hover:text-rose-600">Deshacer</button>
                     </div>`).join('');
 
+            // Plan de hoy cumplido (o sin materia nueva): propone con qué seguir si te quedan ganas
+            if (!plan.blocks.length && !plan.eve && plan.state !== 'rest' && plan.examsToday.length === 0) plan.blocks = extraBlocks(p, plan);
             const blocksHtml = plan.blocks.map(b => {
                 const det = blockDetails(p, b);
                 const st = p.status[b.sub.name];
                 const safe = escapeHtml(b.sub.name);
                 return `
-                    <div class="p-3.5 rounded-2xl border ${b.kind === 'eve' ? 'border-rose-300 bg-rose-50/50' : 'border-slate-200 bg-white'} shadow-sm space-y-2.5">
+                    <div class="p-3.5 rounded-2xl border ${b.kind === 'eve' ? 'border-rose-300 bg-rose-50/50' : (b.kind === 'extra' ? 'border-emerald-200 bg-emerald-50/40' : 'border-slate-200 bg-white')} shadow-sm space-y-2.5">
                         <div class="flex items-start justify-between gap-2">
                             <div class="min-w-0">
-                                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">${escapeHtml(shortName(b.sub.name))}${st.inReview ? ' · <span class="text-purple-600">semana de repaso</span>' : ''} · examen ${dayLabel(b.sub.exam)}${b.sub.examTime ? ' ' + b.sub.examTime : ''}</p>
+                                <p class="text-[10px] font-black uppercase tracking-wider text-slate-400">${b.kind === 'extra' ? '<span class="text-emerald-600">Extra · adelantas</span> · ' : ''}${escapeHtml(shortName(b.sub.name))}${st.inReview ? ' · <span class="text-purple-600">semana de repaso</span>' : ''} · examen ${dayLabel(b.sub.exam)}${b.sub.examTime ? ' ' + b.sub.examTime : ''}</p>
                                 <p class="text-sm font-black text-slate-900">${det.icon} ${det.title}${det.topic && !topicName(b.sub.name, det.topic) ? ` <button data-sub="${safe}" onclick="openTopicNames(this.dataset.sub)" class="ml-1 align-middle px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 text-[10px] font-bold" title="Escribe el nombre real de los temas de esta asignatura">✏️ Ponerle nombre</button>` : ''}</p>
                                 ${det.text ? `<p class="text-[11px] text-slate-500 leading-snug">${det.text}</p>` : ''}
                             </div>
                             <span class="shrink-0 px-2.5 py-1 rounded-lg bg-slate-900 text-amber-300 text-xs font-black">${formatHM(b.hours)}</span>
                         </div>
                         <div class="flex flex-wrap gap-1.5">
-                            <button data-sub="${safe}" data-h="${b.hours}" onclick="addStudyHours(this.dataset.sub, parseFloat(this.dataset.h))" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition flex items-center gap-1.5">
+                            <button data-sub="${safe}" data-h="${b.hours}" onclick="logBlockHours(this.dataset.sub, ${det.topic || 0}, parseFloat(this.dataset.h))" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition flex items-center gap-1.5">
                                 <i class="fa-solid fa-plus"></i> Anotar ${formatHM(b.hours)}
                             </button>
-                            ${det.topic ? `<button data-sub="${safe}" onclick="markTopicDone(this.dataset.sub, ${det.topic})" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold transition flex items-center gap-1.5">
+                            ${det.topic ? `<button data-sub="${safe}" data-h="${b.hours}" onclick="finishTopicFromPlan(this.dataset.sub, ${det.topic}, parseFloat(this.dataset.h))" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold transition flex items-center gap-1.5">
                                 <i class="fa-solid fa-check text-emerald-400"></i> Tema ${det.topic} terminado
                             </button>` : ''}
                         </div>
                     </div>`;
             }).join('');
 
+            html += finishedTodayHtml(p);
+
             if (blocksHtml || reviewsHtml) {
                 html += `
                     <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
                         <div class="lg:col-span-3 space-y-2.5">
-                            <h4 class="text-[11px] font-black uppercase tracking-wider text-slate-500"><i class="fa-solid fa-book-open text-emerald-600 mr-1"></i> Estudio</h4>
+                            <h4 class="text-[11px] font-black uppercase tracking-wider text-slate-500"><i class="fa-solid fa-book-open text-emerald-600 mr-1"></i> ${plan.blocks.length && plan.blocks[0].kind === 'extra' ? '¿Te quedan ganas? Sigue con…' : 'Estudio'}</h4>
                             ${blocksHtml || '<p class="text-xs text-slate-400">Nada nuevo para hoy.</p>'}
                         </div>
                         <div class="lg:col-span-2 space-y-2.5">
@@ -8087,7 +8091,7 @@ html.dark #installPointer *{color:inherit}
         // cómo se usa (web, app instalada o archivo), si sincroniza con Drive y, si el alumno lo pone, su nombre de usuario.
         // Nunca se envían datos de estudio. Se puede desactivar en Datos.
         const STATS_URL = 'https://script.google.com/macros/s/AKfycbwRdxL0fvYa05e_lmOlCYfZ9IkuHmcd0YsHIIVaU3LnvOOuYjKrb-bZLNjJo2iWJHHa/exec';   // URL de la aplicación web de Google Apps Script (…/exec)
-        const APP_VERSION = 'v29.2';
+        const APP_VERSION = 'v29.3';
         const STATS_KEY = STORAGE_KEY + '_stats';
         const ALIAS_MAX = 30;
 
@@ -9184,6 +9188,94 @@ html.dark #installPointer *{color:inherit}
             applyTheme();
             renderDaysOff();
             setTimeout(() => checkForUpdate(true), 6000);
+        }
+
+        // ---------- V29.3: terminar un tema desde el Plan de hoy cuenta para el plan ----------
+        // Marca el tema y, si hoy aún no habías anotado tiempo de esa asignatura, anota el tiempo del bloque.
+        const BLOCK_LOG_KEY = STORAGE_KEY + '_blocks_logged';
+
+        function blockLogged(name, n) {
+            try {
+                const v = JSON.parse(sessionStorage.getItem(BLOCK_LOG_KEY) || localStorage.getItem(BLOCK_LOG_KEY)) || {};
+                return v.day === todayKey() && !!(v.list || {})[name + '|' + n];
+            } catch (e) { return false; }
+        }
+
+        function rememberBlockLogged(name, n) {
+            let v = {};
+            try { v = JSON.parse(localStorage.getItem(BLOCK_LOG_KEY)) || {}; } catch (e) {}
+            if (v.day !== todayKey()) v = { day: todayKey(), list: {} };
+            v.list[name + '|' + n] = true;
+            try { localStorage.setItem(BLOCK_LOG_KEY, JSON.stringify(v)); } catch (e) {}
+        }
+
+        // «Anotar» de un bloque del Plan de hoy: suma el tiempo y recuerda que ese tema ya tiene su tiempo anotado hoy
+        function logBlockHours(name, n, hours) {
+            if (n) rememberBlockLogged(name, n);
+            addStudyHours(name, hours);
+        }
+
+        function finishTopicFromPlan(name, n, hours) {
+            if (!DB_NAMES.has(name)) return;
+            const wasDone = !!topicEntry(name, n);
+            if (!wasDone) markTopicDone(name, n);
+            let logged = 0;
+            // Si no pulsaste «Anotar» en este bloque, el tiempo del bloque se anota al terminar el tema
+            if (!wasDone && !blockLogged(name, n) && hours > 0 && getCalendarInfo().currentWeek >= 1) {
+                rememberBlockLogged(name, n);
+                adjustStudyHours(name, hours);
+                logged = hours;
+            }
+            renderDashboardTab();
+            showToast(logged
+                ? `✅ Tema ${n} de ${shortName(name)} terminado · anotadas ${formatHM(logged)} de hoy. Si fue otro tiempo, ajústalo con − / +.`
+                : `✅ Tema ${n} de ${shortName(name)} terminado.`, 'ok');
+        }
+
+        // Temas terminados hoy, con el tiempo anotado hoy en esa asignatura y botones para ajustarlo
+        function finishedTodayHtml(p) {
+            const today = todayKey();
+            const rows = [];
+            p.subjects.forEach(s => {
+                const entries = topicEntries(s.name);
+                const nums = Object.keys(entries).filter(k => entries[k] && entries[k].done === today && !entries[k].est).map(Number).sort((a, b) => a - b);
+                if (!nums.length) return;
+                const h = (dayLog[today] && dayLog[today][s.name]) || 0;
+                rows.push({ s, nums, h });
+            });
+            if (!rows.length) return '';
+            return `
+                <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-2">
+                    <p class="text-[11px] font-black uppercase tracking-wider text-emerald-700">🏁 Terminado hoy</p>
+                    ${rows.map(r => {
+                        const safe = escapeHtml(r.s.name);
+                        const names = r.nums.map(n => `Tema ${n}${topicName(r.s.name, n) ? ' · ' + escapeHtml(topicName(r.s.name, n)) : ''}`).join(', ');
+                        return `
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <p class="text-xs text-emerald-950 min-w-0"><b>✅ ${escapeHtml(shortName(r.s.name))}</b> · ${names}</p>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    <span class="text-[11px] font-bold text-emerald-800">⏱️ ${r.h > 0 ? formatHM(r.h) + ' hoy' : 'sin tiempo anotado'}</span>
+                                    <button data-sub="${safe}" onclick="adjustStudyHours(this.dataset.sub, -0.25)" ${r.h < 0.25 ? 'disabled' : ''} class="w-7 h-7 rounded-lg bg-white border border-emerald-200 text-emerald-800 font-black disabled:opacity-40" title="Restar 15 min">−</button>
+                                    <button data-sub="${safe}" onclick="adjustStudyHours(this.dataset.sub, 0.25)" class="w-7 h-7 rounded-lg bg-white border border-emerald-200 text-emerald-800 font-black" title="Sumar 15 min">+</button>
+                                </div>
+                            </div>`;
+                    }).join('')}
+                </div>`;
+        }
+
+        // Con el objetivo de hoy cumplido: hasta 2 propuestas para adelantar (el siguiente tema de las asignaturas que más lo necesitan)
+        function extraBlocks(p, plan) {
+            const studyable = p.subjects.filter(s => !postponedSubjects[s.name] && !p.status[s.name].examPassed && p.status[s.name].daysLeft > 0 && p.status[s.name].activeToday && nextPendingTopic(s));
+            if (!studyable.length) return [];
+            const today = todayKey();
+            const doneToday = s => { const e = topicEntries(s.name); return Object.keys(e).some(k => e[k] && e[k].done === today); };
+            return studyable
+                .sort((a, b) => (doneToday(b) - doneToday(a)) || (p.status[b.name].debt - p.status[a.name].debt) || (a.exam - b.exam))
+                .slice(0, 2)
+                .map(s => {
+                    const rh = p.status[s.name].rhythm || 1;
+                    return { sub: s, hours: Math.max(0.5, Math.min(1.5, roundQuarter(rh))), kind: 'extra' };
+                });
         }
 
         let currentWizardStep = 1;
