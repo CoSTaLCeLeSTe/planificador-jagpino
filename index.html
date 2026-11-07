@@ -2441,8 +2441,10 @@ html.dark .hover\:bg-slate-50:hover{background-color:#1e293b}
 html.dark .hover\:bg-slate-50\/80:hover{background-color:#1e293b}
 html.dark .hover\:bg-white:hover{background-color:#1e293b}
 html.dark .hover\:bg-white\/80:hover{background-color:#1e293b}
+html.dark .hover\:border-rose-200:hover{border-color:rgba(244,63,94,0.38)}
 html.dark .hover\:text-emerald-700:hover{color:#6ee7b7}
 html.dark .hover\:text-rose-600:hover{color:#fb7185}
+html.dark .hover\:text-rose-700:hover{color:#fda4af}
 html.dark .hover\:text-rose-800:hover{color:#fecdd3}
 html.dark .hover\:text-slate-600:hover{color:#a3b1c6}
 html.dark .hover\:text-slate-700:hover{color:#cbd5e1}
@@ -3329,7 +3331,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             <!-- Detailed Legal Terms Clause -->
             <div class="pt-3 border-t border-slate-100 text-[11px] text-slate-400 flex flex-col sm:flex-row justify-between gap-2">
                 <p>© 2026 <b>Jagpino</b>. Se autoriza el uso libre y gratuito para fines estrictamente académicos y personales. Queda prohibida su venta, comercialización total o parcial, así como la redistribución sin citar la autoría original.</p>
-                <span class="whitespace-nowrap font-medium text-slate-500">v29.8</span>
+                <span class="whitespace-nowrap font-medium text-slate-500">v29.9</span>
             </div>
         </div>
     </footer>
@@ -7123,13 +7125,27 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             return true;
         }
 
-        function showToast(text, kind) {
+        // action (opcional): { label, run } → botón en el aviso (p. ej. «Deshacer»)
+        function showToast(text, kind, action) {
             const t = document.getElementById('appToast');
             if (!t) return;
             t.className = `fixed left-1/2 -translate-x-1/2 bottom-6 z-[70] max-w-sm w-[calc(100%-2rem)] px-4 py-3 rounded-2xl shadow-2xl text-xs font-bold ${kind === 'warn' ? 'bg-amber-100 text-amber-950 border border-amber-300' : 'bg-slate-900 text-emerald-200 border border-emerald-500/40'}`;
-            t.innerText = text;
+            t.textContent = '';
+            if (action && action.run) {
+                t.classList.add('flex', 'items-center', 'gap-3');
+                const span = document.createElement('span');
+                span.className = 'flex-1 min-w-0';
+                span.textContent = text;
+                const b = document.createElement('button');
+                b.className = 'shrink-0 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/25 text-white text-xs font-black';
+                b.textContent = action.label || 'Deshacer';
+                b.onclick = () => { t.classList.add('hidden'); clearTimeout(showToast._t); action.run(); };
+                t.append(span, b);
+            } else {
+                t.textContent = text;
+            }
             clearTimeout(showToast._t);
-            showToast._t = setTimeout(() => t.classList.add('hidden'), 6000);
+            showToast._t = setTimeout(() => t.classList.add('hidden'), action ? 10000 : 6000);
         }
 
         // ---- Instalador del navegador (Chrome / Edge) ----
@@ -8253,7 +8269,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
         // cómo se usa (web, app instalada o archivo), si sincroniza con Drive y, si el alumno lo pone, su nombre de usuario.
         // Nunca se envían datos de estudio. Se puede desactivar en Datos.
         const STATS_URL = 'https://script.google.com/macros/s/AKfycbwRdxL0fvYa05e_lmOlCYfZ9IkuHmcd0YsHIIVaU3LnvOOuYjKrb-bZLNjJo2iWJHHa/exec';   // URL de la aplicación web de Google Apps Script (…/exec)
-        const APP_VERSION = 'v29.8';
+        const APP_VERSION = 'v29.9';
         const STATS_KEY = STORAGE_KEY + '_stats';
         const ALIAS_MAX = 30;
 
@@ -9461,7 +9477,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             renderDashboardTab();
             // Si hoy ya anotaste tiempo a este tema, no hace falta preguntar
             if (wasDone || blockLogged(name, n) || !canLogToday()) {
-                showToast(`✅ Tema ${n} de ${shortName(name)} terminado.${deviationToastText(name, n)}`, 'ok');
+                showToast(`✅ Tema ${n} de ${shortName(name)} terminado.${deviationToastText(name, n)}`, 'ok', wasDone ? null : undoAction(name, n));
                 return;
             }
             openFinishTimeModal(name, n, hours);
@@ -9488,6 +9504,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                 </div>
                 <div class="flex flex-wrap justify-center gap-1.5">${chips}${slot > 0 ? `<button onclick="setFinishTime(${roundQuarter(Math.max(0.25, slot - Math.max(0, before)))})" class="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold">Lo previsto · ${formatHM(roundQuarter(Math.max(0.25, slot - Math.max(0, before))))}</button>` : ''}</div>
                 <p class="text-[11px] text-slate-500 leading-snug">Tu plan ya cuenta el tema entero (${formatHM(slot)} previstas). Este tiempo es tu esfuerzo real: con él la app detecta si un tema se te alarga.</p>
+                <button onclick="cancelFinishTopic()" class="text-[11px] font-bold text-rose-600 hover:text-rose-700 underline underline-offset-2">↩️ Me he equivocado: no lo he terminado</button>
                 <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-1">
                     <button onclick="saveFinishTime(0)" class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs font-bold">Hoy no le he dedicado tiempo</button>
                     <button onclick="saveFinishTime(finishCtx.h)" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black">Guardar</button>
@@ -9522,7 +9539,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             } else {
                 renderDashboardTab();
             }
-            showToast(`✅ Tema ${n} de ${shortName(name)} terminado${h > 0 ? ` · ${formatHM(h)} anotadas` : ''}.${deviationToastText(name, n)}`, 'ok');
+            showToast(`✅ Tema ${n} de ${shortName(name)} terminado${h > 0 ? ` · ${formatHM(h)} anotadas` : ''}.${deviationToastText(name, n)}`, 'ok', undoAction(name, n));
         }
 
         // −/+ de un tema en «Hoy, tema a tema». Al sumar, primero se usa el tiempo de hoy que no tenía tema.
@@ -9598,6 +9615,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                                         <span class="text-[11px] font-bold text-emerald-800 min-w-[3.5rem] text-right">${h > 0 ? formatHM(h) : '—'}</span>
                                         ${btn(`data-sub="${safe}" onclick="adjustTopicTime(this.dataset.sub, ${n}, -0.25)"`, '−', 'Restar 15 min a este tema', h < 0.25)}
                                         ${btn(`data-sub="${safe}" onclick="adjustTopicTime(this.dataset.sub, ${n}, 0.25)"`, '+', b.free >= 0.25 ? 'Pasar a este tema 15 min de los que no tienen tema' : 'Sumar 15 min a este tema', false)}
+                                        ${doneToday ? `<button data-sub="${safe}" onclick="undoFinishTopic(this.dataset.sub, ${n})" class="h-7 px-2 rounded-lg bg-white border border-emerald-200 text-emerald-800 text-[11px] font-bold hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition" title="No lo he terminado: vuelve a pendiente">↩️<span class="hidden sm:inline"> Deshacer</span></button>` : ''}
                                     </div>
                                 </div>`;
                         }).join('');
@@ -10397,6 +10415,34 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
         }
 
         document.addEventListener('DOMContentLoaded', () => { applyProgressLayout(); initPboxDrag(); });
+
+
+        // ================= V29.9: DESHACER «TEMA TERMINADO» =================
+        function undoAction(name, n) {
+            return { label: '↩️ Deshacer', run: () => undoFinishTopic(name, n) };
+        }
+
+        function cancelFinishTopic() {
+            if (!finishCtx) { closeV29Modal(); return; }
+            const { name, n } = finishCtx;
+            finishCtx = null;
+            closeV29Modal();
+            undoFinishTopic(name, n);
+        }
+
+        // El tema vuelve a pendiente. El tiempo que le anotaste se conserva: ahora cuenta como tema en curso.
+        function undoFinishTopic(name, n) {
+            const t = topicLog[name] || {};
+            const e = t[n];
+            if (!e) return;
+            if (topicReviewsDone(e) >= 1 && !confirm(`¿Desmarcar el tema ${n}? Se perderán sus repasos marcados.`)) return;
+            delete t[n];
+            if (!Object.keys(t).length) delete topicLog[name];
+            saveAllToStorage();
+            renderDashboardTab();
+            const h = topicHoursToday(name, n);
+            showToast(`↩️ Tema ${n} de ${shortName(name)} vuelve a estar pendiente.${h > 0 ? ` El tiempo de hoy (${formatHM(h)}) se mantiene como tema en curso; quítalo con − si no lo estudiaste.` : ''}`, 'ok');
+        }
         let currentWizardStep = 1;
         const totalWizardSteps = 5;
 
