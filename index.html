@@ -2456,6 +2456,7 @@ html.dark .text-emerald-700{color:#6ee7b7}
 html.dark .text-emerald-800{color:#a7f3d0}
 html.dark .text-emerald-800\/80{color:#a7f3d0}
 html.dark .text-emerald-900{color:#a7f3d0}
+html.dark .text-emerald-900\/80{color:#a7f3d0}
 html.dark .text-emerald-950{color:#d1fae5}
 html.dark .text-orange-600{color:#fb923c}
 html.dark .text-orange-700{color:#fdba74}
@@ -3242,7 +3243,7 @@ html.dark #installPointer *{color:inherit}
             <!-- Detailed Legal Terms Clause -->
             <div class="pt-3 border-t border-slate-100 text-[11px] text-slate-400 flex flex-col sm:flex-row justify-between gap-2">
                 <p>© 2026 <b>Jagpino</b>. Se autoriza el uso libre y gratuito para fines estrictamente académicos y personales. Queda prohibida su venta, comercialización total o parcial, así como la redistribución sin citar la autoría original.</p>
-                <span class="whitespace-nowrap font-medium text-slate-500">v29.3</span>
+                <span class="whitespace-nowrap font-medium text-slate-500">v29.4</span>
             </div>
         </div>
     </footer>
@@ -3330,6 +3331,7 @@ html.dark #installPointer *{color:inherit}
         let dayHist = {};            // { 'AAAA-MM-DD': horas } · historial diario completo (racha y mapa de calor)
         let topicNames = {};         // { nombreAsignatura: { nºTema: 'Nombre del tema' } }
         let daysOff = [];            // [{ from: 'AAAA-MM-DD', to: 'AAAA-MM-DD', label }] · días sin estudio
+        let topicTime = {};          // { 'AAAA-MM-DD': { nombreAsignatura: { nºTema: horas } } } · tiempo anotado tema a tema (V29.4)
         let record = {};             // { nombreAsignatura: { st: 'ok'|'ko'|'np'|'conv', nota, conv: 'feb'|'jun'|'sep', year } } · expediente
 
         let currentTab = 1;
@@ -5078,6 +5080,7 @@ html.dark #installPointer *{color:inherit}
             delete dayLog[key][name];
             if (Object.keys(dayLog[key]).length === 0) delete dayLog[key];
             addDayHist(key, -h);
+            if (topicTime[key]) { delete topicTime[key][name]; if (!Object.keys(topicTime[key]).length) delete topicTime[key]; }
             // Los repasos de hoy siguen marcados, pero sus minutos ya no constan en el registro
             const t = topicEntries(name);
             Object.keys(t).forEach(k => [1, 2].forEach(st => { if (t[k]['r' + st] === key) t[k]['m' + st] = 0; }));
@@ -5194,7 +5197,9 @@ html.dark #installPointer *{color:inherit}
                 return { icon: '⚠️', title, topic: next, text: `Ya estás en la semana de repaso y te quedan ${st.remTopics} tema${st.remTopics > 1 ? 's' : ''}: termínalos cuanto antes.` };
             }
             const partial = rh > b.hours * 1.25 ? ' · hoy avanzas parte del tema' : '';
-            return { icon: '📖', title, topic: next, text: rh > 0 ? `Ritmo actual ≈ ${formatHM(rh)} por tema${partial}` : '' };
+            const already = topicHoursToday(s.name, next);
+            const done = already > 0 ? ` · hoy llevas ${formatHM(already)} con este tema` : '';
+            return { icon: '📖', title, topic: next, text: rh > 0 ? `Ritmo actual ≈ ${formatHM(rh)} por tema${partial}${done}` : done.replace(/^ · h/, 'H') };
         }
 
         function renderTodayPlan(p) {
@@ -6225,6 +6230,7 @@ html.dark #installPointer *{color:inherit}
                 dayHist: clone(dayHist),
                 topicNames: clone(topicNames),
                 daysOff: clone(daysOff),
+                topicTime: clone(topicTime),
                 record: clone(record)
             };
         }
@@ -6423,6 +6429,23 @@ html.dark #installPointer *{color:inherit}
                     return { from, to, label: String(o.label || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 40) };
                 })
                 .slice(0, 60);
+            // V29.4: tiempo por tema y día
+            const ttime = {};
+            Object.keys(obj(raw.topicTime)).sort().slice(-400).forEach(k => {
+                const e = raw.topicTime[k];
+                if (!isDate(k) || !e || typeof e !== 'object') return;
+                Object.keys(e).forEach(name => {
+                    if (!DB_NAMES.has(name) || !e[name] || typeof e[name] !== 'object') return;
+                    Object.keys(e[name]).forEach(t => {
+                        const n = parseInt(t), v = parseFloat(e[name][t]);
+                        if (n >= 1 && n <= 60 && v > 0) {
+                            if (!ttime[k]) ttime[k] = {};
+                            if (!ttime[k][name]) ttime[k][name] = {};
+                            ttime[k][name][n] = Math.min(24, round2(v));
+                        }
+                    });
+                });
+            });
             const rec = {};
             Object.keys(obj(raw.record)).forEach(name => {
                 const e = raw.record[name];
@@ -6453,6 +6476,7 @@ html.dark #installPointer *{color:inherit}
                 dayHist: hist,
                 topicNames: tnames,
                 daysOff: offs,
+                topicTime: ttime,
                 record: rec
             };
         }
@@ -6474,6 +6498,7 @@ html.dark #installPointer *{color:inherit}
             dayHist = state.dayHist || {};
             topicNames = state.topicNames || {};
             daysOff = state.daysOff || [];
+            topicTime = state.topicTime || {};
             record = state.record || {};
             // Vaciar la tabla evita que renderSubjectInputs relea las filas antiguas del DOM
             document.getElementById('subjectsContainer').innerHTML = '';
@@ -8091,7 +8116,7 @@ html.dark #installPointer *{color:inherit}
         // cómo se usa (web, app instalada o archivo), si sincroniza con Drive y, si el alumno lo pone, su nombre de usuario.
         // Nunca se envían datos de estudio. Se puede desactivar en Datos.
         const STATS_URL = 'https://script.google.com/macros/s/AKfycbwRdxL0fvYa05e_lmOlCYfZ9IkuHmcd0YsHIIVaU3LnvOOuYjKrb-bZLNjJo2iWJHHa/exec';   // URL de la aplicación web de Google Apps Script (…/exec)
-        const APP_VERSION = 'v29.3';
+        const APP_VERSION = 'v29.4';
         const STATS_KEY = STORAGE_KEY + '_stats';
         const ALIAS_MAX = 30;
 
@@ -9190,29 +9215,73 @@ html.dark #installPointer *{color:inherit}
             setTimeout(() => checkForUpdate(true), 6000);
         }
 
-        // ---------- V29.3: terminar un tema desde el Plan de hoy cuenta para el plan ----------
-        // Marca el tema y, si hoy aún no habías anotado tiempo de esa asignatura, anota el tiempo del bloque.
-        const BLOCK_LOG_KEY = STORAGE_KEY + '_blocks_logged';
+        // ---------- V29.3 / V29.4: el tiempo se anota tema a tema ----------
+        // topicTime guarda cuánto has dedicado hoy a cada tema; dayLog sigue siendo el total por asignatura.
+        const BLOCK_LOG_KEY = STORAGE_KEY + '_blocks_logged';   // registro de la v29.3 (solo para el día del cambio)
 
-        function blockLogged(name, n) {
+        function topicTimeToday(name) {
+            return (topicTime[todayKey()] || {})[name] || {};
+        }
+
+        function topicHoursToday(name, n) {
+            return topicTimeToday(name)[n] || 0;
+        }
+
+        function addTopicTime(name, n, h) {
+            if (!n || !h) return;
+            const k = todayKey();
+            if (!topicTime[k]) topicTime[k] = {};
+            if (!topicTime[k][name]) topicTime[k][name] = {};
+            const v = round2((topicTime[k][name][n] || 0) + h);
+            if (v > 0.001) topicTime[k][name][n] = Math.min(24, v); else delete topicTime[k][name][n];
+            if (!Object.keys(topicTime[k][name]).length) delete topicTime[k][name];
+            if (!Object.keys(topicTime[k]).length) delete topicTime[k];
+        }
+
+        function subjectHoursToday(name) {
+            return (dayLog[todayKey()] && dayLog[todayKey()][name]) || 0;
+        }
+
+        // Lo repartido por temas nunca puede superar lo anotado hoy en la asignatura (si se restó por otro lado, se ajusta)
+        function normalizeTopicTime(name) {
+            const t = topicTimeToday(name);
+            let excess = round2(Object.values(t).reduce((a, x) => a + x, 0) - subjectHoursToday(name));
+            if (excess <= 0.001) return;
+            Object.keys(t).map(Number).sort((x, y) => y - x).forEach(n => {
+                if (excess <= 0.001) return;
+                const take = Math.min(t[n], excess);
+                addTopicTime(name, n, -take);
+                excess = round2(excess - take);
+            });
+        }
+
+        function unassignedToday(name) {
+            const sum = Object.values(topicTimeToday(name)).reduce((a, x) => a + x, 0);
+            return Math.max(0, round2(subjectHoursToday(name) - sum));
+        }
+
+        function legacyBlockLogged(name, n) {
             try {
-                const v = JSON.parse(sessionStorage.getItem(BLOCK_LOG_KEY) || localStorage.getItem(BLOCK_LOG_KEY)) || {};
+                const v = JSON.parse(localStorage.getItem(BLOCK_LOG_KEY)) || {};
                 return v.day === todayKey() && !!(v.list || {})[name + '|' + n];
             } catch (e) { return false; }
         }
 
-        function rememberBlockLogged(name, n) {
-            let v = {};
-            try { v = JSON.parse(localStorage.getItem(BLOCK_LOG_KEY)) || {}; } catch (e) {}
-            if (v.day !== todayKey()) v = { day: todayKey(), list: {} };
-            v.list[name + '|' + n] = true;
-            try { localStorage.setItem(BLOCK_LOG_KEY, JSON.stringify(v)); } catch (e) {}
+        function blockLogged(name, n) {
+            return topicHoursToday(name, n) > 0 || legacyBlockLogged(name, n);
         }
 
-        // «Anotar» de un bloque del Plan de hoy: suma el tiempo y recuerda que ese tema ya tiene su tiempo anotado hoy
+        function canLogToday() {
+            const cal = getCalendarInfo();
+            return !!cal.start && cal.currentWeek >= 1;
+        }
+
+        // «Anotar» de un bloque del Plan de hoy: suma el tiempo a la asignatura y al tema de ese bloque
         function logBlockHours(name, n, hours) {
-            if (n) rememberBlockLogged(name, n);
+            if (!(hours > 0)) return;
+            if (n && canLogToday() && DB_NAMES.has(name)) addTopicTime(name, n, hours);
             addStudyHours(name, hours);
+            if (n && canLogToday()) showToast(`⏱️ ${formatHM(hours)} anotadas al Tema ${n} de ${shortName(name)}.`, 'ok');
         }
 
         function finishTopicFromPlan(name, n, hours) {
@@ -9220,46 +9289,100 @@ html.dark #installPointer *{color:inherit}
             const wasDone = !!topicEntry(name, n);
             if (!wasDone) markTopicDone(name, n);
             let logged = 0;
-            // Si no pulsaste «Anotar» en este bloque, el tiempo del bloque se anota al terminar el tema
-            if (!wasDone && !blockLogged(name, n) && hours > 0 && getCalendarInfo().currentWeek >= 1) {
-                rememberBlockLogged(name, n);
+            // Si hoy no habías anotado tiempo a este tema, se anota el tiempo del bloque al terminarlo
+            if (!wasDone && !blockLogged(name, n) && hours > 0 && canLogToday()) {
+                addTopicTime(name, n, hours);
                 adjustStudyHours(name, hours);
                 logged = hours;
             }
             renderDashboardTab();
             showToast(logged
-                ? `✅ Tema ${n} de ${shortName(name)} terminado · anotadas ${formatHM(logged)} de hoy. Si fue otro tiempo, ajústalo con − / +.`
+                ? `✅ Tema ${n} de ${shortName(name)} terminado · anotadas ${formatHM(logged)} a este tema. Si fue otro tiempo, ajústalo con − / +.`
                 : `✅ Tema ${n} de ${shortName(name)} terminado.`, 'ok');
         }
 
-        // Temas terminados hoy, con el tiempo anotado hoy en esa asignatura y botones para ajustarlo
+        // −/+ de un tema en «Hoy, tema a tema». Al sumar, primero se usa el tiempo de hoy que no tenía tema.
+        function adjustTopicTime(name, n, delta) {
+            if (!DB_NAMES.has(name) || !canLogToday()) return;
+            if (delta > 0) {
+                const free = unassignedToday(name);
+                if (free >= delta - 0.001) {
+                    addTopicTime(name, n, delta);
+                    saveAllToStorage();
+                    renderDashboardTab();
+                    return;
+                }
+                addTopicTime(name, n, delta);
+                adjustStudyHours(name, delta);
+            } else {
+                const take = Math.min(-delta, topicHoursToday(name, n));
+                if (take <= 0) return;
+                addTopicTime(name, n, -take);
+                adjustStudyHours(name, -take);
+            }
+        }
+
+        function topicLabel(name, n) {
+            const nm = topicName(name, n);
+            return `Tema ${n}${nm ? ' · ' + escapeHtml(nm) : ''}`;
+        }
+
+        // Lo de hoy, tema a tema: temas terminados, el tema en curso y el tiempo sin tema concreto, con −/+ para ajustar
         function finishedTodayHtml(p) {
             const today = todayKey();
-            const rows = [];
+            const blocks = [];
             p.subjects.forEach(s => {
+                normalizeTopicTime(s.name);
                 const entries = topicEntries(s.name);
-                const nums = Object.keys(entries).filter(k => entries[k] && entries[k].done === today && !entries[k].est).map(Number).sort((a, b) => a - b);
-                if (!nums.length) return;
-                const h = (dayLog[today] && dayLog[today][s.name]) || 0;
-                rows.push({ s, nums, h });
+                const tt = topicTimeToday(s.name);
+                const total = subjectHoursToday(s.name);
+                const doneNums = Object.keys(entries).filter(k => entries[k] && entries[k].done === today && !entries[k].est).map(Number);
+                const timeNums = Object.keys(tt).map(Number);
+                if (!doneNums.length && !timeNums.length && total <= 0) return;
+                const nums = [...new Set([...doneNums, ...timeNums])];
+                const next = nextPendingTopic(s);
+                if (next && !nums.includes(next)) nums.push(next);
+                nums.sort((x, y) => x - y);
+                blocks.push({ s, nums, total, free: unassignedToday(s.name) });
             });
-            if (!rows.length) return '';
+            if (!blocks.length || !blocks.some(b => b.total > 0 || b.nums.some(n => (topicEntry(b.s.name, n) || {}).done === today))) return '';
+            const btn = (attrs, sign, title, disabled) => `<button ${attrs} ${disabled ? 'disabled' : ''} class="w-7 h-7 rounded-lg bg-white border border-emerald-200 text-emerald-800 font-black disabled:opacity-40" title="${title}">${sign}</button>`;
             return `
-                <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-2">
-                    <p class="text-[11px] font-black uppercase tracking-wider text-emerald-700">🏁 Terminado hoy</p>
-                    ${rows.map(r => {
-                        const safe = escapeHtml(r.s.name);
-                        const names = r.nums.map(n => `Tema ${n}${topicName(r.s.name, n) ? ' · ' + escapeHtml(topicName(r.s.name, n)) : ''}`).join(', ');
+                <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-2.5">
+                    <p class="text-[11px] font-black uppercase tracking-wider text-emerald-700">🏁 Hoy, tema a tema</p>
+                    ${blocks.map(b => {
+                        const safe = escapeHtml(b.s.name);
+                        const rows = b.nums.map(n => {
+                            const e = topicEntry(b.s.name, n);
+                            const doneToday = e && e.done === today;
+                            const h = topicHoursToday(b.s.name, n);
+                            const state = doneToday ? '✅' : (e ? '✔️' : '📖');
+                            const tag = doneToday ? '' : (e ? '' : ' <span class="text-[10px] font-bold text-emerald-600">· en curso</span>');
+                            return `
+                                <div class="flex flex-wrap items-center justify-between gap-2 pl-2">
+                                    <p class="text-xs text-emerald-950 min-w-0">${state} ${topicLabel(b.s.name, n)}${tag}</p>
+                                    <div class="flex items-center gap-1.5 shrink-0">
+                                        <span class="text-[11px] font-bold text-emerald-800 min-w-[3.5rem] text-right">${h > 0 ? formatHM(h) : '—'}</span>
+                                        ${btn(`data-sub="${safe}" onclick="adjustTopicTime(this.dataset.sub, ${n}, -0.25)"`, '−', 'Restar 15 min a este tema', h < 0.25)}
+                                        ${btn(`data-sub="${safe}" onclick="adjustTopicTime(this.dataset.sub, ${n}, 0.25)"`, '+', b.free >= 0.25 ? 'Pasar a este tema 15 min de los que no tienen tema' : 'Sumar 15 min a este tema', false)}
+                                    </div>
+                                </div>`;
+                        }).join('');
+                        const freeRow = b.free >= 0.01 ? `
+                                <div class="flex flex-wrap items-center justify-between gap-2 pl-2">
+                                    <p class="text-xs text-emerald-900/80 min-w-0">⏳ Sin tema concreto <span class="text-[10px] font-semibold">· pulsa + en un tema para pasárselo</span></p>
+                                    <div class="flex items-center gap-1.5 shrink-0">
+                                        <span class="text-[11px] font-bold text-emerald-800 min-w-[3.5rem] text-right">${formatHM(b.free)}</span>
+                                        ${btn(`data-sub="${safe}" onclick="adjustStudyHours(this.dataset.sub, -0.25)"`, '−', 'Restar 15 min', b.free < 0.25)}
+                                        <span class="w-7"></span>
+                                    </div>
+                                </div>` : '';
                         return `
-                            <div class="flex flex-wrap items-center justify-between gap-2">
-                                <p class="text-xs text-emerald-950 min-w-0"><b>✅ ${escapeHtml(shortName(r.s.name))}</b> · ${names}</p>
-                                <div class="flex items-center gap-1.5 shrink-0">
-                                    <span class="text-[11px] font-bold text-emerald-800">⏱️ ${r.h > 0 ? formatHM(r.h) + ' hoy' : 'sin tiempo anotado'}</span>
-                                    <button data-sub="${safe}" onclick="adjustStudyHours(this.dataset.sub, -0.25)" ${r.h < 0.25 ? 'disabled' : ''} class="w-7 h-7 rounded-lg bg-white border border-emerald-200 text-emerald-800 font-black disabled:opacity-40" title="Restar 15 min">−</button>
-                                    <button data-sub="${safe}" onclick="adjustStudyHours(this.dataset.sub, 0.25)" class="w-7 h-7 rounded-lg bg-white border border-emerald-200 text-emerald-800 font-black" title="Sumar 15 min">+</button>
-                                </div>
+                            <div class="space-y-1.5">
+                                <p class="text-xs text-emerald-950"><b>${escapeHtml(shortName(b.s.name))}</b> · ⏱️ ${b.total > 0 ? formatHM(b.total) + ' hoy' : 'sin tiempo anotado hoy'}</p>
+                                ${rows}${freeRow}
                             </div>`;
-                    }).join('')}
+                    }).join('<div class="border-t border-emerald-200"></div>')}
                 </div>`;
         }
 
