@@ -2422,6 +2422,7 @@ html.dark .border-rose-200{border-color:rgba(244,63,94,0.38)}
 html.dark .border-rose-300{border-color:rgba(244,63,94,0.5)}
 html.dark .border-sky-200{border-color:rgba(14,165,233,0.38)}
 html.dark .border-sky-200\/70{border-color:rgba(14,165,233,0.38)}
+html.dark .border-sky-300{border-color:rgba(14,165,233,0.5)}
 html.dark .border-slate-100{border-color:#22304a}
 html.dark .border-slate-200{border-color:#2b3a52}
 html.dark .border-slate-200\/70{border-color:#2b3a52}
@@ -2435,6 +2436,7 @@ html.dark .hover\:bg-emerald-100:hover{background-color:rgba(16,185,129,0.24)}
 html.dark .hover\:bg-emerald-50:hover{background-color:rgba(16,185,129,0.18)}
 html.dark .hover\:bg-rose-100:hover{background-color:rgba(244,63,94,0.24)}
 html.dark .hover\:bg-rose-50:hover{background-color:rgba(244,63,94,0.18)}
+html.dark .hover\:bg-sky-100:hover{background-color:rgba(14,165,233,0.24)}
 html.dark .hover\:bg-slate-100:hover{background-color:#2b3a52}
 html.dark .hover\:bg-slate-200:hover{background-color:#3b4b66}
 html.dark .hover\:bg-slate-300:hover{background-color:#4b5b76}
@@ -3333,7 +3335,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             <!-- Detailed Legal Terms Clause -->
             <div class="pt-3 border-t border-slate-100 text-[11px] text-slate-400 flex flex-col sm:flex-row justify-between gap-2">
                 <p>© 2026 <b>Jagpino</b>. Se autoriza el uso libre y gratuito para fines estrictamente académicos y personales. Queda prohibida su venta, comercialización total o parcial, así como la redistribución sin citar la autoría original.</p>
-                <span class="whitespace-nowrap font-medium text-slate-500">v30.1</span>
+                <span class="whitespace-nowrap font-medium text-slate-500">v30.2</span>
             </div>
         </div>
     </footer>
@@ -4039,7 +4041,15 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
         }
 
         // V29.10: tiempo de cada semana de exámenes = su semana de repaso + los días hasta su último examen (desde hoy)
+        let examWindowsMemo = null;
         function examWindows() {
+            if (examWindowsMemo && Date.now() - examWindowsMemo.t < 1500) return examWindowsMemo.v;
+            const v = examWindowsRaw();
+            examWindowsMemo = { t: Date.now(), v };
+            return v;
+        }
+
+        function examWindowsRaw() {
             const last1 = parseLocalDate(EXAM_DATA.week1[EXAM_DATA.week1.length - 1]);
             const last2 = parseLocalDate(EXAM_DATA.week2[EXAM_DATA.week2.length - 1]);
             const today = startOfToday();
@@ -4351,15 +4361,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                     <p class="text-[11px] text-slate-500 leading-relaxed">Para cada semana: lo que necesitan sus asignaturas (repaso según su <b>carga ponderada</b> y lo que lleves avanzado, más el temario que les vaya a faltar a tu ritmo real) frente a su tiempo (semana de repaso + días hasta su último examen). <b>100 %</b> = el tiempo justo para repasar sus asignaturas; por encima, lo que les falte de temario tendrá que entrar en esa semana. Las fáciles y medias pueden terminar temario en su semana de repaso (hasta la mitad de ella); las difíciles no.</p>
                 </div>` : '';
 
-            let actions = '';
-            if (sug) {
-                const moves = sug.changes.map(c => `<b>${escapeHtml(shortName(c.name))}</b> → ${c.w}ª semana`).join(', ');
-                actions += `
-                    <div class="p-4 rounded-2xl bg-amber-50 border border-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <p class="text-xs text-amber-950 leading-relaxed"><b>💡 Hay un reparto más equilibrado:</b> ${moves}. ${sug.best.clashes < sug.cur.clashes ? 'Además evita exámenes a la misma hora.' : `La semana más apretada pasaría del ${pct(sug.cur.maxOcc)} al ${pct(sug.best.maxOcc)}.`}</p>
-                        <button onclick="applyExamSuggestion(false)" class="shrink-0 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 text-xs font-black transition">Aplicar</button>
-                    </div>`;
-            }
+            let actions = examProposalTabHtml();     // V30.2: la misma propuesta que la ventana, con sus botones
             if (official.length >= 2) {
                 actions += `
                     <div class="flex flex-wrap items-center gap-2">
@@ -8314,7 +8316,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
         // cómo se usa (web, app instalada o archivo), si sincroniza con Drive y, si el alumno lo pone, su nombre de usuario.
         // Nunca se envían datos de estudio. Se puede desactivar en Datos.
         const STATS_URL = 'https://script.google.com/macros/s/AKfycbwRdxL0fvYa05e_lmOlCYfZ9IkuHmcd0YsHIIVaU3LnvOOuYjKrb-bZLNjJo2iWJHHa/exec';   // URL de la aplicación web de Google Apps Script (…/exec)
-        const APP_VERSION = 'v30.1';
+        const APP_VERSION = 'v30.2';
         const STATS_KEY = STORAGE_KEY + '_stats';
         const ALIAS_MAX = 30;
 
@@ -10094,7 +10096,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             }
 
             recordPressureWeek(p);
-            let html = hardAlertsHtml(p);
+            let html = examNoticeHtml() + hardAlertsHtml(p);
             p.subjects.forEach(A => {
                 const pc = paces[A.name];
                 if (!pc || pc.trend !== 'slow' || pc.need < 1 || paceSnoozed(A.name)) return;
@@ -10585,13 +10587,34 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                     o.backlog = Math.max(0, need - fp);
                     // Para el reparto de exámenes: lo que faltará al empezar la 1.ª semana de repaso (hasta ahí todas
                     // reciben tiempo igual, elijas la semana que elijas), así el reparto no cambia de opinión solo
-                    o.backExam = Math.max(0, need - futureShare(p, s, addDays(OFFICIAL_W1, -7)));
                     o.pace = pace;
                 }
+                o.backExam = examBacklog(p, s, st);
                 o.P = Math.min(9, Math.max(0, P));
             });
             lastPressure = out;
             return out;
+        }
+
+        // V30.2: temario que le faltará al empezar la 1.ª semana de repaso, medido SOLO con lo que no depende de la
+        // semana de examen elegida (hasta esa fecha todas las asignaturas reciben su parte igual). Así el mejor
+        // reparto se calcula a la primera y, al aceptarlo, no aparece otro.
+        function examBacklog(p, s, st) {
+            if (!st || st.examPassed || postponedSubjects[s.name] || !s.topics || !p.days || !p.days.length) return 0;
+            const rv1 = addDays(OFFICIAL_W1, -7);
+            let planned = 0, future = 0;
+            const i0 = Math.max(0, p.cal.todayIdx);
+            p.days.forEach((d, i) => {
+                if (d.date >= rv1) return;
+                const h = d.shares[s.name] || 0;
+                planned += h;
+                if (i >= i0) future += h;
+            });
+            const c = st.cov || {};
+            const doneEq = c.mode === 'topics' ? (c.D || 0) + (c.slot > 0 ? (c.partial || 0) / c.slot : 0) : Math.min(s.topics, (st.doneH / Math.max(0.01, s.firstPassHours || 1)) * s.topics);
+            const remFrac = Math.max(0, s.topics - doneEq) / s.topics;
+            const pace = (lastPressure[s.name] && lastPressure[s.name].pace) || 1;
+            return Math.max(0, remFrac * planned * pace - future);
         }
 
         // Orden de urgencia común para el ranking, el Plan de hoy y las propuestas
@@ -10684,8 +10707,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
         }
 
         let examSugNow = null;
-        function openExamProposal(sug) {
-            examSugNow = sug;
+        function examProposalBody(sug) {
             const subs = (currentCalculation.subjects || []).filter(s => s.valid);
             const items = examItems(subs);
             const cur = currentExamAssignment(items);
@@ -10702,10 +10724,8 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                 </tr>`;
             const why = sug.best.clashes < sug.cur.clashes
                 ? 'Así evitas tener dos exámenes a la misma hora.'
-                : `La semana más apretada pasa del <b>${pct(sug.cur.maxOcc)}</b> al <b>${pct(sug.best.maxOcc)}</b> de su tiempo.`;
-            v29ModalLocked = false;
-            openV29Modal(`
-                ${lockedHeader('📅', 'Hay un reparto mejor de tus exámenes', 'Con lo que has avanzado, ha cambiado lo que necesita cada semana de exámenes.')}
+                : `La semana más apretada pasa del <b>${pct(sug.cur.maxOcc)}</b> al <b>${pct(sug.best.maxOcc)}</b> de su tiempo. Es el mejor reparto posible: he probado todas las combinaciones.`;
+            return `
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead><tr class="text-[10px] uppercase tracking-wider text-slate-400"><th></th><th class="pb-1">Ahora</th><th class="pb-1">Propuesto</th></tr></thead>
@@ -10716,12 +10736,69 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                     ${sug.changes.map(c => `<p>🔄 <b>${escapeHtml(shortName(c.name))}</b> pasa a la ${c.w}ª semana: <b>${examSlotText(c.name, c.w)}</b></p>`).join('')}
                     <p class="text-sky-900">${why}</p>
                 </div>
-                <p class="text-[11px] text-slate-500">% = lo que necesitan sus asignaturas frente al tiempo de esa semana (repaso + días hasta su último examen); 100 % es lo justo para repasar. Las asignaturas con 🔒 están fijadas y no se mueven.</p>
+                <p class="text-[11px] text-slate-500">% = lo que necesitan sus asignaturas frente al tiempo de esa semana (repaso + días hasta su último examen); 100 % es lo justo para repasar. Las asignaturas con 🔒 están fijadas y no se mueven.</p>`;
+        }
+
+        function examProposalButtons(inTab) {
+            return `
                 <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-1">
+                    ${inTab ? '' : '<button onclick="viewExamProposalInTab()" class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs font-bold">🔍 Verlo en la pestaña Exámenes</button>'}
                     <button onclick="rejectExamProposal()" class="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs font-bold">No puedo hacer este cambio</button>
                     <button onclick="acceptExamProposal()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black">✓ Aceptar el cambio</button>
-                </div>`, true);
+                </div>`;
+        }
+
+        function openExamProposal(sug) {
+            examSugNow = sug;
+            v29ModalLocked = false;
+            openV29Modal(`
+                ${lockedHeader('📅', 'Hay un reparto mejor de tus exámenes', 'Con lo que has avanzado, ha cambiado lo que necesita cada semana de exámenes.')}
+                ${examProposalBody(sug)}
+                ${examProposalButtons(false)}`, true);
             v29ModalLocked = true;
+        }
+
+        function viewExamProposalInTab() {
+            v29ModalLocked = false;
+            closeV29Modal();
+            switchTab(3);
+            setTimeout(() => document.getElementById('examProposalBox')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+        }
+
+        // Propuesta pendiente (sin responder): se muestra en la pestaña Exámenes y se avisa en «Hoy»
+        function pendingExamProposal() {
+            if (typeof examPlanningOpen !== 'function' || !examPlanningOpen()) return null;
+            return examSuggestion((currentCalculation.subjects || []).filter(s => s.valid), false);
+        }
+
+        function examProposalTabHtml() {
+            const sug = pendingExamProposal();
+            if (!sug) return '';
+            examSugNow = sug;
+            return `
+                <section id="examProposalBox" class="p-4 sm:p-5 rounded-2xl bg-white border-2 border-amber-300 shadow-sm space-y-3 scroll-mt-4">
+                    <p class="text-sm font-black text-slate-900">📅 Hay un reparto mejor de tus exámenes</p>
+                    ${examProposalBody(sug)}
+                    ${examProposalButtons(true)}
+                </section>`;
+        }
+
+        function examNoticeHtml() {
+            const sug = pendingExamProposal();
+            if (sug) return `
+                <div class="px-3 py-2.5 rounded-2xl bg-amber-50 border border-amber-300 flex flex-wrap items-center justify-between gap-2">
+                    <p class="text-xs text-amber-950">📅 <b>Tienes un reparto de exámenes mejor pendiente:</b> ${sug.changes.map(c => `${escapeHtml(shortName(c.name))} → ${c.w}ª semana`).join(' · ')}.</p>
+                    <button onclick="viewExamProposalInTab()" class="shrink-0 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-[11px] font-black">Revisarlo en Exámenes</button>
+                </div>`;
+            let v = {};
+            try { v = JSON.parse(localStorage.getItem(EXAM_MOVED_KEY)) || {}; } catch (e) {}
+            const recent = Object.keys(v).filter(n => Date.now() - v[n] < 7 * 864e5 && examChoice[n] && officialOptions(n));
+            if (!recent.length) return '';
+            return `
+                <div class="px-3 py-2.5 rounded-2xl bg-sky-50 border border-sky-200 flex flex-wrap items-center justify-between gap-2">
+                    <p class="text-xs text-sky-950">📅 <b>Tus exámenes han cambiado:</b> ${recent.map(n => `${escapeHtml(shortName(n))} → <b>${examSlotText(n, examChoice[n].w)}</b>`).join(' · ')}.</p>
+                    <button onclick="switchTab(3)" class="shrink-0 px-3 py-1.5 rounded-xl bg-white hover:bg-sky-100 border border-sky-300 text-sky-900 text-[11px] font-bold">Ver en Exámenes</button>
+                </div>`;
         }
 
         function acceptExamProposal() {
@@ -10732,6 +10809,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             examSugNow = null;
             closeV29Modal();
             afterExamChange();
+            if (currentTab === 3) renderExamTab();
             showToast(`📅 Exámenes reorganizados: ${sug.changes.map(c => `${shortName(c.name)} → ${examSlotText(c.name, c.w)}`).join(' · ')}. Tu plan ya está recalculado.`, 'ok');
         }
 
