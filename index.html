@@ -2439,7 +2439,9 @@ html.dark .hover\:bg-slate-200:hover{background-color:#3b4b66}
 html.dark .hover\:bg-slate-300:hover{background-color:#4b5b76}
 html.dark .hover\:bg-slate-50:hover{background-color:#1e293b}
 html.dark .hover\:bg-slate-50\/80:hover{background-color:#1e293b}
+html.dark .hover\:bg-white:hover{background-color:#1e293b}
 html.dark .hover\:bg-white\/80:hover{background-color:#1e293b}
+html.dark .hover\:text-emerald-700:hover{color:#6ee7b7}
 html.dark .hover\:text-rose-600:hover{color:#fb7185}
 html.dark .hover\:text-rose-800:hover{color:#fecdd3}
 html.dark .hover\:text-slate-600:hover{color:#a3b1c6}
@@ -2636,14 +2638,22 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             <!-- ================= TAB 2: PROGRESO ================= -->
             <div id="tabContent2" class="hidden space-y-6">
 
+                <div id="progressTools" class="flex justify-end -mb-3"></div>
+
+                <div id="progressBoxes" class="space-y-6">
+                <div class="pbox" data-box="semaforo">
+                    <div class="pbox-bar hidden"></div>
+                    <div class="pbox-body">
                 <!-- Dynamic Diagnostic Alert Banner -->
                 <section id="mainDiagnosticBanner" class="p-5 rounded-2xl border shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 bg-white">
                     <!-- Injected via JS -->
                 </section>
+                    </div>
+                </div>
 
-                <!-- V29: CONSTANCIA Y PREVISIÓN -->
-                <div id="motivationSection" class="grid grid-cols-1 lg:grid-cols-2 gap-6 empty:hidden"></div>
-
+                <div class="pbox" data-box="indicadores">
+                    <div class="pbox-bar hidden"></div>
+                    <div class="pbox-body">
                 <!-- 5 Master KPI Summary Cards -->
                 <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/90 flex items-center justify-between">
@@ -2704,7 +2714,12 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                         </div>
                     </div>
                 </section>
+                    </div>
+                </div>
 
+                <div class="pbox" data-box="calendario">
+                    <div class="pbox-bar hidden"></div>
+                    <div class="pbox-body">
                 <!-- CALENDARIO SEMANAL CON LA FECHA REAL -->
                 <section class="bg-white rounded-2xl shadow-sm border border-slate-200/90 overflow-hidden">
                     <div class="bg-slate-900 text-white px-6 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -2732,47 +2747,44 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                         </div>
                     </div>
                 </section>
-
-                                <section id="historySection" class="bg-white rounded-2xl shadow-sm border border-slate-200/90 overflow-hidden scroll-mt-4">
-                    <div class="bg-slate-900 text-white px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div>
-                            <h2 class="font-bold text-base flex items-center gap-2">
-                                <i class="fa-solid fa-calendar-check text-emerald-400"></i>
-                                Historial por semanas
-                            </h2>
-                            <p class="text-xs text-slate-400 mt-0.5">Tus horas reales semana a semana. Se rellenan solas desde el Plan de hoy; aquí puedes corregirlas.</p>
-                        </div>
-                        <button onclick="openOtherDayModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs transition shadow flex items-center gap-2">
-                            <i class="fa-solid fa-calendar-plus"></i>
-                            <span>Anotar otro día</span>
-                        </button>
                     </div>
+                </div>
 
-                    <div class="p-3 sm:p-6">
-                        <!-- Vista móvil: una semana cada vez (se rellena por JS) -->
-                        <div id="trackingMobile" class="hidden"></div>
+                <div class="pbox" data-box="constancia">
+                    <div class="pbox-bar hidden"></div>
+                    <div class="pbox-body">
+                <!-- V29: CONSTANCIA Y PREVISIÓN -->
+                <div id="motivationSection" class="grid grid-cols-1 lg:grid-cols-2 gap-6 empty:hidden"></div>
+                    </div>
+                </div>
 
-                        <!-- Vista escritorio: tabla completa -->
-                        <div id="trackingDesktopWrap">
-                        <div id="trackingScroll" class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm max-h-[580px]">
-                            <table class="w-full text-left text-xs border-collapse">
-                                <thead class="bg-slate-800 text-white font-bold uppercase sticky top-0 z-10 text-[11px]">
-                                    <tr id="trackingTableHeader">
-                                        <!-- Dynamic Headers -->
-                                    </tr>
-                                </thead>
-                                <tbody id="trackingTableBody" class="divide-y divide-slate-200 bg-white">
-                                    <!-- Dynamic Weekly Rows -->
-                                </tbody>
-                                <tfoot class="bg-slate-900 text-white font-black text-xs sticky bottom-0 z-10" id="trackingTableFooter">
-                                    <!-- Dynamic Totals -->
-                                </tfoot>
-                            </table>
+                <div class="pbox" data-box="temario">
+                    <div class="pbox-bar hidden"></div>
+                    <div class="pbox-body">
+                <!-- SECTION: TEMARIO COMPLETADO -->
+                <section class="bg-white rounded-2xl shadow-sm border border-slate-200/90 overflow-hidden">
+                    <div class="bg-slate-900 text-white px-6 py-4 flex items-center gap-2.5">
+                        <span class="w-7 h-7 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center shadow"><i class="fa-solid fa-list-check"></i></span>
+                        <div>
+                            <h2 class="font-bold text-base tracking-wide">Temario Completado</h2>
+                            <p class="text-xs text-slate-400">Marca cada tema al terminarlo: se programan dos repasos rápidos, a la semana y al mes, siempre antes del examen</p>
                         </div>
-                        </div>
+                    </div>
+                    <div id="topicsContainer" class="p-6 grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+                    <div class="px-6 pb-5 -mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-semibold text-slate-500">
+                        <span><i class="fa-solid fa-square text-emerald-200"></i> Terminado</span>
+                        <span><i class="fa-solid fa-square text-emerald-500"></i> Repaso de la semana hecho</span>
+                        <span><i class="fa-solid fa-square text-emerald-700"></i> Repaso del mes hecho</span>
+                        <span><i class="fa-regular fa-circle text-amber-500"></i> Aro ámbar: le toca repaso</span>
+                        <span>▍ Línea oscura: dónde deberías ir según el plan</span>
                     </div>
                 </section>
+                    </div>
+                </div>
 
+                <div class="pbox" data-box="estado">
+                    <div class="pbox-bar hidden"></div>
+                    <div class="pbox-body">
                 <!-- SECTION: STATUS & PROGRESS TRACKING -->
                 <section class="bg-white rounded-2xl shadow-sm border border-slate-200/90 overflow-hidden">
                     <div class="bg-slate-900 text-white px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -2813,26 +2825,12 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                         </div>
                     </div>
                 </section>
-
-                <!-- SECTION: TEMARIO COMPLETADO -->
-                <section class="bg-white rounded-2xl shadow-sm border border-slate-200/90 overflow-hidden">
-                    <div class="bg-slate-900 text-white px-6 py-4 flex items-center gap-2.5">
-                        <span class="w-7 h-7 rounded-full bg-emerald-500 text-white text-xs flex items-center justify-center shadow"><i class="fa-solid fa-list-check"></i></span>
-                        <div>
-                            <h2 class="font-bold text-base tracking-wide">Temario Completado</h2>
-                            <p class="text-xs text-slate-400">Marca cada tema al terminarlo: se programan dos repasos rápidos, a la semana y al mes, siempre antes del examen</p>
-                        </div>
                     </div>
-                    <div id="topicsContainer" class="p-6 grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
-                    <div class="px-6 pb-5 -mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-semibold text-slate-500">
-                        <span><i class="fa-solid fa-square text-emerald-200"></i> Terminado</span>
-                        <span><i class="fa-solid fa-square text-emerald-500"></i> Repaso de la semana hecho</span>
-                        <span><i class="fa-solid fa-square text-emerald-700"></i> Repaso del mes hecho</span>
-                        <span><i class="fa-regular fa-circle text-amber-500"></i> Aro ámbar: le toca repaso</span>
-                        <span>▍ Línea oscura: dónde deberías ir según el plan</span>
-                    </div>
-                </section>
+                </div>
 
+                <div class="pbox" data-box="ranking">
+                    <div class="pbox-bar hidden"></div>
+                    <div class="pbox-body">
                 <!-- SECTION: PRIORITY RANKING TABLE -->
                 <section class="bg-white rounded-2xl shadow-sm border border-slate-200/90 overflow-hidden">
                     <div class="bg-slate-900 text-white px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -2871,7 +2869,57 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                         </div>
                     </div>
                 </section>
+                    </div>
+                </div>
 
+                <div class="pbox" data-box="historial">
+                    <div class="pbox-bar hidden"></div>
+                    <div class="pbox-body">
+                <section id="historySection" class="bg-white rounded-2xl shadow-sm border border-slate-200/90 overflow-hidden scroll-mt-4">
+                    <div class="bg-slate-900 text-white px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h2 class="font-bold text-base flex items-center gap-2">
+                                <i class="fa-solid fa-calendar-check text-emerald-400"></i>
+                                Historial por semanas
+                            </h2>
+                            <p class="text-xs text-slate-400 mt-0.5">Tus horas reales semana a semana. Se rellenan solas desde el Plan de hoy; aquí puedes corregirlas.</p>
+                        </div>
+                        <button onclick="openOtherDayModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs transition shadow flex items-center gap-2">
+                            <i class="fa-solid fa-calendar-plus"></i>
+                            <span>Anotar otro día</span>
+                        </button>
+                    </div>
+
+                    <div class="p-3 sm:p-6">
+                        <!-- Vista móvil: una semana cada vez (se rellena por JS) -->
+                        <div id="trackingMobile" class="hidden"></div>
+
+                        <!-- Vista escritorio: tabla completa -->
+                        <div id="trackingDesktopWrap">
+                        <div id="trackingScroll" class="overflow-x-auto rounded-xl border border-slate-200 shadow-sm max-h-[580px]">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead class="bg-slate-800 text-white font-bold uppercase sticky top-0 z-10 text-[11px]">
+                                    <tr id="trackingTableHeader">
+                                        <!-- Dynamic Headers -->
+                                    </tr>
+                                </thead>
+                                <tbody id="trackingTableBody" class="divide-y divide-slate-200 bg-white">
+                                    <!-- Dynamic Weekly Rows -->
+                                </tbody>
+                                <tfoot class="bg-slate-900 text-white font-black text-xs sticky bottom-0 z-10" id="trackingTableFooter">
+                                    <!-- Dynamic Totals -->
+                                </tfoot>
+                            </table>
+                        </div>
+                        </div>
+                    </div>
+                </section>
+                    </div>
+                </div>
+
+                <div class="pbox" data-box="graficos">
+                    <div class="pbox-bar hidden"></div>
+                    <div class="pbox-body">
                 <!-- SECTION: VISUAL CHARTS -->
                 <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/90">
@@ -2904,7 +2952,12 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                         </div>
                     </div>
                 </section>
+                    </div>
+                </div>
 
+                <div class="pbox" data-box="semanal">
+                    <div class="pbox-bar hidden"></div>
+                    <div class="pbox-body">
                 <!-- SECTION: WEEKLY COMPARISON CHART (OBJECTIVE VS REAL) -->
                 <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/90">
                     <div class="flex items-center justify-between mb-4">
@@ -2920,6 +2973,10 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
                         <canvas id="chartWeeklyComparison"></canvas>
                     </div>
                 </section>
+                    </div>
+                </div>
+
+                </div>
             </div>
 
             <!-- ================= TAB 3: EXÁMENES Y PEC ================= -->
@@ -3272,7 +3329,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             <!-- Detailed Legal Terms Clause -->
             <div class="pt-3 border-t border-slate-100 text-[11px] text-slate-400 flex flex-col sm:flex-row justify-between gap-2">
                 <p>© 2026 <b>Jagpino</b>. Se autoriza el uso libre y gratuito para fines estrictamente académicos y personales. Queda prohibida su venta, comercialización total o parcial, así como la redistribución sin citar la autoría original.</p>
-                <span class="whitespace-nowrap font-medium text-slate-500">v29.6</span>
+                <span class="whitespace-nowrap font-medium text-slate-500">v29.7</span>
             </div>
         </div>
     </footer>
@@ -8196,7 +8253,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
         // cómo se usa (web, app instalada o archivo), si sincroniza con Drive y, si el alumno lo pone, su nombre de usuario.
         // Nunca se envían datos de estudio. Se puede desactivar en Datos.
         const STATS_URL = 'https://script.google.com/macros/s/AKfycbwRdxL0fvYa05e_lmOlCYfZ9IkuHmcd0YsHIIVaU3LnvOOuYjKrb-bZLNjJo2iWJHHa/exec';   // URL de la aplicación web de Google Apps Script (…/exec)
-        const APP_VERSION = 'v29.6';
+        const APP_VERSION = 'v29.7';
         const STATS_KEY = STORAGE_KEY + '_stats';
         const ALIAS_MAX = 30;
 
@@ -10153,6 +10210,163 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             const what = `${shortName(name)}${n ? ' · Tema ' + n : ''}`;
             showToast(`📅 ${fmtLong(date)}: ${h > 0 ? formatHM(h) + ' anotadas a ' + what : what}${finish ? ' · tema terminado' : ''}.${finish && h > 0 ? deviationToastText(name, n) : ''}`, 'ok');
         }
+
+        // ================= V29.7: RECUADROS DE «PROGRESO» A TU GUSTO =================
+        // Cada estudiante puede cambiar el orden u ocultar recuadros. Se guarda en este dispositivo.
+        const PBOX_KEY = STORAGE_KEY + '_layout_progress';
+        const PBOX_DEFAULT = ['semaforo', 'indicadores', 'calendario', 'constancia', 'temario', 'estado', 'ranking', 'historial', 'graficos', 'semanal'];
+        const PBOX_LABEL = {
+            semaforo: ['🚦', 'Semáforo'], indicadores: ['📈', 'Indicadores'], calendario: ['🗓️', 'Calendario del semestre'],
+            constancia: ['🔥', 'Tu constancia y previsión del temario'], temario: ['📗', 'Temario completado'],
+            estado: ['📋', 'Estado de asignaturas y reajuste de ritmo'], ranking: ['🏅', 'Ranking de urgencia'],
+            historial: ['🗂️', 'Historial por semanas'], graficos: ['📊', 'Gráficos'], semanal: ['📉', 'Objetivo y real por semana']
+        };
+        let pboxEditing = false;
+        let pboxDrag = null;
+
+        function readPboxLayout() {
+            let v = {};
+            try { v = JSON.parse(localStorage.getItem(PBOX_KEY)) || {}; } catch (e) {}
+            const order = (Array.isArray(v.order) ? v.order : []).filter(k => PBOX_DEFAULT.includes(k));
+            PBOX_DEFAULT.forEach((k, i) => {            // recuadros nuevos: en su sitio por defecto
+                if (order.includes(k)) return;
+                const prev = PBOX_DEFAULT.slice(0, i).reverse().find(x => order.includes(x));
+                order.splice(prev ? order.indexOf(prev) + 1 : 0, 0, k);
+            });
+            const hidden = (Array.isArray(v.hidden) ? v.hidden : []).filter(k => PBOX_DEFAULT.includes(k));
+            return { order, hidden };
+        }
+
+        function savePboxLayout(l) {
+            try { localStorage.setItem(PBOX_KEY, JSON.stringify(l)); } catch (e) {}
+        }
+
+        function currentPboxOrder() {
+            return [...document.querySelectorAll('#progressBoxes > .pbox')].map(b => b.dataset.box);
+        }
+
+        function applyProgressLayout() {
+            const wrap = document.getElementById('progressBoxes');
+            if (!wrap) return;
+            const l = readPboxLayout();
+            l.order.forEach(k => { const b = wrap.querySelector(`.pbox[data-box="${k}"]`); if (b) wrap.appendChild(b); });
+            wrap.classList.toggle('pbox-editing', pboxEditing);
+            wrap.querySelectorAll('.pbox').forEach((b, i) => {
+                const k = b.dataset.box, off = l.hidden.includes(k);
+                const body = b.querySelector(':scope > .pbox-body'), bar = b.querySelector(':scope > .pbox-bar');
+                body.classList.toggle('hidden', pboxEditing || off);
+                b.classList.toggle('hidden', !pboxEditing && off);
+                bar.classList.toggle('hidden', !pboxEditing);
+                b.draggable = pboxEditing;
+                if (!pboxEditing) { bar.innerHTML = ''; return; }
+                const [ic, label] = PBOX_LABEL[k] || ['▫️', k];
+                const last = i === l.order.length - 1;
+                const arrow = (dir, dis, title) => `<button onclick="movePbox('${k}', ${dir})" ${dis ? 'disabled' : ''} class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black disabled:opacity-30 disabled:cursor-not-allowed" title="${title}" aria-label="${title}">${dir < 0 ? '↑' : '↓'}</button>`;
+                bar.innerHTML = `
+                    <div class="flex items-center gap-2 p-2.5 pl-3 rounded-2xl border-2 border-dashed ${off ? 'border-slate-300 bg-slate-50' : 'border-emerald-300 bg-white'} shadow-sm">
+                        <span class="hidden sm:inline text-slate-400 cursor-grab select-none" title="Arrástralo">⠿</span>
+                        <span class="text-xl leading-none">${ic}</span>
+                        <p class="flex-1 min-w-0 text-sm font-bold leading-tight ${off ? 'text-slate-400 line-through' : 'text-slate-800'}">${label}</p>
+                        <button onclick="togglePbox('${k}')" class="px-2.5 h-9 rounded-xl ${off ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200'} text-[11px] font-bold whitespace-nowrap" title="${off ? 'Volver a mostrarlo' : 'Ocultarlo'}" aria-label="${off ? 'Mostrar' : 'Ocultar'}">${off ? '👁<span class="hidden sm:inline"> Mostrar</span>' : '🙈<span class="hidden sm:inline"> Ocultar</span>'}</button>
+                        ${arrow(-1, i === 0, 'Subir')}
+                        ${arrow(1, last, 'Bajar')}
+                    </div>`;
+            });
+            renderProgressTools();
+        }
+
+        function renderProgressTools() {
+            const t = document.getElementById('progressTools');
+            if (!t) return;
+            const l = readPboxLayout();
+            const custom = JSON.stringify(l.order) !== JSON.stringify(PBOX_DEFAULT) || l.hidden.length > 0;
+            t.className = pboxEditing ? 'space-y-2' : 'flex justify-end -mb-3';
+            t.innerHTML = pboxEditing ? `
+                <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex flex-wrap items-center justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="text-sm font-black text-emerald-950">↕️ Ordena tus recuadros</p>
+                        <p class="text-xs text-emerald-900">Sube o baja cada recuadro con las flechas${matchMedia('(pointer:fine)').matches ? ' o arrástralo' : ''}. Oculta los que no uses. Se guarda en este dispositivo.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        ${custom ? `<button onclick="resetPbox()" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs font-bold">Restablecer</button>` : ''}
+                        <button onclick="setPboxEditing(false)" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black">✓ Listo</button>
+                    </div>
+                </div>` : `
+                <button onclick="setPboxEditing(true)" class="px-3 py-1.5 rounded-xl text-[11px] font-bold text-slate-500 hover:text-emerald-700 hover:bg-white transition flex items-center gap-1.5" title="Cambia el orden de los recuadros u oculta los que no uses">
+                    <i class="fa-solid fa-arrow-down-up-across-line"></i> Ordenar recuadros${l.hidden.length ? ` <span class="text-slate-400">(${l.hidden.length} oculto${l.hidden.length === 1 ? '' : 's'})</span>` : ''}
+                </button>`;
+        }
+
+        function setPboxEditing(on) {
+            pboxEditing = !!on;
+            applyProgressLayout();
+            if (!on) {
+                renderDashboardTab();              // los gráficos se redibujan al volver a verse
+                if (currentTab === 2) renderTrackingTab(false);
+            }
+            const t = document.getElementById('progressTools');
+            if (t) t.scrollIntoView({ block: 'nearest' });
+        }
+
+        function movePbox(k, dir) {
+            const l = readPboxLayout();
+            const i = l.order.indexOf(k), j = i + dir;
+            if (i < 0 || j < 0 || j >= l.order.length) return;
+            [l.order[i], l.order[j]] = [l.order[j], l.order[i]];
+            savePboxLayout(l);
+            applyProgressLayout();
+            const b = document.querySelector(`#progressBoxes .pbox[data-box="${k}"]`);
+            if (b) { b.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); b.querySelector('.pbox-bar > div')?.classList.add('ring-2', 'ring-emerald-400'); }
+        }
+
+        function togglePbox(k) {
+            const l = readPboxLayout();
+            l.hidden = l.hidden.includes(k) ? l.hidden.filter(x => x !== k) : [...l.hidden, k];
+            savePboxLayout(l);
+            applyProgressLayout();
+        }
+
+        function resetPbox() {
+            try { localStorage.removeItem(PBOX_KEY); } catch (e) {}
+            applyProgressLayout();
+            showToast('Recuadros en su orden original.', 'ok');
+        }
+
+        // Arrastrar y soltar (ordenador)
+        function initPboxDrag() {
+            const wrap = document.getElementById('progressBoxes');
+            if (!wrap || wrap.dataset.dnd) return;
+            wrap.dataset.dnd = '1';
+            wrap.addEventListener('dragstart', e => {
+                const b = e.target.closest && e.target.closest('.pbox');
+                if (!pboxEditing || !b) return;
+                pboxDrag = b.dataset.box;
+                b.classList.add('opacity-50');
+                try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', pboxDrag); } catch (err) {}
+            });
+            wrap.addEventListener('dragover', e => {
+                if (!pboxEditing || !pboxDrag) return;
+                e.preventDefault();
+                const over = e.target.closest && e.target.closest('.pbox');
+                const dragged = wrap.querySelector(`.pbox[data-box="${pboxDrag}"]`);
+                if (!over || !dragged || over === dragged) return;
+                const r = over.getBoundingClientRect();
+                wrap.insertBefore(dragged, e.clientY < r.top + r.height / 2 ? over : over.nextSibling);
+            });
+            const end = () => {
+                if (!pboxDrag) return;
+                const l = readPboxLayout();
+                l.order = currentPboxOrder();
+                savePboxLayout(l);
+                pboxDrag = null;
+                wrap.querySelectorAll('.pbox').forEach(b => b.classList.remove('opacity-50'));
+                applyProgressLayout();
+            };
+            wrap.addEventListener('drop', e => { e.preventDefault(); end(); });
+            wrap.addEventListener('dragend', end);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { applyProgressLayout(); initPboxDrag(); });
         let currentWizardStep = 1;
         const totalWizardSteps = 5;
 
