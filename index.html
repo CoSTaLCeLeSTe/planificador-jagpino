@@ -3329,7 +3329,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
             <!-- Detailed Legal Terms Clause -->
             <div class="pt-3 border-t border-slate-100 text-[11px] text-slate-400 flex flex-col sm:flex-row justify-between gap-2">
                 <p>© 2026 <b>Jagpino</b>. Se autoriza el uso libre y gratuito para fines estrictamente académicos y personales. Queda prohibida su venta, comercialización total o parcial, así como la redistribución sin citar la autoría original.</p>
-                <span class="whitespace-nowrap font-medium text-slate-500">v29.7</span>
+                <span class="whitespace-nowrap font-medium text-slate-500">v29.8</span>
             </div>
         </div>
     </footer>
@@ -8253,7 +8253,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
         // cómo se usa (web, app instalada o archivo), si sincroniza con Drive y, si el alumno lo pone, su nombre de usuario.
         // Nunca se envían datos de estudio. Se puede desactivar en Datos.
         const STATS_URL = 'https://script.google.com/macros/s/AKfycbwRdxL0fvYa05e_lmOlCYfZ9IkuHmcd0YsHIIVaU3LnvOOuYjKrb-bZLNjJo2iWJHHa/exec';   // URL de la aplicación web de Google Apps Script (…/exec)
-        const APP_VERSION = 'v29.7';
+        const APP_VERSION = 'v29.8';
         const STATS_KEY = STORAGE_KEY + '_stats';
         const ALIAS_MAX = 30;
 
@@ -9295,16 +9295,20 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
         // ---------- Aviso de versión nueva ----------
         const VERSION_CHECK_KEY = STORAGE_KEY + '_version_check';
         let versionCheckAt = 0;
+        let pendingUpdate = null;
+        const UPDATE_KEY = STORAGE_KEY + '_updating';
+        const UPDATE_EVERY = 5 * 60 * 1000;
 
+        // v29.8: 29.10 > 29.9 (antes 29.10 se leía como 29.1)
         function versionNumber(v) {
-            const m = String(v || '').match(/v?(\d+)(?:\.(\d+))?/);
-            return m ? parseInt(m[1]) + (m[2] ? parseInt(m[2]) / 100 : 0) : 0;
+            const m = String(v || '').match(/v?(\d+)(?:\.(\d+))?(?:\.(\d+))?/);
+            return m ? parseInt(m[1]) * 1e6 + (m[2] ? parseInt(m[2]) : 0) * 1e3 + (m[3] ? parseInt(m[3]) : 0) : 0;
         }
 
         async function checkForUpdate(force) {
             if (typeof navigator.onLine === 'boolean' && !navigator.onLine) return;
             const now = Date.now();
-            if (!force && now - versionCheckAt < 30 * 60 * 1000) return;
+            if (!force && now - versionCheckAt < UPDATE_EVERY) return;
             versionCheckAt = now;
             try {
                 const res = await fetch(`${APP_URL}version.json?t=${now}`, { cache: 'no-store' });
@@ -9317,6 +9321,7 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
         function showUpdateBanner(info) {
             const box = document.getElementById('updateBanner');
             if (!box) return;
+            pendingUpdate = info;
             const web = isWebOrigin();
             box.innerHTML = `
                 <div class="fixed left-1/2 -translate-x-1/2 top-3 z-[68] w-[calc(100%-2rem)] max-w-md bg-slate-900 text-white rounded-2xl shadow-2xl border border-emerald-400/50 p-3.5 flex items-center gap-3">
@@ -9333,23 +9338,48 @@ html.dark #todayPlanBody .bg-slate-900:hover{background-color:#475569}
 
         async function applyUpdate() {
             try { saveAllToStorage(); } catch (e) {}
+            const target = String((pendingUpdate && pendingUpdate.v) || '');
+            try { localStorage.setItem(UPDATE_KEY, JSON.stringify({ v: target, at: Date.now() })); } catch (e) {}
             try {
                 if (navigator.serviceWorker) {
                     const reg = await navigator.serviceWorker.getRegistration();
                     if (reg) await reg.update();
                 }
             } catch (e) {}
-            location.reload();
+            // Dirección distinta para saltarse cualquier copia antigua guardada por el camino
+            const base = location.href.split('#')[0].split('?')[0];
+            location.replace(`${base}?actualizar=${encodeURIComponent(target || Date.now())}`);
+        }
+
+        // Tras actualizar: limpiar la dirección y confirmar la versión
+        function afterUpdateCheck() {
+            try {
+                if (/[?&]actualizar=/.test(location.search)) history.replaceState(null, '', location.pathname + location.hash);
+            } catch (e) {}
+            let u = null;
+            try { u = JSON.parse(localStorage.getItem(UPDATE_KEY)); } catch (e) {}
+            if (!u) return;
+            try { localStorage.removeItem(UPDATE_KEY); } catch (e) {}
+            if (Date.now() - (u.at || 0) > 10 * 60 * 1000) return;
+            if (!u.v || versionNumber(APP_VERSION) >= versionNumber(u.v)) {
+                setTimeout(() => showToast(`✅ Ya tienes la ${APP_VERSION}. Tus datos siguen intactos.`, 'ok'), 800);
+            } else {
+                setTimeout(() => showToast(`La ${u.v} aún se está publicando. Vuelve a intentarlo en unos minutos.`, 'warn'), 800);
+            }
         }
 
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') checkForUpdate(false);
         });
+        window.addEventListener('focus', () => checkForUpdate(false));
+        window.addEventListener('online', () => checkForUpdate(true));
+        setInterval(() => { if (document.visibilityState === 'visible') checkForUpdate(false); }, UPDATE_EVERY);
 
         function v29AfterStartup() {
             applyTheme();
             renderDaysOff();
-            setTimeout(() => checkForUpdate(true), 6000);
+            afterUpdateCheck();
+            setTimeout(() => checkForUpdate(true), 4000);
         }
 
         // ---------- V29.3 / V29.4: el tiempo se anota tema a tema ----------
